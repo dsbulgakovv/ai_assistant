@@ -91,7 +91,7 @@ async def voice_to_text_process_handler(message: types.Message, bot: Bot, state:
         file_id = message.voice.file_id
         file = await bot.get_file(file_id)
         file_path = file.file_path
-        file_name = f"files/audio_{file_id}.mp3"
+        file_name = f"service_files/audio_{file_id}.mp3"
         await bot.download_file(file_path, file_name)
         await message.answer('Голосовое сообщение обработано!', reply_markup=end_keyboard())
         text = await api.transcript(file_name)
