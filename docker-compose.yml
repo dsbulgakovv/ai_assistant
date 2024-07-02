@@ -80,7 +80,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./service_files:/root/app/service_files
+      - ./service_files:/root/voice_to_text/service_files
 
 
 networks:
