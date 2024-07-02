@@ -123,6 +123,7 @@ async def set_commands(bot: Bot):
 
 async def main() -> None:
     logger.info(os.listdir('../'))
+    logger.info(os.getcwd())
     bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     await bot.delete_webhook(drop_pending_updates=True)
     await set_commands(bot)
