@@ -19,7 +19,6 @@ asyncio = "^3.4.3"
 fastapi = "^0.111.0"
 asyncio = "^3.4.3"
 speechrecognition = "^3.10.4"
-pydub = "^0.25.1"
 
 [build-system]
 requires = ["poetry-core"]
