@@ -75,9 +75,6 @@ services:
 #      - redis
     ports:
       - "8000:8000"
-      - "55051:55051"
-    expose:
-      - "50051"
     networks:
       - pg-network
     env_file:
