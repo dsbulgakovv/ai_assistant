@@ -65,12 +65,12 @@ services:
     build:
       context: .
       dockerfile: voice_to_text/Dockerfile
-    depends_on:
-      init_db:
-        condition: service_completed_successfully
-    links:
-      - postgres
-      - redis
+#    depends_on:
+#      init_db:
+#        condition: service_completed_successfully
+#    links:
+#      - postgres
+#      - redis
     ports:
       - "8000:8000"
       - "55051:55051"
