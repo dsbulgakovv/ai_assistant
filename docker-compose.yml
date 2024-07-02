@@ -48,7 +48,7 @@ services:
       context: .
       dockerfile: bot/Dockerfile
     depends_on:
-      recsys-service:
+      voice_to_text:
         condition: service_started
     links:
 #      - postgres
