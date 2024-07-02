@@ -60,7 +60,7 @@ services:
     env_file:
       - .env
     volumes:
-      - 'voice_files:/root/service_files'
+      - 'root/service_files:app/service_files'
 
 
   voice_to_text:
@@ -83,14 +83,9 @@ services:
     env_file:
       - .env
     volumes:
-      - 'voice_files:/root/service_files'
+      - 'root/service_files:app/service_files'
 
 
 networks:
   pg-network:
     driver: bridge
-
-volumes:
-  voice_files:
-    driver: local
-
