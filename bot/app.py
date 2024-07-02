@@ -17,13 +17,6 @@ from keyboards.general import start_keyboard, end_keyboard
 
 from utils.voice_to_text_api import VoiceToTextAPI
 
-# from aiogram.utils.markdown import hbold
-# from handlers import recommend, user_info
-# from handlers.user_info import User
-# from keyboards.data import share_data_keyboard
-# from keyboards.general import start_keyboard
-# from utils.db import check_user
-
 
 TOKEN = '6675850647:AAGMrJUk2t4CV2oHwtz7QNxrR0vPn30Bbac'
 
@@ -109,8 +102,6 @@ async def set_commands(bot: Bot):
 
 
 async def main() -> None:
-    logger.info(os.listdir('.'))
-    logger.info(os.listdir('./service_files'))
     bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     await bot.delete_webhook(drop_pending_updates=True)
     await set_commands(bot)
