@@ -10,6 +10,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import BotCommand, BotCommandScopeDefault, ReplyKeyboardRemove
+from aiogram.client.bot import DefaultBotProperties
+from aiogram.enums import ParseMode
 
 from keyboards.general import start_keyboard, end_keyboard
 
@@ -92,10 +94,8 @@ async def voice_to_text_process_handler(message: types.Message, bot: Bot, state:
         file_name = f"files/audio_{file_id}.mp3"
         await bot.download_file(file_path, file_name)
         await message.answer('Голосовое сообщение обработано!', reply_markup=end_keyboard())
-        text, path_to_wav_file = convert_voice_to_text(file_name)
-        await message.answer(text, reply_markup=end_keyboard())
-        os.remove(file_name)
-        os.remove(path_to_wav_file)
+        text = await api.transcript(file_name)
+        await message.answer(text['text'], reply_markup=end_keyboard())
     else:
         if message.text == 'Хватит':
             await message.answer('Закончили', reply_markup=ReplyKeyboardRemove())
@@ -122,7 +122,7 @@ async def set_commands(bot: Bot):
 
 
 async def main() -> None:
-    bot = Bot(TOKEN, parse_mode=ParseMode.HTML)
+    bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     await bot.delete_webhook(drop_pending_updates=True)
     await set_commands(bot)
     await dp.start_polling(bot)

@@ -13,6 +13,9 @@ def convert_voice_to_text(path_to_file: str):
         audio_data = recognizer.record(source)
         text = recognizer.recognize_google(audio_data, language="ru")
 
+    os.remove(path_to_file)
+    os.remove(path_to_wav_file)
+
     return text
 
 
