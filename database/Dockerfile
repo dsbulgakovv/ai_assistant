@@ -1,4 +1,4 @@
-FROM python:3.9
+FROM python:3.12
 
 RUN curl -sSL https://install.python-poetry.org | python3 -
 ENV PATH="${PATH}:/root/.local/bin"
