@@ -9,7 +9,7 @@ WORKDIR /voice_to_text
 
 COPY pyproject.toml poetry.lock /voice_to_text/
 RUN poetry config installer.max-workers 10
-RUN poetry install --no-interaction --no-ansi --without bot,db,dev
+RUN poetry install --no-interaction --no-ansi --without bot
 RUN poetry run python -m pip install --no-use-pep517 --no-binary :all: lightfm
 
 COPY ./voice_to_text /voice_to_text/

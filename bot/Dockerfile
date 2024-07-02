@@ -9,7 +9,7 @@ WORKDIR /app
 
 COPY pyproject.toml poetry.lock /app/
 RUN poetry config installer.max-workers 10
-RUN poetry install --no-interaction --no-ansi --without db,voice_to_text,dev
+RUN poetry install --no-interaction --no-ansi --without voice_to_text
 
 
 COPY ./bot /app/
