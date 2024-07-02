@@ -1,8 +1,15 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
-from model.infer import convert_voice_to_text
+import logging
+from logging.config import dictConfig
 
+from model.infer import convert_voice_to_text
+from log_config import LogConfig
+
+
+dictConfig(LogConfig().dict())
+logger = logging.getLogger("voice_to_text")
 
 app = FastAPI()
 
@@ -13,7 +20,7 @@ async def root():
 
 
 @app.get("/voice_to_text")
-async def voice_to_text(path_to_file: str):
-    resp = convert_voice_to_text(path_to_file)
+async def voice_to_text(path_to_file: str, log=logger):
+    resp = convert_voice_to_text(path_to_file, log)
 
     return JSONResponse(content={"text": resp})
