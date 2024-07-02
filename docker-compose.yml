@@ -60,7 +60,7 @@ services:
     env_file:
       - .env
     volumes:
-      - './service_files:root/service_files'
+      - '/root/repos/ai_assistant/service_files:./service_files'
 
 
   voice_to_text:
@@ -83,7 +83,7 @@ services:
     env_file:
       - .env
     volumes:
-      - './service_files:root/service_files'
+      - '/root/repos/ai_assistant/service_files:./service_files'
 
 
 networks:
