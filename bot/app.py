@@ -126,6 +126,7 @@ async def main() -> None:
     await bot.delete_webhook(drop_pending_updates=True)
     await set_commands(bot)
     await dp.start_polling(bot)
+    logger.info(os.listdir('.'))
 
 
 if __name__ == "__main__":
