@@ -16,7 +16,7 @@ class VoiceToTextAPI:
     async def transcript(self, path_to_file):
         async with ClientSession() as session:
             async with session.get(
-                f"{self.base_url}/popular", params={"path_to_file": path_to_file}
+                f"{self.base_url}/voice_to_text", params={"path_to_file": path_to_file}
             ) as resp:
                 response = await resp.json()
         return response
