@@ -51,8 +51,8 @@ services:
       recsys-service:
         condition: service_started
     links:
-      - postgres
-      - recsys-service
+#      - postgres
+      - voice_to_text
     ports:
       - "3000:3000"
     networks:
