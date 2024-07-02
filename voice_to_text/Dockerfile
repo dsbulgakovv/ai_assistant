@@ -8,6 +8,7 @@ RUN poetry config virtualenvs.create false
 WORKDIR /voice_to_text
 
 COPY pyproject.toml poetry.lock /voice_to_text/
+RUN mkdir service_files
 RUN poetry config installer.max-workers 10
 RUN poetry install --no-interaction --no-ansi --without bot
 
