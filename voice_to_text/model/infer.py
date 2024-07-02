@@ -4,7 +4,7 @@ import os
 import logging
 from logging.config import dictConfig
 
-from ..log_config import LogConfig
+from log_config import LogConfig
 
 
 dictConfig(LogConfig().dict())

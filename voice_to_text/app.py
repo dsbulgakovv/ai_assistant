@@ -7,7 +7,7 @@ import logging
 from logging.config import dictConfig
 
 from model.infer import convert_voice_to_text
-from log_config import LogConfig
+from model.log_config import LogConfig
 
 
 dictConfig(LogConfig().dict())
