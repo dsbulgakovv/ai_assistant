@@ -13,27 +13,29 @@ from aiogram.types import BotCommand, BotCommandScopeDefault, ReplyKeyboardRemov
 
 from keyboards.general import start_keyboard, end_keyboard
 
+from utils.voice_to_text_api import VoiceToTextAPI
+
 # from aiogram.utils.markdown import hbold
 # from handlers import recommend, user_info
 # from handlers.user_info import User
 # from keyboards.data import share_data_keyboard
 # from keyboards.general import start_keyboard
 # from utils.db import check_user
-import speech_recognition as sr
-import subprocess
+# import speech_recognition as sr
+# import subprocess
 
 
-def convert_voice_to_text(path_to_file: str):
-    path_to_wav_file = path_to_file[:-3] + 'wav'
-    subprocess.call(['ffmpeg', '-i', path_to_file, path_to_wav_file])
-
-    # Распознаем речь из аудио файла
-    with sr.AudioFile(path_to_wav_file) as source:
-        recognizer = sr.Recognizer()
-        audio_data = recognizer.record(source)
-        text = recognizer.recognize_google(audio_data, language="ru")
-
-    return text, path_to_wav_file
+# def convert_voice_to_text(path_to_file: str):
+#     path_to_wav_file = path_to_file[:-3] + 'wav'
+#     subprocess.call(['ffmpeg', '-i', path_to_file, path_to_wav_file])
+#
+#     # Распознаем речь из аудио файла
+#     with sr.AudioFile(path_to_wav_file) as source:
+#         recognizer = sr.Recognizer()
+#         audio_data = recognizer.record(source)
+#         text = recognizer.recognize_google(audio_data, language="ru")
+#
+#     return text, path_to_wav_file
 
 
 TOKEN = '6675850647:AAGMrJUk2t4CV2oHwtz7QNxrR0vPn30Bbac'
@@ -44,7 +46,8 @@ dp["user_data"] = {}
 router = Router()
 
 logger = logging.getLogger('aiogram')
-# logger.info(f'path: {os.getcwd()}')
+
+api = VoiceToTextAPI()
 
 
 class Abilities(StatesGroup):

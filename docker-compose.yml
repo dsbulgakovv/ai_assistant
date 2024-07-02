@@ -1,0 +1,87 @@
+version: '1'
+
+services:
+#  postgres:
+#    image: postgres:16
+#    env_file:
+#      - .env
+#    environment:
+#      POSTGRES_DB: $DB_NAME
+#      POSTGRES_USER: $DB_USER
+#      POSTGRES_PASSWORD: $DB_PASS
+#      PGUSER: $DB_USER
+#    ports:
+#      - "5432:5432"
+#    volumes:
+#      - ./database/create_db.sql:/docker-entrypoint-initdb.d/init.sql
+#      - ./pgdata:/var/lib/postgresql/data
+#    networks:
+#      - pg-network
+#    healthcheck:
+#      test: [ "CMD-SHELL", "pg_isready -d $$DB_NAME -U $$DB_USER"]
+#      interval: 5s
+#      timeout: 5s
+#      retries: 5
+
+#  redis:
+#    image: redis:latest
+#    container_name: redis_app
+#    command: --port 5370
+#    expose:
+#      - 5370
+
+#  init_db:
+#    build:
+#      context: .
+#      dockerfile: db/Dockerfile
+#    depends_on:
+#      postgres:
+#        condition: service_healthy
+#    links:
+#      - postgres
+#    networks:
+#      - pg-network
+
+
+  bot:
+    build:
+      context: .
+      dockerfile: bot/Dockerfile
+    depends_on:
+      recsys-service:
+        condition: service_started
+    links:
+      - postgres
+      - recsys-service
+    ports:
+      - "3000:3000"
+    networks:
+      - pg-network
+    env_file:
+      - .env
+
+
+  voice_to_text:
+    build:
+      context: .
+      dockerfile: voice_to_text/Dockerfile
+    depends_on:
+      init_db:
+        condition: service_completed_successfully
+    links:
+      - postgres
+      - redis
+    ports:
+      - "8000:8000"
+      - "55051:55051"
+    expose:
+      - "50051"
+    networks:
+      - pg-network
+    env_file:
+      - .env
+
+
+networks:
+  pg-network:
+    driver: bridge
