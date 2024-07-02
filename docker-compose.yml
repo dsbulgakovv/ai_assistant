@@ -59,6 +59,8 @@ services:
       - pg-network
     env_file:
       - .env
+    volumes:
+      - ./files
 
 
   voice_to_text:
@@ -80,6 +82,8 @@ services:
       - pg-network
     env_file:
       - .env
+    volumes:
+      - ./files
 
 
 networks:
