@@ -1,3 +1,5 @@
+import os
+
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
@@ -10,6 +12,9 @@ from log_config import LogConfig
 
 dictConfig(LogConfig().dict())
 logger = logging.getLogger("voice_to_text")
+
+logger.info(os.listdir('../'))
+logger.info(os.listdir('.'))
 
 app = FastAPI()
 
