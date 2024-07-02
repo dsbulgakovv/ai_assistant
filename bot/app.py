@@ -122,6 +122,7 @@ async def set_commands(bot: Bot):
 
 
 async def main() -> None:
+    logger.info(os.listdir('.'))
     logger.info(os.listdir('../'))
     logger.info(os.listdir('../root'))
     logger.info(os.getcwd())
