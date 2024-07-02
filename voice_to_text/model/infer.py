@@ -1,14 +1,21 @@
 import speech_recognition as sr
 import subprocess
-import logging
 import os
+import logging
+from logging.config import dictConfig
+
+from ..log_config import LogConfig
 
 
-def convert_voice_to_text(path_to_file: str, log: logging.getLogger()) -> str:
+dictConfig(LogConfig().dict())
+logger = logging.getLogger("voice_to_text")
+
+
+def convert_voice_to_text(path_to_file: str) -> str:
     path_to_wav_file = path_to_file[:-3] + 'wav'
-    log.info('Changing file format')
-    log.info(os.listdir('.'))
-    log.info(os.listdir('./service_files'))
+    logger.info('Changing file format')
+    logger.info(os.listdir('.'))
+    logger.info(os.listdir('./service_files'))
     subprocess.call(['ffmpeg', '-i', path_to_file, path_to_wav_file])
 
     # Распознаем речь из аудио файла

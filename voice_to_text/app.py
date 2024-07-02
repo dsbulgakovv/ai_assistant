@@ -26,14 +26,13 @@ async def root():
     return JSONResponse(content={"message": "Service to convert voice to text."})
 
 
-@app.get("/listdir/{path_dir}")
+@app.get("/listdir")
 async def root(path_dir: str):
     content = ' '.join(os.listdir(path_dir))
     return JSONResponse(content={"message": content})
 
 
 @app.get("/voice_to_text")
-async def voice_to_text(path_to_file: str, log=logger):
-    resp = convert_voice_to_text(path_to_file, log)
-
+async def voice_to_text(path_to_file: str):
+    resp = convert_voice_to_text(path_to_file)
     return JSONResponse(content={"text": resp})
