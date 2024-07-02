@@ -48,6 +48,7 @@ dp["user_data"] = {}
 router = Router()
 
 logger = logging.getLogger('aiogram')
+logger.setLevel(logging.DEBUG)
 
 api = VoiceToTextAPI()
 
@@ -123,9 +124,7 @@ async def set_commands(bot: Bot):
 
 async def main() -> None:
     logger.info(os.listdir('.'))
-    logger.info(os.listdir('../'))
-    logger.info(os.listdir('../root'))
-    logger.info(os.getcwd())
+    logger.info(os.listdir('./service_files'))
     bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     await bot.delete_webhook(drop_pending_updates=True)
     await set_commands(bot)
