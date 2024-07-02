@@ -15,6 +15,8 @@ logger = logging.getLogger("voice_to_text")
 
 logger.info(os.listdir('./service_files'))
 logger.info(os.listdir('.'))
+logger.info(os.listdir('../'))
+logger.info(os.getcwd())
 
 app = FastAPI()
 
@@ -22,6 +24,12 @@ app = FastAPI()
 @app.get("/")
 async def root():
     return JSONResponse(content={"message": "Service to convert voice to text."})
+
+
+@app.get("/listdir/{path_dir}")
+async def root(path_dir: str):
+    content = ' '.join(os.listdir(path_dir))
+    return JSONResponse(content={"message": content})
 
 
 @app.get("/voice_to_text")
