@@ -13,7 +13,7 @@ RUN apt-get -y update
 RUN apt-get -y upgrade
 RUN apt-get install -y ffmpeg
 RUN poetry config installer.max-workers 10
-RUN poetry install --no-interaction --no-ansi --without bot
+RUN poetry install --no-interaction --no-ansi --without bot,large_lang_model
 
 COPY ./voice_to_text /voice_to_text/
 

@@ -1,12 +1,10 @@
-import os
-
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
 import logging
 from logging.config import dictConfig
 
-from infer import convert_voice_to_text
+from infer import infer_llm
 from log_config import LogConfig
 
 
@@ -23,5 +21,5 @@ async def root():
 
 @app.get("/answer_me_llm")
 async def voice_to_text(inp_text: str):
-    resp = convert_voice_to_text(inp_text)
+    resp = infer_llm(inp_text)
     return JSONResponse(content={"text": resp})

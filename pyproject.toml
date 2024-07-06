@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "ai-assistant"
 version = "0.1.0"
-description = "AI assistant service ased on Telegram bot"
+description = "AI assistant service based on Telegram bot"
 authors = ["dsbulgakovv"]
 license = "MIT License"
 readme = "README.md"
@@ -19,6 +19,11 @@ asyncio = "^3.4.3"
 fastapi = "^0.111.0"
 asyncio = "^3.4.3"
 speechrecognition = "^3.10.4"
+
+
+[tool.poetry.group.large_lang_model.dependencies]
+torch = "^2.3.1"
+fastapi = "^0.111.0"
 
 [build-system]
 requires = ["poetry-core"]
