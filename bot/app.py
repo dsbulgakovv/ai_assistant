@@ -1,10 +1,10 @@
 import asyncio
 import logging
-import os
 import sys
 
+from datetime import date
+
 from aiogram import Bot, Dispatcher, F, Router, types
-from aiogram.enums import ParseMode
 from aiogram.filters import Command, CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.storage.memory import MemoryStorage
@@ -13,22 +13,19 @@ from aiogram.types import BotCommand, BotCommandScopeDefault, ReplyKeyboardRemov
 from aiogram.client.bot import DefaultBotProperties
 from aiogram.enums import ParseMode
 
-from keyboards.general import start_keyboard, end_keyboard
-
-from utils.voice_to_text_api import VoiceToTextAPI
+from keyboards.general import start_keyboard
+from handlers import voice_to_text, q_and_a
 
 
 TOKEN = '6675850647:AAGMrJUk2t4CV2oHwtz7QNxrR0vPn30Bbac'
 
 dp = Dispatcher(storage=MemoryStorage())
-dp["user_data"] = {}
+dp['user_data'] = {}
 
 router = Router()
 
 logger = logging.getLogger('aiogram')
 logger.setLevel(logging.DEBUG)
-
-api = VoiceToTextAPI()
 
 
 class Abilities(StatesGroup):
@@ -36,13 +33,21 @@ class Abilities(StatesGroup):
 
 
 @dp.message(CommandStart())
-async def command_start_handler(message: types.Message, state: FSMContext) -> None:
-    await message.answer(
-        f"Привет, {message.from_user.full_name}!\n"
-        "Я виртуальный ассистент.\nВыбери нужное действие.",
-        reply_markup=start_keyboard()
-    )
-    await state.set_state(None)
+async def command_start_handler(message: types.Message, state: FSMContext, user_data: dict) -> None:
+    if user_data['last_start_cmd_usage'] == str(date.today()):
+        await state.set_state(None)
+        await message.answer(
+            "Я виртуальный ассистент.\nВыбери нужное действие.",
+            reply_markup=start_keyboard()
+        )
+    else:
+        user_data['last_start_cmd_usage'] = str(date.today())
+        await state.set_state(None)
+        await message.answer(
+            f"Привет, {message.from_user.full_name}!\n"
+            "Я виртуальный ассистент.\nВыбери нужное действие.",
+            reply_markup=start_keyboard()
+        )
 
 
 @dp.message(Command('help'))
@@ -53,35 +58,6 @@ async def command_help_handler(message: types.Message) -> None:
         "- что-то еще"
     )
     await message.answer(msg)
-
-
-@dp.message(F.text.casefold() == 'расшифровка голоса')
-async def voice_to_text_start_handler(message: types.Message, state: FSMContext) -> None:
-    await message.answer(
-        "Запиши мне голосовое сообщение и я пришлю его расшифровку.",
-        reply_markup=end_keyboard()
-    )
-    await state.set_state(Abilities.voice_to_text)
-
-
-@dp.message(StateFilter(Abilities.voice_to_text))
-async def voice_to_text_process_handler(message: types.Message, bot: Bot, state: FSMContext) -> None:
-    if message.voice:
-        file_id = message.voice.file_id
-        file = await bot.get_file(file_id)
-        file_path = file.file_path
-        file_name = f"service_files/audio_{file_id}.mp3"
-        await bot.download_file(file_path, file_name)
-        await message.answer('Голосовое сообщение обработано!', reply_markup=end_keyboard())
-        logger.info(os.listdir('./service_files'))
-        text = await api.transcript(file_name)
-        await message.answer(text['text'], reply_markup=end_keyboard())
-    else:
-        if message.text == 'Хватит':
-            await message.answer('Закончили', reply_markup=ReplyKeyboardRemove())
-            await state.clear()
-        else:
-            await message.answer('Пришли голсоовое сообщение', reply_markup=end_keyboard())
 
 
 @dp.message(F.text.casefold() == 'хватит')
@@ -102,6 +78,7 @@ async def set_commands(bot: Bot):
 
 
 async def main() -> None:
+    dp.include_routers(voice_to_text.router, q_and_a.router)
     bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     await bot.delete_webhook(drop_pending_updates=True)
     await set_commands(bot)
