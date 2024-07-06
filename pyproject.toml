@@ -24,6 +24,7 @@ speechrecognition = "^3.10.4"
 [tool.poetry.group.large_lang_model.dependencies]
 torch = "^2.3.1"
 fastapi = "^0.111.0"
+transformers = "^4.42.3"
 
 [build-system]
 requires = ["poetry-core"]
