@@ -66,11 +66,6 @@ async def process_end_handler(message: types.Message, state: FSMContext) -> None
     await state.clear()
 
 
-@dp.message(StateFilter(None))
-async def uncertainty_handler(message: types.Message) -> None:
-    await message.answer(f"Выбери нужную функцию!")
-
-
 async def set_commands(bot: Bot):
     commands = [BotCommand(command='start', description='Старт'),
                 BotCommand(command='help', description='Справка')]

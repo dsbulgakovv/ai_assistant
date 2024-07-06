@@ -18,3 +18,8 @@ markup_text = "<b>Текст:</b>\n{}"
 
 router = Router()
 api = VoiceToTextAPI()
+
+
+# @router.message(StateFilter(None))
+# async def uncertainty_handler(message: types.Message) -> None:
+#     await message.answer(f"Выбери нужную функцию!")
