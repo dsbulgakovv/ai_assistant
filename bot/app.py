@@ -20,7 +20,7 @@ from handlers import voice_to_text, q_and_a
 TOKEN = '6675850647:AAGMrJUk2t4CV2oHwtz7QNxrR0vPn30Bbac'
 
 dp = Dispatcher(storage=MemoryStorage())
-dp['user_data'] = {}
+dp['user_data'] = {'last_start_cmd_usage': '1999-01-01'}
 
 router = Router()
 
