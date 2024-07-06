@@ -19,10 +19,14 @@ def convert_voice_to_text(path_to_file: str) -> str:
     subprocess.call(['ffmpeg', '-i', path_to_file, path_to_wav_file])
 
     # Распознаем речь из аудио файла
-    with sr.AudioFile(path_to_wav_file) as source:
-        recognizer = sr.Recognizer()
-        audio_data = recognizer.record(source)
-        text = recognizer.recognize_google(audio_data, language="ru")
+    try:
+        with sr.AudioFile(path_to_wav_file) as source:
+            recognizer = sr.Recognizer()
+            audio_data = recognizer.record(source)
+            text = recognizer.recognize_google(audio_data, language="ru")
+    except sr.exceptions.UnknownValueError:
+        logger.info('UnknownValueError - no text is recognized in the voice message.')
+        text = '...'
 
     os.remove(path_to_file)
     os.remove(path_to_wav_file)
