@@ -16,10 +16,10 @@ app = FastAPI()
 
 @app.get("/")
 async def root():
-    return JSONResponse(content={"message": "Service to convert voice to text."})
+    return JSONResponse(content={"message": "Service to infer LLM for text generation."})
 
 
 @app.get("/answer_me_llm")
-async def voice_to_text(inp_text: str):
+async def answer_me_llm(inp_text: str):
     resp = infer_llm(inp_text)
     return JSONResponse(content={"text": resp})

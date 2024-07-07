@@ -13,6 +13,7 @@ python = "^3.12"
 [tool.poetry.group.bot.dependencies]
 aiogram = "^3.8.0"
 asyncio = "^3.4.3"
+openai = "^1.35.10"
 
 
 [tool.poetry.group.voice_to_text.dependencies]
