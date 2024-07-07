@@ -51,7 +51,7 @@ async def command_start_handler(message: types.Message, state: FSMContext, user_
 
 
 @dp.message(Command('help'))
-async def command_help_handler(message: types.Message) -> None:
+async def command_help_handler(message: types.Message, state: FSMContext) -> None:
     msg = (
         "Бот умеет:\n"
         "- расшифровывать аудио сообщение\n"
