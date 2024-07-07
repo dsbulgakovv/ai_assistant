@@ -1,12 +1,12 @@
-from aiogram.types import ReplyKeyboardMarkup
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from aiogram.utils.keyboard import ReplyKeyboardBuilder
 
 
 def start_keyboard() -> ReplyKeyboardMarkup:
     kb = ReplyKeyboardBuilder()
-    kb.button(text='Расшифровка голоса')
-    kb.button(text='Задать вопрос')
-    kb.button(text='Хватит')
+    kb.row(KeyboardButton(text='Расшифровка голоса'))
+    kb.row(KeyboardButton(text='Задать вопрос'))
+    kb.row(KeyboardButton(text='Хватит'))
     return kb.as_markup(resize_keyboard=True)
 
 
