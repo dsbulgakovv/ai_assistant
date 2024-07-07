@@ -28,21 +28,21 @@ logger = logging.getLogger('aiogram')
 logger.setLevel(logging.DEBUG)
 
 
-class Abilities(StatesGroup):
-    voice_to_text = State()
+class InitStates(StatesGroup):
+    start = State()
 
 
 @dp.message(CommandStart())
 async def command_start_handler(message: types.Message, state: FSMContext, user_data: dict) -> None:
     if user_data['last_start_cmd_usage'] == str(date.today()):
-        await state.set_state(None)
+        await state.set_state(InitStates.start)
         await message.answer(
             "Я виртуальный ассистент.\nВыбери нужное действие.",
             reply_markup=start_keyboard()
         )
     else:
         user_data['last_start_cmd_usage'] = str(date.today())
-        await state.set_state(None)
+        await state.set_state(InitStates.start)
         await message.answer(
             f"Привет, {message.from_user.full_name}!\n"
             "Я виртуальный ассистент.\nВыбери нужное действие.",
@@ -58,12 +58,18 @@ async def command_help_handler(message: types.Message) -> None:
         "- что-то еще"
     )
     await message.answer(msg)
+    await state.set_state(None)
 
 
 @dp.message(F.text.casefold() == 'хватит')
 async def process_end_handler(message: types.Message, state: FSMContext) -> None:
     await message.answer('Закончили', reply_markup=ReplyKeyboardRemove())
     await state.clear()
+
+
+@dp.message(StateFilter(None), ~(F.text.casefold() == 'расшифровка голоса'), ~(F.text.casefold() == 'задать вопрос'))
+async def uncertainty_handler(message: types.Message) -> None:
+    await message.answer(f"Выбери нужную функцию!")
 
 
 async def set_commands(bot: Bot):

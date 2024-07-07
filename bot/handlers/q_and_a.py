@@ -43,7 +43,6 @@ async def get_answer_from_llm(text):
     yield answer
 
 
-
 @router.message(F.text.casefold() == 'задать вопрос')
 async def voice_to_text_start_handler(message: types.Message, state: FSMContext) -> None:
     await message.answer(
@@ -75,8 +74,3 @@ async def voice_to_text_process_handler(message: types.Message, bot: Bot, state:
         await message.answer(markup_text.format(answer), reply_markup=end_keyboard())
     else:
         await message.answer('Задай вопрос голосом или текстом.', reply_markup=end_keyboard())
-
-
-@router.message(StateFilter(None))
-async def uncertainty_handler(message: types.Message) -> None:
-    await message.answer(f"Выбери нужную функцию!")
