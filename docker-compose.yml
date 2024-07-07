@@ -61,8 +61,6 @@ services:
       - .env
     volumes:
       - ./service_files:/app/service_files
-    extra_hosts:
-      - "host.docker.internal=localhost:1234"
 
 
   voice_to_text:
