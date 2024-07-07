@@ -46,7 +46,7 @@ def get_answer_from_llm(text):
 @router.message(F.text.casefold() == 'задать вопрос')
 async def voice_to_text_start_handler(message: types.Message, state: FSMContext) -> None:
     await message.answer(
-        "Задай вопрос голосом или напиши тестом, а я постараюсь ответить.",
+        "Задай вопрос голосом или напиши текстом, а я постараюсь ответить.",
         reply_markup=end_keyboard()
     )
     await state.set_state(LLMchat.answer_questions)
