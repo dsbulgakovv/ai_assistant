@@ -55,13 +55,14 @@ services:
       - voice_to_text
     ports:
       - "3000:3000"
-      - "1234:1234"
     networks:
       - pg-network
     env_file:
       - .env
     volumes:
       - ./service_files:/app/service_files
+    extra_hosts:
+      - "host.docker.internal:1234"
 
 
   voice_to_text:
