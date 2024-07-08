@@ -44,7 +44,7 @@ def get_answer_from_llm(text):
 
 
 @router.message(F.text.casefold() == 'задать вопрос')
-async def voice_to_text_start_handler(message: types.Message, state: FSMContext) -> None:
+async def q_and_a_start_handler(message: types.Message, state: FSMContext) -> None:
     await message.answer(
         "Задай вопрос голосом или напиши текстом, а я постараюсь ответить.",
         reply_markup=end_keyboard()
@@ -53,7 +53,7 @@ async def voice_to_text_start_handler(message: types.Message, state: FSMContext)
 
 
 @router.message(StateFilter(LLMchat.answer_questions))
-async def voice_to_text_process_handler(message: types.Message, bot: Bot, state: FSMContext) -> None:
+async def q_and_a_process_handler(message: types.Message, bot: Bot, state: FSMContext) -> None:
     if message.voice:
         file_id = message.voice.file_id
         file = await bot.get_file(file_id)
@@ -64,23 +64,21 @@ async def voice_to_text_process_handler(message: types.Message, bot: Bot, state:
         text = await api.transcript(file_name)
         await message.answer('Голос обработан! Думаю...', reply_markup=end_keyboard())
         answer = get_answer_from_llm(text['text'])
-        mes_to_send = markup_text.format(answer)
-        if len(mes_to_send) > 4095:
-            for x in range(0, len(mes_to_send), 4095):
-                await message.answer(mes_to_send[x:x + 4095], reply_markup=end_keyboard())
+        if len(answer) > 4080:
+            for x in range(0, len(answer), 4080):
+                await message.answer(markup_text.format(answer)[x:x + 4095], reply_markup=end_keyboard())
         else:
-            await message.answer(mes_to_send, reply_markup=end_keyboard())
+            await message.answer(markup_text.format(answer), reply_markup=end_keyboard())
     elif message.text == 'Хватит':
         await message.answer('Закончили', reply_markup=ReplyKeyboardRemove())
         await state.clear()
     elif message.text:
         await message.answer('Думаю...', reply_markup=end_keyboard())
         answer = get_answer_from_llm(message.text)
-        mes_to_send = markup_text.format(answer)
-        if len(mes_to_send) > 4095:
-            for x in range(0, len(mes_to_send), 4095):
-                await message.answer(mes_to_send[x:x + 4095], reply_markup=end_keyboard())
+        if len(answer) > 4080:
+            for x in range(0, len(answer), 4080):
+                await message.answer(markup_text.format(answer)[x:x + 4095], reply_markup=end_keyboard())
         else:
-            await message.answer(mes_to_send, reply_markup=end_keyboard())
+            await message.answer(markup_text.format(answer), reply_markup=end_keyboard())
     else:
         await message.answer('Задай вопрос голосом или текстом.', reply_markup=end_keyboard())
