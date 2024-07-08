@@ -62,17 +62,25 @@ async def voice_to_text_process_handler(message: types.Message, bot: Bot, state:
         await bot.download_file(file_path, file_name)
         logger.info(os.listdir('./service_files'))
         text = await api.transcript(file_name)
-        await message.answer('Голос обработан!', reply_markup=end_keyboard())
-        await message.answer('Думаю...', reply_markup=end_keyboard())
+        await message.answer('Голос обработан! Думаю...', reply_markup=end_keyboard())
         answer = get_answer_from_llm(text['text'])
-        await message.answer(markup_text.format(answer), reply_markup=end_keyboard())
-
+        mes_to_send = markup_text.format(answer)
+        if len(mes_to_send) > 4095:
+            for x in range(0, len(mes_to_send), 4095):
+                await message.answer(mes_to_send[x:x + 4095], reply_markup=end_keyboard())
+        else:
+            await message.answer(mes_to_send, reply_markup=end_keyboard())
     elif message.text == 'Хватит':
         await message.answer('Закончили', reply_markup=ReplyKeyboardRemove())
         await state.clear()
     elif message.text:
         await message.answer('Думаю...', reply_markup=end_keyboard())
         answer = get_answer_from_llm(message.text)
-        await message.answer(markup_text.format(answer), reply_markup=end_keyboard())
+        mes_to_send = markup_text.format(answer)
+        if len(mes_to_send) > 4095:
+            for x in range(0, len(mes_to_send), 4095):
+                await message.answer(mes_to_send[x:x + 4095], reply_markup=end_keyboard())
+        else:
+            await message.answer(mes_to_send, reply_markup=end_keyboard())
     else:
         await message.answer('Задай вопрос голосом или текстом.', reply_markup=end_keyboard())
