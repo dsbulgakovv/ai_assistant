@@ -16,7 +16,7 @@ from utils.voice_to_text_api import VoiceToTextAPI
 logger = logging.getLogger('aiogram')
 logger.setLevel(logging.DEBUG)
 
-markup_text = "<b>Ответ:</b>\n{}"
+markup_text = "**Ответ:**\n{}"
 
 router = Router()
 api = VoiceToTextAPI()

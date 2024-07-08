@@ -80,7 +80,7 @@ async def set_commands(bot: Bot):
 
 async def main() -> None:
     dp.include_routers(voice_to_text.router, q_and_a.router)
-    bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.MARKDOWN_V2))
     await bot.delete_webhook(drop_pending_updates=True)
     await set_commands(bot)
     await dp.start_polling(bot)
