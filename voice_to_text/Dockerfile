@@ -1,7 +1,7 @@
 FROM python:3.12-slim
 
 # Установка системных зависимостей
-RUN apt-get update && apt-get install -y --no-install-recommends \
+RUN apt-get update -y && apt-get upgrade -y && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
