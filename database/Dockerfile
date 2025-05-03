@@ -7,7 +7,7 @@ RUN poetry config virtualenvs.create false
 
 WORKDIR /app
 
-COPY ./daatabase /app/
+COPY ./database /app/
 
 COPY pyproject.toml poetry.lock /app/
 RUN poetry config installer.max-workers 10
