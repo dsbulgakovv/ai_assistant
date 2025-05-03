@@ -27,13 +27,13 @@ def main(cfg):
 
     engine = create_async_engine(db_address, echo=True)
     log.info("Connection established!")
-    async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
+    # async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
-    async def create_tables():
-        async with engine.begin() as conn:
-            await conn.run_sync(Base.metadata.create_all)
+    def create_tables():
+        with engine.begin() as conn:
+            conn.run_sync(Base.metadata.create_all)
 
-    await create_tables()
+    create_tables()
     log.info("Tables created!")
 
 
