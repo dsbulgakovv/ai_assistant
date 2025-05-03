@@ -29,7 +29,7 @@ COPY pyproject.toml poetry.lock /app/
 
 RUN mkdir service_files
 # RUN apt-get install -y ffmpeg
-RUN poetry install --no-interaction --no-ansi --without bot,large_lang_model
+RUN poetry install --no-interaction --no-ansi --without bot,large_lang_model,db
 
 ENV PYTHONUNBUFFERED 1
 
