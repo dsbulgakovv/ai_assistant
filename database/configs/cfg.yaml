@@ -1,0 +1,12 @@
+db:
+    type: "postgresql"
+    name: "test"
+    user: "admin"
+    password: "admin"
+    host: "postgres"
+    port: "5432"
+    tables:
+        users: "users"
+        items: "items"
+        interactions: "interactions"
+        links: "links"
