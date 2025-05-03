@@ -1,13 +1,16 @@
 FROM python:3.12
 
-# Установка FFmpeg из deb-multimedia репозитория
+# Установка последней версии FFmpeg
 RUN apt-get update -y && \
-    apt-get install -y --no-install-recommends curl gnupg && \
-    echo "deb http://www.deb-multimedia.org bullseye main non-free" >> /etc/apt/sources.list && \
-    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 5C808C2B65558117 && \
-    apt-get update -y && \
-    apt-get install -y --no-install-recommends ffmpeg && \
-    rm -rf /var/lib/apt/lists/*
+    apt-get install -y --no-install-recommends \
+    wget \
+    && wget https://johnvansickle.com/ffmpeg/releases/ffmpeg-release-amd64-static.tar.xz \
+    && tar xf ffmpeg-release-amd64-static.tar.xz \
+    && mv ffmpeg-*-amd64-static/ffmpeg /usr/local/bin/ \
+    && mv ffmpeg-*-amd64-static/ffprobe /usr/local/bin/ \
+    && rm -rf ffmpeg-* \
+    && apt-get remove -y wget \
+    && rm -rf /var/lib/apt/lists/*
 
 
 # Установка Poetry (фиксированная версия для стабильности)
