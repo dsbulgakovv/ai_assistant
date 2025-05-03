@@ -15,10 +15,10 @@ log.setLevel(logging.DEBUG)
 @hydra.main(config_path="configs", config_name="cfg", version_base=None)
 def main(cfg):
 
-    log.info(f"Connection to the database: '{cfg.db.name}'...")
     db_name = os.getenv('DB_NAME')
     db_user = os.getenv('DB_USER')
     db_pass = os.getenv('DB_PASS')
+    log.info(f"Connection to the database: '{db_name}'...")
     db_address = (
         f"{cfg.db.type}://{db_user}:"
         f"{db_pass}@{cfg.db.host}:"
