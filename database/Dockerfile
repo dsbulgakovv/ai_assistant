@@ -7,9 +7,9 @@ RUN poetry config virtualenvs.create false
 
 WORKDIR /app
 
-COPY ./db /app/
+COPY ./daatabase /app/
 
-COPY pyproject.toml poetry.lock /database/
+COPY pyproject.toml poetry.lock /app/
 RUN poetry config installer.max-workers 10
 RUN poetry install --no-interaction --no-ansi --no-root --without bot,large_lang_model,voice_to_text,dev
 
