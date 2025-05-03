@@ -1,21 +1,27 @@
 FROM python:3.12-slim
 
-RUN curl -sSL https://install.python-poetry.org | python3 -
-ENV PATH="${PATH}:/root/.local/bin"
+# Установка системных зависимостей
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
 
-RUN poetry config virtualenvs.create false
+# Установка Poetry (фиксированная версия для стабильности)
+ENV POETRY_VERSION=1.8.2
+RUN curl -sSL https://install.python-poetry.org | python3 - --version ${POETRY_VERSION}
+ENV PATH="/root/.local/bin:${PATH}"
 
-WORKDIR /voice_to_text
+# Настройка Poetry
+RUN poetry config virtualenvs.create false && \
+    poetry config installer.max-workers 10
 
-COPY pyproject.toml poetry.lock /voice_to_text/
+WORKDIR /app
+
+COPY ./voice_to_text /app/
+COPY pyproject.toml poetry.lock /app/
+
 RUN mkdir service_files
-RUN apt-get -y update
-RUN apt-get -y upgrade
 RUN apt-get install -y ffmpeg
-RUN poetry config installer.max-workers 10
 RUN poetry install --no-interaction --no-ansi --without bot,large_lang_model
-
-COPY ./voice_to_text /voice_to_text/
 
 ENV PYTHONUNBUFFERED 1
 
