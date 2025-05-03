@@ -1,5 +1,5 @@
 db:
-    type: "postgresql"
+    type: "postgresql+asyncpg"
 #    name: "test"
 #    user: "admin"
 #    password: "admin"

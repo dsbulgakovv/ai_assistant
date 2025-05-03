@@ -3,7 +3,7 @@ import hydra
 import os
 
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
-from sqlalchemy.orm import sessionmaker
+# from sqlalchemy.orm import sessionmaker
 
 from table_models import Base
 
@@ -13,27 +13,23 @@ log.setLevel(logging.DEBUG)
 
 
 @hydra.main(config_path="configs", config_name="cfg", version_base=None)
-def main(cfg):
+async def main(cfg):
 
     db_name = os.getenv('DB_NAME')
     db_user = os.getenv('DB_USER')
     db_pass = os.getenv('DB_PASS')
     log.info(f"Connection to the database: '{db_name}'...")
     db_address = (
-        f"{cfg.db.type}://{db_user}:"
-        f"{db_pass}@{cfg.db.host}:"
-        f"{cfg.db.port}/{db_name}"
+        f"{cfg.db.type}://{db_user}:{db_pass}@{cfg.db.host}:{cfg.db.port}/{db_name}"
     )
-
+    log.info(f"Database address: '{db_address}'...")
     engine = create_async_engine(db_address, echo=True)
     log.info("Connection established!")
     # async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 
-    def create_tables():
-        with engine.begin() as conn:
-            conn.run_sync(Base.metadata.create_all)
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
-    create_tables()
     log.info("Tables created!")
 
 
