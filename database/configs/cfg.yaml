@@ -1,8 +1,8 @@
 db:
     type: "postgresql"
-    name: "test"
-    user: "admin"
-    password: "admin"
+#    name: "test"
+#    user: "admin"
+#    password: "admin"
     host: "postgres"
     port: "5432"
     tables:

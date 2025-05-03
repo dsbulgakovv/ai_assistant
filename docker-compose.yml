@@ -9,11 +9,10 @@ services:
       POSTGRES_DB: $DB_NAME
       POSTGRES_USER: $DB_USER
       POSTGRES_PASSWORD: $DB_PASS
-      PGUSER: $DB_USER
     ports:
       - "5432:5432"
     volumes:
-      - ./database/create_db.sql:/docker-entrypoint-initdb.d/init.sql
+#      - ./database/create_db.sql:/docker-entrypoint-initdb.d/init.sql
       - ./pgdata:/var/lib/postgresql/data
     networks:
       - pg-network
@@ -33,7 +32,7 @@ services:
   init_db:
     build:
       context: .
-      dockerfile: db/Dockerfile
+      dockerfile: database/Dockerfile
     depends_on:
       postgres:
         condition: service_healthy
@@ -51,7 +50,7 @@ services:
       voice_to_text:
         condition: service_started
     links:
-#      - postgres
+      - postgres
       - voice_to_text
     ports:
       - "3000:3000"
@@ -67,9 +66,9 @@ services:
     build:
       context: .
       dockerfile: voice_to_text/Dockerfile
-#    depends_on:
-#      init_db:
-#        condition: service_completed_successfully
+    depends_on:
+      init_db:
+        condition: service_completed_successfully
 #    links:
 #      - postgres
 #      - redis

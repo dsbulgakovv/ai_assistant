@@ -25,7 +25,7 @@ def main(cfg):
         f"{cfg.db.port}/{db_name}"
     )
 
-    engine = create_async_engine(db_address, echo=True)  # echo=True для логгирования SQL-запросов
+    engine = create_async_engine(db_address, echo=True)
     log.info("Connection established!")
     async_session = sessionmaker(engine, expire_on_commit=False, class_=AsyncSession)
 

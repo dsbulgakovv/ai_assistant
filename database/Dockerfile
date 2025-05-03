@@ -9,9 +9,9 @@ WORKDIR /app
 
 COPY ./db /app/
 
-COPY pyproject.toml poetry.lock /app/
+COPY pyproject.toml poetry.lock /database/
 RUN poetry config installer.max-workers 10
-RUN poetry install --no-interaction --no-ansi --no-root --without bot,voice_to_text,dev
+RUN poetry install --no-interaction --no-ansi --no-root --without bot,large_lang_model,voice_to_text,dev
 
 
 CMD ["poetry", "run", "python", "init-script.py"]
