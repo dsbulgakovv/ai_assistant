@@ -1,9 +1,14 @@
 FROM python:3.12
 
-# Установка системных зависимостей
-RUN apt-get update -y && apt-get upgrade -y && apt-get install -y --no-install-recommends \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
+# Установка FFmpeg из deb-multimedia репозитория
+RUN apt-get update -y && \
+    apt-get install -y --no-install-recommends curl gnupg && \
+    echo "deb http://www.deb-multimedia.org bullseye main non-free" >> /etc/apt/sources.list && \
+    apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 5C808C2B65558117 && \
+    apt-get update -y && \
+    apt-get install -y --no-install-recommends ffmpeg && \
+    rm -rf /var/lib/apt/lists/*
+
 
 # Установка Poetry (фиксированная версия для стабильности)
 ENV POETRY_VERSION=1.8.2
