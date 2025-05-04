@@ -27,9 +27,12 @@ def convert_voice_to_text(path_to_file: str) -> str:
     except sr.exceptions.UnknownValueError:
         logger.info('UnknownValueError - no text is recognized in the voice message.')
         text = '...'
-
-    os.remove(path_to_file)
-    os.remove(path_to_wav_file)
+    except Exception as e:
+        logger.info(e)
+        text = 'NULL'
+    finally:
+        os.remove(path_to_file)
+        os.remove(path_to_wav_file)
 
     return text
 
