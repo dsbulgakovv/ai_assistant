@@ -51,6 +51,9 @@ class TaskResponse(BaseModel):
     data: Dict[str, Any] | None = None
 
 
+app = FastAPI()
+
+
 @hydra.main(config_path="configs", config_name="cfg", version_base=None)
 def build_db_address(cfg):
     db_name = os.getenv('DB_NAME')
@@ -64,12 +67,8 @@ def build_db_address(cfg):
     return db_address
 
 
-db_url = build_db_address()
-
-app = FastAPI()
-
-
 async def get_db():
+    db_url = build_db_address()
     return await asyncpg.connect(db_url)
 
 
