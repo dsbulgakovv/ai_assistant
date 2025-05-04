@@ -1,4 +1,4 @@
-FROM python:3.12-slim
+FROM python:3.12
 
 # Установка системных зависимостей
 RUN apt-get update && apt-get install -y --no-install-recommends \
@@ -23,5 +23,5 @@ RUN poetry install --no-interaction --no-ansi --no-root --without bot,large_lang
 
 ENV PYTHONUNBUFFERED 1
 
-#CMD ["poetry", "run", "python", "init_db.py"]
+CMD ["poetry", "run", "python", "init_db.py"]
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8002"]
