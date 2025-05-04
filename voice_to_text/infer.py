@@ -28,7 +28,7 @@ def convert_voice_to_text(path_to_file: str) -> str:
         logger.info('UnknownValueError - no text is recognized in the voice message.')
         text = '...'
     except Exception as e:
-        logger.info(e)
+        logger.info(f'Error: {e}')
         text = 'NULL'
     finally:
         os.remove(path_to_file)
