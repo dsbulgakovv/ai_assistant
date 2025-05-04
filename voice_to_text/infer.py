@@ -23,7 +23,9 @@ def convert_voice_to_text(path_to_file: str) -> str:
         with sr.AudioFile(path_to_wav_file) as source:
             recognizer = sr.Recognizer()
             audio_data = recognizer.record(source)
+            logger.info('Audio data is built!')
             text = recognizer.recognize_google(audio_data, language="ru")
+            logger.info('Audio data is transformed to text!')
     except sr.exceptions.UnknownValueError:
         logger.info('UnknownValueError - no text is recognized in the voice message.')
         text = '...'
