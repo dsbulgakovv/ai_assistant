@@ -3,6 +3,7 @@ FROM python:3.12
 # Установка последней версии FFmpeg
 RUN apt-get update && apt-get install -y --no-install-recommends \
     ffmpeg \
+    flac  \
     libavcodec-dev \
     libavformat-dev \
     libswscale-dev \
