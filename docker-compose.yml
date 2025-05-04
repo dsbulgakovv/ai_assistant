@@ -42,6 +42,8 @@ services:
       - "8002:8002"
     networks:
       - pg-network
+    env_file:
+      - .env
 
 
   bot:
