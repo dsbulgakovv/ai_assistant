@@ -22,3 +22,4 @@ COPY pyproject.toml poetry.lock /app/
 RUN poetry install --no-interaction --no-ansi --no-root --without bot,large_lang_model,voice_to_text
 
 CMD ["poetry", "run", "python", "init_db.py"]
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8002"]

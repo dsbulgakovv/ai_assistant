@@ -29,7 +29,7 @@ services:
 #    expose:
 #      - 5370
 
-  init_db:
+  database:
     build:
       context: .
       dockerfile: database/Dockerfile
@@ -38,6 +38,9 @@ services:
         condition: service_healthy
     links:
       - postgres
+      - bot
+    ports:
+      - "8002:8002"
     networks:
       - pg-network
 
@@ -50,7 +53,6 @@ services:
       voice_to_text:
         condition: service_started
     links:
-      - postgres
       - voice_to_text
     ports:
       - "3000:3000"
@@ -67,11 +69,10 @@ services:
       context: .
       dockerfile: voice_to_text/Dockerfile
     depends_on:
-      init_db:
+      database:
         condition: service_completed_successfully
-#    links:
-#      - postgres
-#      - redis
+    links:
+      - bot
     ports:
       - "8000:8000"
     networks:
@@ -87,7 +88,7 @@ services:
 #      context: .
 #      dockerfile: large_lang_model/Dockerfile
 ##    depends_on:
-##      init_db:
+##      database:
 ##        condition: service_completed_successfully
 ##    links:
 ##      - postgres

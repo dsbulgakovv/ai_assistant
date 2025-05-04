@@ -1,8 +1,5 @@
 db:
     type: "postgresql+asyncpg"
-#    name: "test"
-#    user: "admin"
-#    password: "admin"
     host: "postgres"
     port: "5432"
     tables:
@@ -10,3 +7,8 @@ db:
         items: "items"
         interactions: "interactions"
         links: "links"
+    data:
+        dir_path: "./test_files"
+        filenames:
+            users: "test_users.csv"
+            tasks: "test_tasks.csv"
