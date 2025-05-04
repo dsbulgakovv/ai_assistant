@@ -8,7 +8,7 @@ import logging
 from logging.config import dictConfig
 
 import os
-import hydra
+from contextlib import asynccontextmanager
 from pydantic import BaseModel
 from typing import Dict, Any
 
@@ -17,6 +17,29 @@ from log_config import LogConfig
 
 dictConfig(LogConfig().dict())
 logger = logging.getLogger("database")
+
+# Конфигурация подключения к БД (вынесена отдельно)
+DB_CONFIG = {
+    "host": os.getenv("DB_HOST", "postgres"),
+    "port": os.getenv("DB_PORT", "5432"),
+    "user": os.getenv("DB_USER"),
+    "password": os.getenv("DB_PASS"),
+    "database": os.getenv("DB_NAME"),
+    "min_size": 5,
+    "max_size": 20
+}
+
+
+# Создаем пул соединений при старте приложения
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    app.state.pool = await asyncpg.create_pool(**DB_CONFIG)
+    logger.info("Database connection pool created")
+    yield
+    await app.state.pool.close()
+    logger.info("Database connection pool closed")
+
+app = FastAPI(lifespan=lifespan)
 
 
 class UserCreate(BaseModel):
@@ -51,19 +74,9 @@ class TaskResponse(BaseModel):
     data: Dict[str, Any] | None = None
 
 
-app = FastAPI()
-
-
-@hydra.main(config_path="configs", config_name="cfg", version_base=None)
-async def get_db(cfg):
-    db_name = os.getenv('DB_NAME')
-    db_user = os.getenv('DB_USER')
-    db_pass = os.getenv('DB_PASS')
-    logger.info(f"Connection to the database: '{db_name}'...")
-    db_address = (
-        f"{cfg.db.type}://{db_user}:{db_pass}@{cfg.db.host}:{cfg.db.port}/{db_name}"
-    )
-    return await asyncpg.connect(db_address)
+async def get_db():
+    async with app.state.pool.acquire() as connection:
+        yield connection
 
 
 @app.get("/")
