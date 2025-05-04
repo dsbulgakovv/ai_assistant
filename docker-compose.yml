@@ -46,6 +46,43 @@ services:
       - .env
 
 
+  voice_to_text:
+    build:
+      context: .
+      dockerfile: voice_to_text/Dockerfile
+    depends_on:
+      database:
+        condition: service_started
+    ports:
+      - "8000:8000"
+    networks:
+      - pg-network
+    env_file:
+      - .env
+    volumes:
+      - ./service_files:/app/service_files
+
+
+#  large_lang_model:
+#    build:
+#      context: .
+#      dockerfile: large_lang_model/Dockerfile
+##    depends_on:
+##      voice_to_text:
+##        condition: service_started
+##    links:
+##      - postgres
+##      - redis
+#    ports:
+#      - "8001:8001"
+#    networks:
+#      - pg-network
+#    env_file:
+#      - .env
+#    volumes:
+#      - ./artifacts:/large_lang_model/artifacts
+
+
   bot:
     build:
       context: .
@@ -63,43 +100,6 @@ services:
       - .env
     volumes:
       - ./service_files:/app/service_files
-
-
-  voice_to_text:
-    build:
-      context: .
-      dockerfile: voice_to_text/Dockerfile
-    depends_on:
-      database:
-        condition: service_completed_successfully
-    ports:
-      - "8000:8000"
-    networks:
-      - pg-network
-    env_file:
-      - .env
-    volumes:
-      - ./service_files:/app/service_files
-
-
-#  large_lang_model:
-#    build:
-#      context: .
-#      dockerfile: large_lang_model/Dockerfile
-##    depends_on:
-##      database:
-##        condition: service_completed_successfully
-##    links:
-##      - postgres
-##      - redis
-#    ports:
-#      - "8001:8001"
-#    networks:
-#      - pg-network
-#    env_file:
-#      - .env
-#    volumes:
-#      - ./artifacts:/large_lang_model/artifacts
 
 
 networks:
