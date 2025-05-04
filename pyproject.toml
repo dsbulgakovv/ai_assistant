@@ -34,6 +34,7 @@ sqlalchemy = "^2.0.40"
 pandas = "^2.2.3"
 asyncpg = "^0.30.0"
 fastapi = "^0.111.0"
+asyncio = "^3.4.3"
 
 [build-system]
 requires = ["poetry-core"]
