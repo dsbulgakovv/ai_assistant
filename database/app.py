@@ -55,7 +55,7 @@ app = FastAPI()
 
 
 @hydra.main(config_path="configs", config_name="cfg", version_base=None)
-def build_db_address(cfg):
+async def get_db(cfg):
     db_name = os.getenv('DB_NAME')
     db_user = os.getenv('DB_USER')
     db_pass = os.getenv('DB_PASS')
@@ -63,13 +63,7 @@ def build_db_address(cfg):
     db_address = (
         f"{cfg.db.type}://{db_user}:{db_pass}@{cfg.db.host}:{cfg.db.port}/{db_name}"
     )
-
-    return db_address
-
-
-async def get_db():
-    db_url = build_db_address()
-    return await asyncpg.connect(db_url)
+    return await asyncpg.connect(db_address)
 
 
 @app.get("/")
