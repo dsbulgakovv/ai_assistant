@@ -31,7 +31,6 @@ def convert_voice_to_text(path_to_file: str) -> str:
         text = '...'
     except Exception as e:
         logger.info(f'Error: {e}')
-        text = 'NULL'
     finally:
         os.remove(path_to_file)
         os.remove(path_to_wav_file)
