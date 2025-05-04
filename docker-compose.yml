@@ -79,7 +79,7 @@ services:
     env_file:
       - .env
     volumes:
-      - ./service_files:/voice_to_text/service_files
+      - ./service_files:/app/service_files
 
 
 #  large_lang_model:
