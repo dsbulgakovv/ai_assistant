@@ -29,4 +29,5 @@ RUN poetry install --no-interaction --no-ansi --without bot,large_lang_model,db
 
 ENV PYTHONUNBUFFERED 1
 
+CMD ["poetry", "run", "python", "load_models_at_start.py"]
 CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]

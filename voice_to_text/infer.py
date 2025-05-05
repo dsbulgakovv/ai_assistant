@@ -1,8 +1,9 @@
-import speech_recognition as sr
-import subprocess
 import os
 import logging
 from logging.config import dictConfig
+
+# import speech_recognition as sr
+# import subprocess
 
 from log_config import LogConfig
 
@@ -39,21 +40,14 @@ logger = logging.getLogger("voice_to_text")
 
 
 def convert_voice_to_text(path_to_file: str, model) -> str:
-    # path_to_wav_file = path_to_file[:-3] + 'wav'
-    # logger.info('Changing file format')
-    # logger.info(os.listdir('.'))
-    # logger.info(os.listdir('./service_files'))
-    # subprocess.call(['ffmpeg', '-i', path_to_file, path_to_wav_file])
     logger.info('Converting voice to text ...')
     try:
         result = model.transcribe(path_to_file, language="ru")
+        return result["text"] if result["text"] else '...'
     except Exception as e:
         logger.info(f'Error: {e}')
     finally:
         os.remove(path_to_file)
-        # os.remove(path_to_wav_file)
-
-    return result["text"]
 
 
 def main():
