@@ -27,7 +27,7 @@ os.environ["XDG_CACHE_HOME"] = MODEL_CACHE_DIR
 @lru_cache(maxsize=None)
 def load_whisper_model():
     logger.info('Loading the model ...')
-    return whisper.load_model("tiny")
+    return whisper.load_model("small")
 
 
 @app.get("/")
