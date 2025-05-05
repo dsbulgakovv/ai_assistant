@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 
 from functools import lru_cache
 
-import whisper
+from whisper import Whisper
 
 import logging
 from logging.config import dictConfig
@@ -20,7 +20,7 @@ app = FastAPI()
 
 @lru_cache(maxsize=None)
 def load_whisper_model():
-    return whisper.load_model("small")
+    return Whisper.load_model("small")
 
 
 @app.get("/")
