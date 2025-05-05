@@ -2,6 +2,7 @@ from fastapi import FastAPI, Depends
 from fastapi.responses import JSONResponse
 
 from functools import lru_cache
+import os
 
 import whisper
 
@@ -18,8 +19,14 @@ logger = logging.getLogger("voice_to_text")
 app = FastAPI()
 
 
+MODEL_CACHE_DIR = "/app/models/whisper_cache"
+os.makedirs(MODEL_CACHE_DIR, exist_ok=True)
+os.environ["XDG_CACHE_HOME"] = MODEL_CACHE_DIR
+
+
 @lru_cache(maxsize=None)
 def load_whisper_model():
+    logger.info('Loading the model ...')
     return whisper.load_model("small")
 
 
