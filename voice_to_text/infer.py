@@ -11,31 +11,42 @@ dictConfig(LogConfig().dict())
 logger = logging.getLogger("voice_to_text")
 
 
-def convert_voice_to_text(path_to_file: str) -> str:
+# def convert_voice_to_text(path_to_file: str) -> str:
+#     path_to_wav_file = path_to_file[:-3] + 'wav'
+#     logger.info('Changing file format')
+#     logger.info(os.listdir('.'))
+#     logger.info(os.listdir('./service_files'))
+#     subprocess.call(['ffmpeg', '-i', path_to_file, path_to_wav_file])
+#
+#     # Распознаем речь из аудио файла
+#     try:
+#         with sr.AudioFile(path_to_wav_file) as source:
+#             recognizer = sr.Recognizer()
+#             audio_data = recognizer.record(source)
+#             logger.info('Audio data is built!')
+#             text = recognizer.recognize_google(audio_data, language="ru")
+#             logger.info('Audio data is transformed to text!')
+#     except sr.exceptions.UnknownValueError:
+#         logger.info('UnknownValueError - no text is recognized in the voice message.')
+#         text = '...'
+#     except Exception as e:
+#         logger.info(f'Error: {e}')
+#     finally:
+#         os.remove(path_to_file)
+#         os.remove(path_to_wav_file)
+#
+#     return text
+
+
+def convert_voice_to_text(path_to_file: str, model) -> str:
     path_to_wav_file = path_to_file[:-3] + 'wav'
     logger.info('Changing file format')
     logger.info(os.listdir('.'))
     logger.info(os.listdir('./service_files'))
     subprocess.call(['ffmpeg', '-i', path_to_file, path_to_wav_file])
+    result = model.transcribe(path_to_file, language="ru")
 
-    # Распознаем речь из аудио файла
-    try:
-        with sr.AudioFile(path_to_wav_file) as source:
-            recognizer = sr.Recognizer()
-            audio_data = recognizer.record(source)
-            logger.info('Audio data is built!')
-            text = recognizer.recognize_google(audio_data, language="ru")
-            logger.info('Audio data is transformed to text!')
-    except sr.exceptions.UnknownValueError:
-        logger.info('UnknownValueError - no text is recognized in the voice message.')
-        text = '...'
-    except Exception as e:
-        logger.info(f'Error: {e}')
-    finally:
-        os.remove(path_to_file)
-        os.remove(path_to_wav_file)
-
-    return text
+    return result["text"]
 
 
 def main():
