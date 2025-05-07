@@ -1,0 +1,16 @@
+db:
+    type: "postgresql+asyncpg"
+    host: "postgres"
+    port: "5432"
+    tables:
+        users: "users"
+        tasks: "tasks"
+        task_statuses_dict: "task_statuses_dict"
+        task_categories_dict: "task_categories_dict"
+    data:
+        dir_path: "./test_files"
+        filenames:
+            users: "test_users.csv"
+            tasks: "test_tasks.csv"
+            task_statuses_dict: "task_statuses_dict.csv"
+            task_categories_dict: "task_categories_dict.csv"

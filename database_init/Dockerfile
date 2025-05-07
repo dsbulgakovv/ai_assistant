@@ -24,4 +24,3 @@ RUN poetry install --no-interaction --no-ansi --no-root --without bot,large_lang
 ENV PYTHONUNBUFFERED 1
 
 CMD ["poetry", "run", "python", "init_db.py"]
-CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8002"]

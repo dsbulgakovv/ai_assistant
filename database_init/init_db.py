@@ -16,7 +16,7 @@ from logging.config import dictConfig
 
 
 dictConfig(LogConfig().dict())
-logger = logging.getLogger("init_db")
+log = logging.getLogger("init_db")
 
 
 def load_data(cfg, engine, dir_path, filename, table):
