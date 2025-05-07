@@ -107,7 +107,7 @@ async def get_filtered_tasks(
         conn=Depends(get_db)
 ):
     try:
-        tasks = await conn.fetchrow(
+        tasks = await conn.fetch(
             """
             SELECT
                 *,
