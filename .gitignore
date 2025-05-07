@@ -155,6 +155,8 @@ cython_debug/
 # Files and secrets
 files/
 models/
+pgdata/
+service_files/
 
 *.DS_Store
 *.idea/
