@@ -9,6 +9,9 @@ services:
       POSTGRES_DB: $DB_NAME
       POSTGRES_USER: $DB_USER
       POSTGRES_PASSWORD: $DB_PASS
+      DB_HOST: $DB_HOST
+      DB_PORT: $DB_PORT
+      DB_TYPE: $DB_TYPE
     ports:
       - "5432:5432"
     volumes:
@@ -44,6 +47,13 @@ services:
       - pg-network
     env_file:
       - .env
+    environment:
+      POSTGRES_DB: $DB_NAME
+      POSTGRES_USER: $DB_USER
+      POSTGRES_PASSWORD: $DB_PASS
+      DB_HOST: $DB_HOST
+      DB_PORT: $DB_PORT
+      DB_TYPE: $DB_TYPE
 
 
   voice_to_text:
