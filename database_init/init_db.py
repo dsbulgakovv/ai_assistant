@@ -80,8 +80,8 @@ async def async_main(cfg):
         cfg.db.tables.task_statuses_dict, cfg.db.tables.task_categories_dict
     ]
 
-    for i in range(len(filenames)):
-        await load_data(cfg, engine, dir_path, filenames[i], tables[i])
+    # for i in range(len(filenames)):
+    #     await load_data(cfg, engine, dir_path, filenames[i], tables[i])
 
 
 @hydra.main(config_path="configs", config_name="cfg", version_base=None)
