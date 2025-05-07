@@ -35,7 +35,7 @@ services:
   database_init:
     build:
       context: .
-      dockerfile: db/Dockerfile
+      dockerfile: database_init/Dockerfile
     depends_on:
       postgres:
         condition: service_healthy
