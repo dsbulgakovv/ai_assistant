@@ -1,6 +1,5 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, Query, HTTPException
 from fastapi.responses import JSONResponse
-from fastapi import HTTPException
 
 import asyncpg
 
@@ -92,29 +91,52 @@ async def root():
 
 @app.get("/users/{tg_user_id}")
 async def get_user(tg_user_id: int, conn=Depends(get_db)):
-    return await conn.fetchrow("SELECT * FROM users WHERE tg_user_id = $1", tg_user_id)
+    try:
+        user = await conn.fetchrow("SELECT * FROM users WHERE tg_user_id = $1", tg_user_id)
+
+        if not user:
+            raise HTTPException(status_code=404, detail="No user found with this id")
+
+        return user
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 # Example: /tasks/111222333?start_date=2023-05-01&end_date=2023-07-31 - query parameters
 @app.get("/tasks/{tg_user_id}")
-async def get_filtered_tasks(tg_user_id: int, date_range: DateRange, conn=Depends(get_db)):
-    return await conn.fetchrow(
-        """
-        SELECT
-            *,
-            (task_start_dtm::date) AS business_dt,
-            ROW_NUMBER() OVER (
-                PARTITION BY tg_user_id, (task_start_dtm::date)
-                ORDER BY task_start_dtm
-            ) AS task_relative_id
-        FROM tasks
-        WHERE
-            tg_user_id = $1
-            AND task_start_dtm::date >= $2
-            AND task_end_dtm::date <= $3
-        """,
-        tg_user_id, date_range.start_date, date_range.end_date
-    )
+async def get_filtered_tasks(
+        tg_user_id: int,
+        start_date: DateRange.start_date = Query(..., description="Start date in YYYY-MM-DD format (inclusively)"),
+        end_date: DateRange.end_date = Query(..., description="End date in YYYY-MM-DD format (inclusively)"),
+        conn=Depends(get_db)
+):
+    try:
+        tasks = await conn.fetchrow(
+            """
+            SELECT
+                *,
+                (task_start_dtm::date) AS business_dt,
+                ROW_NUMBER() OVER (
+                    PARTITION BY tg_user_id, (task_start_dtm::date)
+                    ORDER BY task_start_dtm
+                ) AS task_relative_id
+            FROM tasks
+            WHERE
+                tg_user_id = $1
+                AND task_start_dtm::date >= $2
+                AND task_end_dtm::date <= $3
+            """,
+            tg_user_id, start_date, end_date
+        )
+
+        if not tasks:
+            raise HTTPException(status_code=404, detail="No tasks found in this date range")
+
+        return tasks
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.post("/users/add_new", status_code=201)
