@@ -16,7 +16,7 @@ from log_config import LogConfig
 
 
 dictConfig(LogConfig().dict())
-logger = logging.getLogger("database")
+logger = logging.getLogger("db_api")
 
 # Конфигурация подключения к БД (вынесена отдельно)
 DB_CONFIG = {

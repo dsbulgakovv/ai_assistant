@@ -11,9 +11,12 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 
 from table_models import Base
 
+from log_config import LogConfig
+from logging.config import dictConfig
 
-log = logging.getLogger(__name__)
-log.setLevel(logging.INFO)
+
+dictConfig(LogConfig().dict())
+logger = logging.getLogger("init_db")
 
 
 def load_data(cfg, engine, dir_path, filename, table):
