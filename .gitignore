@@ -154,6 +154,7 @@ cython_debug/
 
 # Files and secrets
 files/
+test_files/
 
 *.DS_Store
 *.idea/
