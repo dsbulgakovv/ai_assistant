@@ -19,7 +19,7 @@ dictConfig(LogConfig().dict())
 log = logging.getLogger("init_db")
 
 
-def load_data(cfg, engine, dir_path, filename, table):
+async def load_data(cfg, engine, dir_path, filename, table):
     log.info(f"Loading test file '{filename}' to the database...")
     try:
         # Чтение CSV файла
@@ -81,7 +81,7 @@ async def async_main(cfg):
     ]
 
     for i in range(len(filenames)):
-        load_data(cfg, engine, dir_path, filenames[i], tables[i])
+        asyncio.run(load_data(cfg, engine, dir_path, filenames[i], tables[i]))
 
 
 @hydra.main(config_path="configs", config_name="cfg", version_base=None)
