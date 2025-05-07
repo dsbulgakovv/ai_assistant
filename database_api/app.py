@@ -74,11 +74,6 @@ class TaskResponse(BaseModel):
     data: Dict[str, Any] | None = None
 
 
-class DateRange(BaseModel):
-    start_date: date
-    end_date: date
-
-
 async def get_db():
     async with app.state.pool.acquire() as connection:
         yield connection
@@ -107,8 +102,8 @@ async def get_user(tg_user_id: int, conn=Depends(get_db)):
 @app.get("/tasks/{tg_user_id}")
 async def get_filtered_tasks(
         tg_user_id: int,
-        start_date: DateRange.start_date = Query(..., description="Start date in YYYY-MM-DD format (inclusively)"),
-        end_date: DateRange.end_date = Query(..., description="End date in YYYY-MM-DD format (inclusively)"),
+        start_date: date = Query(..., description="Start date in YYYY-MM-DD format (inclusively)"),
+        end_date: date = Query(..., description="End date in YYYY-MM-DD format (inclusively)"),
         conn=Depends(get_db)
 ):
     try:
