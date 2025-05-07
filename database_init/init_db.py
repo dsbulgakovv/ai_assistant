@@ -76,8 +76,8 @@ async def async_main(cfg):
         cfg.data.filenames.task_statuses_dict, cfg.data.filenames.task_categories_dict
     ]
     tables = [
-        cfg.data.tables.users, cfg.data.tables.tasks,
-        cfg.data.tables.task_statuses_dict, cfg.data.tables.task_categories_dict
+        cfg.db.tables.users, cfg.db.tables.tasks,
+        cfg.db.tables.task_statuses_dict, cfg.db.tables.task_categories_dict
     ]
 
     for i in range(len(filenames)):
