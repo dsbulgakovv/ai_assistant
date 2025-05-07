@@ -12,3 +12,5 @@ db:
         filenames:
             users: "test_users.csv"
             tasks: "test_tasks.csv"
+            task_statuses_dict: "task_statuses_dict.csv"
+            task_categories_dict: "task_categories_dict.csv"
