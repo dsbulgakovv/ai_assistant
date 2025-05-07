@@ -6,12 +6,12 @@ services:
     env_file:
       - .env
     environment:
-      POSTGRES_DB: $DB_NAME
-      POSTGRES_USER: $DB_USER
-      POSTGRES_PASSWORD: $DB_PASS
-      DB_HOST: $DB_HOST
-      DB_PORT: $DB_PORT
-      DB_TYPE: $DB_TYPE
+      POSTGRES_DB: ${DB_NAME:-ai_assistant}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_TYPE: ${DB_TYPE}
     ports:
       - "5432:5432"
     volumes:
@@ -20,7 +20,7 @@ services:
     networks:
       - pg-network
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -d $$DB_NAME -U $$DB_USER"]
+      test: [ "CMD-SHELL", "pg_isready -d ${DB_NAME} -U ${DB_USER}"]
       interval: 5s
       timeout: 5s
       retries: 5
