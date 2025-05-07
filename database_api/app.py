@@ -13,6 +13,7 @@ from pydantic import BaseModel
 from typing import Dict, Any
 
 from log_config import LogConfig
+from datetime import date
 
 
 dictConfig(LogConfig().dict())
@@ -74,6 +75,11 @@ class TaskResponse(BaseModel):
     data: Dict[str, Any] | None = None
 
 
+class DateRange(BaseModel):
+    start_date: date
+    end_date: date
+
+
 async def get_db():
     async with app.state.pool.acquire() as connection:
         yield connection
@@ -89,8 +95,9 @@ async def get_user(tg_user_id: int, conn=Depends(get_db)):
     return await conn.fetchrow("SELECT * FROM users WHERE tg_user_id = $1", tg_user_id)
 
 
-@app.get("/tasks/{tg_user_id}/{task_start_dtm}/{task_end_dtm}")
-async def get_filtered_tasks(tg_user_id: int, task_start_dtm: str, task_end_dtm: str, conn=Depends(get_db)):
+# Example: /tasks/111222333?start_date=2023-05-01&end_date=2023-07-31 - query parameters
+@app.get("/tasks/{tg_user_id}")
+async def get_filtered_tasks(tg_user_id: int, date_range: DateRange, conn=Depends(get_db)):
     return await conn.fetchrow(
         """
         SELECT
@@ -103,10 +110,10 @@ async def get_filtered_tasks(tg_user_id: int, task_start_dtm: str, task_end_dtm:
         FROM tasks
         WHERE
             tg_user_id = $1
-            AND task_start_dtm >= $2
-            AND task_end_dtm <= $3
+            AND task_start_dtm::date >= $2
+            AND task_end_dtm::date <= $3
         """,
-        tg_user_id, task_start_dtm, task_end_dtm
+        tg_user_id, date_range.start_date, date_range.end_date
     )
 
 
