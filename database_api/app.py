@@ -81,7 +81,7 @@ async def get_db():
 
 @app.get("/")
 async def root():
-    return JSONResponse(content={"message": "Service to transfer data between PostgreSQL and Telegram bot."})
+    return JSONResponse(content={"message": "Service to transfer from/to PostgreSQL DB."})
 
 
 @app.get("/users/{tg_user_id}")
@@ -102,8 +102,8 @@ async def get_filtered_tasks(tg_user_id: int, task_start_dtm: str, task_end_dtm:
             ) AS task_relative_id
         FROM tasks
         WHERE
-            tg_user_id = $1,
-            AND task_start_dtm >= $2,
+            tg_user_id = $1
+            AND task_start_dtm >= $2
             AND task_end_dtm <= $3
         """,
         tg_user_id, task_start_dtm, task_end_dtm
