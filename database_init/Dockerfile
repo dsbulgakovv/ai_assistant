@@ -16,7 +16,7 @@ RUN poetry config virtualenvs.create false && \
 
 WORKDIR /app
 
-COPY ./database /app/
+COPY ./database_init /app/
 COPY pyproject.toml poetry.lock /app/
 
 RUN poetry install --no-interaction --no-ansi --no-root --without bot,large_lang_model,voice_to_text
