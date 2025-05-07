@@ -5,7 +5,6 @@ import os
 import pandas as pd
 import asyncio
 
-
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 
@@ -19,36 +18,37 @@ dictConfig(LogConfig().dict())
 log = logging.getLogger("init_db")
 
 
-async def load_data(cfg, engine, dir_path, filename, table):
-    log.info(f"Loading test file '{filename}' to the database...")
+async def is_table_empty(engine, table_name):
+    async with AsyncSession(engine) as session:
+        result = await session.execute(text(f"SELECT COUNT(*) FROM {table_name}"))
+        count = result.scalar()
+        return count == 0
+
+
+async def load_data(engine, dir_path, filename, table):
+    log.info(f"Checking test file '{filename}' for table '{table}'...")
     try:
+        # Проверяем, пуста ли таблица
+        if not await is_table_empty(engine, table):
+            log.info(f'Table "{table}" already contains data, skipping...')
+            return
+
         # Чтение CSV файла
-        df_users = pd.read_csv(dir_path + filename, encoding='utf8', sep=',')
+        df = pd.read_csv(os.path.join(dir_path, filename), encoding='utf8', sep=',')
 
-        # Проверка существования таблицы
+        # Создаем таблицу и загружаем данные
         async with AsyncSession(engine) as session:
-            # Проверяем существует ли таблица
-            table_exists = await session.execute(
-                text(f"SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = '{table}')")
-            )
-            if table_exists.scalar():
-                log.info(f'Table "{table}" already exists!')
-                raise ValueError("Table already exists")
-
-            # Создаем таблицу и загружаем данные
             async with session.begin():
                 # Используем временный sync connection для pandas to_sql
                 with engine.begin() as sync_conn:
-                    df_users.to_sql(
-                        name=cfg.db.tables.users,
+                    df.to_sql(
+                        name=table,
                         con=sync_conn,
                         index=False,
-                        if_exists="fail"
+                        if_exists="append"  # Изменено на "append" вместо "fail"
                     )
-                log.info("Successfully loaded!")
+                log.info(f"Successfully loaded data into '{table}'!")
 
-    except ValueError as e:
-        log.info(f'File "{filename}" already loaded! Error: {str(e)}')
     except Exception as e:
         log.error(f"Error loading file: {str(e)}")
         raise
@@ -58,7 +58,7 @@ async def async_main(cfg):
     db_name = os.getenv('DB_NAME')
     db_user = os.getenv('DB_USER')
     db_pass = os.getenv('DB_PASS')
-    log.info(f"Connection to the database: '{db_name}'...")
+    log.info(f"Connecting to database: '{db_name}'...")
     db_address = (
         f"{cfg.db.type}://{db_user}:{db_pass}@{cfg.db.host}:{cfg.db.port}/{db_name}"
     )
@@ -66,9 +66,10 @@ async def async_main(cfg):
     engine = create_async_engine(db_address, echo=True)
     log.info("Connection established!")
 
+    # Создаем таблицы, если они не существуют
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    log.info("Tables created!")
+    log.info("Tables verified!")
 
     dir_path = cfg.data.dir_path
     filenames = [
@@ -80,13 +81,13 @@ async def async_main(cfg):
         cfg.db.tables.task_statuses_dict, cfg.db.tables.task_categories_dict
     ]
 
-    # for i in range(len(filenames)):
-    #     await load_data(cfg, engine, dir_path, filenames[i], tables[i])
+    # Загружаем данные только в пустые таблицы
+    for i in range(len(filenames)):
+        await load_data(cfg, engine, dir_path, filenames[i], tables[i])
 
 
 @hydra.main(config_path="configs", config_name="cfg", version_base=None)
 def main(cfg):
-    # Запускаем асинхронный код
     asyncio.run(async_main(cfg))
 
 
