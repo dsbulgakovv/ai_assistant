@@ -77,7 +77,7 @@ services:
       DB_TYPE: $DB_TYPE
 
 
-  voice_to_text:
+  voice_to_text_api:
     build:
       context: .
       dockerfile: voice_to_text_api/Dockerfile
@@ -123,7 +123,7 @@ services:
       voice_to_text:
         condition: service_started
     links:
-      - voice_to_text
+      - voice_to_text_api
     ports:
       - "3000:3000"
     networks:

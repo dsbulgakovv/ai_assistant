@@ -21,7 +21,7 @@ RUN poetry config virtualenvs.create false && \
 
 WORKDIR /app
 
-COPY ./voice_to_text /app/
+COPY ./voice_to_text_api /app/
 COPY pyproject.toml poetry.lock /app/
 
 RUN mkdir service_files
