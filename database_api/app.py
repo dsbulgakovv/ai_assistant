@@ -61,6 +61,18 @@ class Task(BaseModel):
     task_end_dtm: str
 
 
+class UpdateTask(BaseModel):
+    business_dt: date
+    task_relative_id: int
+    tg_user_id: int
+    task_name: Any[None, str]
+    task_status: Any[None, int]
+    task_category: Any[None, int]
+    task_description: Any[None, str]
+    task_start_dtm: Any[None, str]
+    task_end_dtm: Any[None, str]
+
+
 class TaskResponse(BaseModel):
     status: str
     message: str
@@ -181,8 +193,8 @@ async def create_task(task: Task, conn=Depends(get_db)):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@app.put("/tasks/{tg_user_id}/{business_dt}/{task_relative_id}")
-async def update_task(tg_user_id: int, business_dt: str, task_relative_id: int, task: Task, conn=Depends(get_db)):
+@app.put("/tasks/update")
+async def update_task(task: UpdateTask, conn=Depends(get_db)):
     try:
         # Получаем текущие данные задачи
         current_task = await conn.fetchrow(
@@ -202,7 +214,7 @@ async def update_task(tg_user_id: int, business_dt: str, task_relative_id: int, 
               AND t.business_dt = $2::date
               AND t.task_relative_id = $3;
             """,
-            tg_user_id, business_dt, task_relative_id
+            task.tg_user_id, task.business_dt, task.task_relative_id
         )
         if not current_task:
             raise HTTPException(status_code=404, detail="Task not found")
@@ -244,7 +256,7 @@ async def update_task(tg_user_id: int, business_dt: str, task_relative_id: int, 
             """,
             updated_task["task_name"], updated_task["task_status"], updated_task["task_category"],
             updated_task["task_description"], updated_task["task_start_dtm"], updated_task["task_end_dtm"],
-            tg_user_id, business_dt, task_relative_id
+            task.tg_user_id, task.business_dt, task.task_relative_id
         )
         return {"status": "success", "message": "Task updated"}
     except Exception as e:
