@@ -75,7 +75,7 @@ class UpdateTask(BaseModel):
 
 class TasksDelete(BaseModel):
     business_dt: date
-    task_relative_id: int
+    task_relative_id: Optional[int]
     tg_user_id: int
 
 

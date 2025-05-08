@@ -80,7 +80,7 @@ services:
   voice_to_text:
     build:
       context: .
-      dockerfile: voice_to_text/Dockerfile
+      dockerfile: voice_to_text_api/Dockerfile
     depends_on:
       database_api:
         condition: service_started
