@@ -73,6 +73,12 @@ class UpdateTask(BaseModel):
     task_end_dtm: Optional[str]
 
 
+class TasksDelete(BaseModel):
+    business_dt: date
+    task_relative_id: int
+    tg_user_id: int
+
+
 class TaskResponse(BaseModel):
     status: str
     message: str
@@ -237,8 +243,20 @@ async def update_task(task: UpdateTask, conn=Depends(get_db)):
             "task_end_dtm": task.task_end_dtm or current_task["task_end_dtm"],
         }
 
-        if current_task["task_start_dtm"] > current_task["task_end_dtm"]:
-            raise HTTPException(status_code=404, detail="Task start dtm cannot be after end dtm")
+        try:
+            start_dt = datetime.strptime(current_task["task_start_dtm"].split('+')[0].strip(), '%Y-%m-%d %H:%M:%S.%f')
+            end_dt = datetime.strptime(current_task["task_end_dtm"].split('+')[0].strip(), '%Y-%m-%d %H:%M:%S.%f')
+
+            if start_dt > end_dt:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Task start datetime cannot be after end datetime"
+                )
+        except ValueError as e:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid datetime format: {str(e)}"
+            )
 
         await conn.execute(
             """
@@ -249,7 +267,8 @@ async def update_task(task: UpdateTask, conn=Depends(get_db)):
               task_category = $3,
               task_description = $4, 
               task_start_dtm = $5, 
-              task_end_dtm = $6
+              task_end_dtm = $6,
+              updated_at=NOW()
             WHERE id = (
               SELECT id FROM (
                 SELECT 
@@ -274,29 +293,51 @@ async def update_task(task: UpdateTask, conn=Depends(get_db)):
         raise HTTPException(status_code=400, detail=str(e))
 
 
-@app.delete("/tasks/{tg_user_id}/{business_dt}/{task_relative_id}")
-async def delete_task(tg_user_id: int, business_dt: str, task_relative_id: int, conn=Depends(get_db)):
+@app.delete("/tasks/delete")
+async def delete_task(tasks: TasksDelete, conn=Depends(get_db)):
     try:
-        result = await conn.execute(
-            """
-            DELETE FROM tasks
-            WHERE id = (
-              SELECT id FROM (
-                SELECT 
-                  id,
-                  (task_start_dtm::date) AS business_dt,
-                  ROW_NUMBER() OVER (
-                    PARTITION BY tg_user_id, (task_start_dtm::date)
-                    ORDER BY task_start_dtm
-                  ) AS task_relative_id
-                FROM tasks
-                WHERE tg_user_id = $1
-              ) t
-              WHERE t.business_dt = $2::date AND t.task_relative_id = $3
-            );
-            """,
-            tg_user_id, business_dt, task_relative_id
-        )
+        if tasks.task_relative_id:
+            result = await conn.execute(
+                """
+                DELETE FROM tasks
+                WHERE id = (
+                  SELECT id FROM (
+                    SELECT 
+                      id,
+                      (task_start_dtm::date) AS business_dt,
+                      ROW_NUMBER() OVER (
+                        PARTITION BY tg_user_id, (task_start_dtm::date)
+                        ORDER BY task_start_dtm
+                      ) AS task_relative_id
+                    FROM tasks
+                    WHERE tg_user_id = $1
+                  ) t
+                  WHERE t.business_dt = $2::date AND t.task_relative_id = $3
+                );
+                """,
+                tasks.tg_user_id, tasks.business_dt, tasks.task_relative_id
+            )
+        else:
+            result = await conn.execute(
+                """
+                DELETE FROM tasks
+                WHERE id IN (
+                  SELECT id FROM (
+                    SELECT 
+                      id,
+                      (task_start_dtm::date) AS business_dt,
+                      ROW_NUMBER() OVER (
+                        PARTITION BY tg_user_id, (task_start_dtm::date)
+                        ORDER BY task_start_dtm
+                      ) AS task_relative_id
+                    FROM tasks
+                    WHERE tg_user_id = $1
+                  ) t
+                  WHERE t.business_dt = $2::date
+                );
+                """,
+                tasks.tg_user_id, tasks.business_dt
+            )
         if result == "DELETE 0":
             raise HTTPException(status_code=404, detail="Task not found")
         return {"status": "success", "message": "Task deleted"}
