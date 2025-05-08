@@ -219,6 +219,11 @@ async def update_task(task: UpdateTask, conn=Depends(get_db)):
         if not current_task:
             raise HTTPException(status_code=404, detail="Task not found")
 
+        if task.task_start_dtm:
+            task.task_start_dtm = parse_datetime(task.task_start_dtm)
+        if task.task_start_dtm:
+            task.task_end_dtm = parse_datetime(task.task_end_dtm)
+
         # Обновляем только переданные поля
         updated_task = {
             "task_name": task.task_name or current_task["task_name"],
@@ -228,8 +233,6 @@ async def update_task(task: UpdateTask, conn=Depends(get_db)):
             "task_start_dtm": task.task_start_dtm or current_task["task_start_dtm"],
             "task_end_dtm": task.task_end_dtm or current_task["task_end_dtm"],
         }
-        updated_task["task_start_dtm"] = parse_datetime(updated_task["task_start_dtm"])
-        updated_task["task_end_dtm"] = parse_datetime(updated_task["task_end_dtm"])
 
         await conn.execute(
             """
