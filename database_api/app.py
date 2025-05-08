@@ -8,11 +8,14 @@ from logging.config import dictConfig
 
 import os
 from contextlib import asynccontextmanager
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 from typing import Dict, Any
 
 from log_config import LogConfig
-from datetime import date
+from datetime import date, datetime
+from pytz import timezone
+
+import re
 
 
 dictConfig(LogConfig().dict())
@@ -48,17 +51,7 @@ class UserCreate(BaseModel):
     full_name: str
 
 
-class TaskCreate(BaseModel):
-    tg_user_id: int
-    task_name: str
-    task_status: int
-    task_category: int
-    task_description: str
-    task_start_dtm: str
-    task_end_dtm: str
-
-
-class TaskUpdate(BaseModel):
+class Task(BaseModel):
     tg_user_id: int
     task_name: str
     task_status: int
@@ -72,6 +65,21 @@ class TaskResponse(BaseModel):
     status: str
     message: str
     data: Dict[str, Any] | None = None
+
+
+@field_validator('task_start_dtm', 'task_end_dtm')
+def validate_datetime_format(cls, value):
+    # Проверяем формат: YYYY-MM-DD HH:MM:SS.fff +ZZZZ
+    if not re.match(r'^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d{3} \+\d{4}$', value):
+        raise ValueError('Datetime must be in format: YYYY-MM-DD HH:MM:SS.fff +ZZZZ')
+    return value
+
+
+def parse_datetime(dt_str):
+    dt, tz = dt_str.rsplit(' ', 1)
+    dt_obj = datetime.strptime(dt, '%Y-%m-%d %H:%M:%S.%f')
+    tz_obj = timezone(f'Etc/GMT{-int(tz[1:3])}')
+    return dt_obj.replace(tzinfo=tz_obj)
 
 
 async def get_db():
@@ -152,8 +160,11 @@ async def create_user(user: UserCreate, conn=Depends(get_db)):
 
 
 @app.post("/tasks/add_new", status_code=201)
-async def create_task(task: TaskCreate, conn=Depends(get_db)):
+async def create_task(task: Task, conn=Depends(get_db)):
     try:
+        task_start_dtm = parse_datetime(task.task_start_dtm)
+        task_end_dtm = parse_datetime(task.task_end_dtm)
+
         await conn.execute(
             """
             INSERT INTO tasks (
@@ -163,7 +174,7 @@ async def create_task(task: TaskCreate, conn=Depends(get_db)):
             VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
             """,
             task.tg_user_id, task.task_name, task.task_status, task.task_category,
-            task.task_description, task.task_start_dtm, task.task_end_dtm
+            task.task_description, task_start_dtm, task_end_dtm
         )
         return {"status": "success", "message": "Task created"}
     except Exception as e:
@@ -171,7 +182,7 @@ async def create_task(task: TaskCreate, conn=Depends(get_db)):
 
 
 @app.put("/tasks/{tg_user_id}/{business_dt}/{task_relative_id}")
-async def update_task(tg_user_id: int, business_dt: str, task_relative_id: int, task: TaskUpdate, conn=Depends(get_db)):
+async def update_task(tg_user_id: int, business_dt: str, task_relative_id: int, task: Task, conn=Depends(get_db)):
     try:
         # Получаем текущие данные задачи
         current_task = await conn.fetchrow(
