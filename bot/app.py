@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import os
 import sys
 
 from datetime import date
@@ -7,20 +8,26 @@ from datetime import date
 from aiogram import Bot, Dispatcher, F, Router, types
 from aiogram.filters import Command, CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
-from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import BotCommand, BotCommandScopeDefault, ReplyKeyboardRemove
 from aiogram.client.bot import DefaultBotProperties
 from aiogram.enums import ParseMode
+from aiogram.fsm.storage.redis import RedisStorage
+
+from redis.asyncio import Redis
 
 from keyboards.general import start_keyboard
 from handlers import voice_to_text, q_and_a
 
 
-TOKEN = '6675850647:AAGMrJUk2t4CV2oHwtz7QNxrR0vPn30Bbac'
+TOKEN = os.getenv('BOT_TOKEN')
 
-dp = Dispatcher(storage=MemoryStorage())
-dp['user_data'] = {'last_start_cmd_usage': '1999-01-01'}
+# Подключаем Redis
+redis_connection = Redis(host='localhost', port=5370, db=0)
+storage = RedisStorage(redis=redis_connection)
+
+dp = Dispatcher(storage=storage)
+
 
 router = Router()
 
@@ -34,6 +41,13 @@ class InitStates(StatesGroup):
 
 @dp.message(CommandStart())
 async def command_start_handler(message: types.Message, state: FSMContext, user_data: dict) -> None:
+    await state.set_state(InitStates.start)
+    await state.update_data(
+        tg_user_id=message.from_user.tg_user_id,
+        full_name=message.from_user.full_name,
+        username=message.from_user.username
+    )
+
     if user_data['last_start_cmd_usage'] == str(date.today()):
         await state.set_state(InitStates.start)
         await message.answer(
@@ -42,7 +56,6 @@ async def command_start_handler(message: types.Message, state: FSMContext, user_
         )
     else:
         user_data['last_start_cmd_usage'] = str(date.today())
-        await state.set_state(InitStates.start)
         await message.answer(
             f"Привет, {message.from_user.full_name}!\n"
             "Я виртуальный ассистент.\nВыбери нужное действие.",

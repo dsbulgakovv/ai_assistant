@@ -25,12 +25,12 @@ services:
       timeout: 5s
       retries: 5
 
-#  redis:
-#    image: redis:latest
-#    container_name: redis_app
-#    command: --port 5370
-#    expose:
-#      - 5370
+  redis:
+    image: redis:latest
+    container_name: redis_app
+    command: --port 5370
+    expose:
+      - 5370
 
   database_init:
     build:
@@ -95,26 +95,6 @@ services:
       - ./models:/app/models
 
 
-#  large_lang_model:
-#    build:
-#      context: .
-#      dockerfile: large_lang_model/Dockerfile
-##    depends_on:
-##      voice_to_text:
-##        condition: service_started
-##    links:
-##      - postgres
-##      - redis
-#    ports:
-#      - "8001:8001"
-#    networks:
-#      - pg-network
-#    env_file:
-#      - .env
-#    volumes:
-#      - ./artifacts:/large_lang_model/artifacts
-
-
   bot:
     build:
       context: .
@@ -130,6 +110,8 @@ services:
       - pg-network
     env_file:
       - .env
+    environment:
+      BOT_TOKEN: $BOT_TOKEN
     volumes:
       - ./service_files:/app/service_files
 

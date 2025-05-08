@@ -3,7 +3,7 @@ from aiohttp import ClientSession
 
 class VoiceToTextAPI:
     def __init__(self):
-        self.base_url = "http://voice_to_text:8000"
+        self.base_url = "http://voice_to_text_api:8000"
 
     async def health_check(self):
         async with ClientSession() as session:
