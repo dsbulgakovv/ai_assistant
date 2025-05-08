@@ -112,16 +112,12 @@ async def root():
 
 @app.get("/users/{tg_user_id}")
 async def get_user(tg_user_id: int, conn=Depends(get_db)):
-    try:
-        user = await conn.fetchrow("SELECT * FROM users WHERE tg_user_id = $1", tg_user_id)
+    user = await conn.fetchrow("SELECT * FROM users WHERE tg_user_id = $1", tg_user_id)
 
-        if not user:
-            raise HTTPException(status_code=404, detail="No user found with this id")
+    if not user:
+        raise HTTPException(status_code=404, detail="No user found with this id")
 
-        return user
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return user
 
 
 # Example: /tasks/111222333?start_date=2023-05-01&end_date=2023-07-31 - query parameters

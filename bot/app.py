@@ -76,7 +76,7 @@ async def command_start_handler(message: types.Message, state: FSMContext) -> No
         await message.answer(
             f"INTERNAL SERVER ERROR.\n"
             f"Please, contact support https://t.me/dm1trybu",
-            reply_markup=start_keyboard()
+            reply_markup=ReplyKeyboardRemove()
         )
 
 
