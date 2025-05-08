@@ -243,7 +243,7 @@ async def update_task(task: UpdateTask, conn=Depends(get_db)):
             "task_end_dtm": task.task_end_dtm or current_task["task_end_dtm"],
         }
 
-        if current_task["task_start_dtm"] > current_task["task_end_dtm"]:
+        if updated_task["task_start_dtm"] > updated_task["task_end_dtm"]:
             raise HTTPException(status_code=404, detail="Task start dtm cannot be after end dtm")
 
         await conn.execute(
