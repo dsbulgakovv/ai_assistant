@@ -75,6 +75,7 @@ async def command_start_handler(message: types.Message, state: FSMContext) -> No
             f"Please, contact support https://t.me/dm1trybu",
             reply_markup=ReplyKeyboardRemove()
         )
+    await state.clear()
 
 
 @dp.message(Command('help'))
