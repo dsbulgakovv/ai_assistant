@@ -41,7 +41,7 @@ class InitStates(StatesGroup):
 
 @dp.message(CommandStart())
 async def command_start_handler(message: types.Message, state: FSMContext) -> None:
-    await state.set_state(InitStates.started)
+    # await state.set_state(InitStates.started)
     resp, status = await db_api.get_user(message.from_user.id)
     if status == 404:
         post_resp, post_status = await db_api.create_user(
@@ -75,7 +75,7 @@ async def command_start_handler(message: types.Message, state: FSMContext) -> No
             f"Please, contact support https://t.me/dm1trybu",
             reply_markup=ReplyKeyboardRemove()
         )
-    await state.clear()
+    # await state.clear()
 
 
 @dp.message(Command('help'))
