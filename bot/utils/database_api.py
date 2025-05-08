@@ -31,7 +31,7 @@ class DatabaseAPI:
         async with ClientSession() as session:
             async with session.post(
                 f"{self.base_url}/users/add_new",
-                body={"tg_user_id": tg_user_id, "username": username, "full_name": full_name}
+                json={"tg_user_id": tg_user_id, "username": username, "full_name": full_name}
             ) as resp:
                 response, status = await resp.json(), resp.status
         return response, status
@@ -43,7 +43,7 @@ class DatabaseAPI:
         async with ClientSession() as session:
             async with session.post(
                 f"{self.base_url}/tasks/add_new",
-                body={
+                json={
                     "tg_user_id": tg_user_id, "task_name": task_name, "task_status": task_status,
                     "task_category": task_category, "task_description": task_description,
                     "task_start_dtm": task_start_dtm, "task_end_dtm": task_end_dtm
@@ -59,7 +59,7 @@ class DatabaseAPI:
         async with ClientSession() as session:
             async with session.put(
                 f"{self.base_url}/tasks/update",
-                body={
+                json={
                     "business_dt": business_dt, "task_relative_id": task_relative_id,
                     "tg_user_id": tg_user_id, "task_name": task_name, "task_status": task_status,
                     "task_category": task_category, "task_description": task_description,
@@ -75,7 +75,7 @@ class DatabaseAPI:
         async with ClientSession() as session:
             async with session.delete(
                 f"{self.base_url}/tasks/delete",
-                body={"business_dt": business_dt, "task_relative_id": task_relative_id, "tg_user_id": tg_user_id}
+                json={"business_dt": business_dt, "task_relative_id": task_relative_id, "tg_user_id": tg_user_id}
             ) as resp:
                 response, status = await resp.json(), resp.status
         return response, status
