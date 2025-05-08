@@ -25,7 +25,7 @@ from texts import instructions
 TOKEN = os.getenv('BOT_TOKEN')
 
 # Подключаем Redis
-redis_connection = Redis(host='localhost', port=5370, db=0)
+redis_connection = Redis(host='redis', port=5370, db=0)
 storage = RedisStorage(redis=redis_connection)
 
 dp = Dispatcher(storage=storage)
