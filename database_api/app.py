@@ -128,131 +128,148 @@ async def get_filtered_tasks(
         end_date: date = Query(..., description="End date in YYYY-MM-DD format (inclusively)"),
         conn=Depends(get_db)
 ):
-    try:
-        tasks = await conn.fetch(
-            """
-            SELECT
-                *,
-                (task_start_dtm::date) AS business_dt,
-                ROW_NUMBER() OVER (
-                    PARTITION BY tg_user_id, (task_start_dtm::date)
-                    ORDER BY task_start_dtm
-                ) AS task_relative_id
-            FROM tasks
-            WHERE
-                tg_user_id = $1
-                AND task_start_dtm::date >= $2
-                AND task_end_dtm::date <= $3
-            ORDER BY task_start_dtm
-            """,
-            tg_user_id, start_date, end_date
-        )
+    tasks = await conn.fetch(
+        """
+        SELECT
+            *,
+            (task_start_dtm::date) AS business_dt,
+            ROW_NUMBER() OVER (
+                PARTITION BY tg_user_id, (task_start_dtm::date)
+                ORDER BY task_start_dtm
+            ) AS task_relative_id
+        FROM tasks
+        WHERE
+            tg_user_id = $1
+            AND task_start_dtm::date >= $2
+            AND task_end_dtm::date <= $3
+        ORDER BY task_start_dtm
+        """,
+        tg_user_id, start_date, end_date
+    )
 
-        if not tasks:
-            raise HTTPException(status_code=404, detail="No tasks found in this date range")
+    if not tasks:
+        raise HTTPException(status_code=404, detail="No tasks found in this date range")
 
-        return tasks
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+    return tasks
 
 
 @app.post("/users/add_new", status_code=201)
 async def create_user(user: UserCreate, conn=Depends(get_db)):
-    try:
-        await conn.execute(
-            """
-            INSERT INTO users (tg_user_id, username, full_name, reg_dt, last_usage_dt)
-            VALUES ($1, $2, $3, NOW(), NOW())
-            ON CONFLICT (tg_user_id) DO NOTHING
-            """,
-            user.tg_user_id, user.username, user.full_name
-        )
-        return {"status": "success", "message": "User created or already exists"}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    await conn.execute(
+        """
+        INSERT INTO users (tg_user_id, username, full_name, reg_dt, last_usage_dt)
+        VALUES ($1, $2, $3, NOW(), NOW())
+        ON CONFLICT (tg_user_id) DO NOTHING
+        """,
+        user.tg_user_id, user.username, user.full_name
+    )
+    return {"status": "success", "message": "User created or already exists"}
 
 
 @app.post("/tasks/add_new", status_code=201)
 async def create_task(task: Task, conn=Depends(get_db)):
-    try:
-        task_start_dtm = parse_datetime(task.task_start_dtm)
-        task_end_dtm = parse_datetime(task.task_end_dtm)
+    task_start_dtm = parse_datetime(task.task_start_dtm)
+    task_end_dtm = parse_datetime(task.task_end_dtm)
 
-        if task_start_dtm > task_end_dtm:
-            raise HTTPException(status_code=404, detail="Task start dtm cannot be after end dtm")
+    if task_start_dtm > task_end_dtm:
+        raise HTTPException(status_code=404, detail="Task start dtm cannot be after end dtm")
 
-        await conn.execute(
-            """
-            INSERT INTO tasks (
-                tg_user_id, task_name, task_status, task_category, task_description,
-                task_start_dtm, task_end_dtm, created_at, updated_at
-            )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
-            """,
-            task.tg_user_id, task.task_name, task.task_status, task.task_category,
-            task.task_description, task_start_dtm, task_end_dtm
+    await conn.execute(
+        """
+        INSERT INTO tasks (
+            tg_user_id, task_name, task_status, task_category, task_description,
+            task_start_dtm, task_end_dtm, created_at, updated_at
         )
-        return {"status": "success", "message": "Task created"}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+        """,
+        task.tg_user_id, task.task_name, task.task_status, task.task_category,
+        task.task_description, task_start_dtm, task_end_dtm
+    )
+    return {"status": "success", "message": "Task created"}
 
 
 @app.put("/tasks/update")
 async def update_task(task: UpdateTask, conn=Depends(get_db)):
-    try:
-        # Получаем текущие данные задачи
-        current_task = await conn.fetchrow(
+    # Получаем текущие данные задачи
+    current_task = await conn.fetchrow(
+        """
+        SELECT * FROM (
+          SELECT 
+            *,
+            (task_start_dtm::date) AS business_dt,
+            ROW_NUMBER() OVER (
+              PARTITION BY tg_user_id, (task_start_dtm::date)
+              ORDER BY task_start_dtm
+            ) AS task_relative_id
+          FROM tasks
+        ) t
+        WHERE 
+          t.tg_user_id = $1 
+          AND t.business_dt = $2::date
+          AND t.task_relative_id = $3;
+        """,
+        task.tg_user_id, task.business_dt, task.task_relative_id
+    )
+    if not current_task:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    if task.task_start_dtm:
+        task.task_start_dtm = parse_datetime(task.task_start_dtm)
+    if task.task_end_dtm:
+        task.task_end_dtm = parse_datetime(task.task_end_dtm)
+
+    # Обновляем только переданные поля
+    updated_task = {
+        "task_name": task.task_name or current_task["task_name"],
+        "task_status": task.task_status or current_task["task_status"],
+        "task_category": task.task_category or current_task["task_category"],
+        "task_description": task.task_description or current_task["task_description"],
+        "task_start_dtm": task.task_start_dtm or current_task["task_start_dtm"],
+        "task_end_dtm": task.task_end_dtm or current_task["task_end_dtm"],
+    }
+
+    if updated_task["task_start_dtm"] > updated_task["task_end_dtm"]:
+        raise HTTPException(status_code=404, detail="Task start dtm cannot be after end dtm")
+
+    await conn.execute(
+        """
+        UPDATE tasks
+        SET 
+          task_name = $1, 
+          task_status = $2, 
+          task_category = $3,
+          task_description = $4, 
+          task_start_dtm = $5, 
+          task_end_dtm = $6,
+          updated_at=NOW()
+        WHERE id = (
+          SELECT id FROM (
+            SELECT 
+              id,
+              (task_start_dtm::date) AS business_dt,
+              ROW_NUMBER() OVER (
+                PARTITION BY tg_user_id, (task_start_dtm::date)
+                ORDER BY task_start_dtm
+              ) AS task_relative_id
+            FROM tasks
+            WHERE tg_user_id = $7
+          ) t
+          WHERE t.business_dt = $8::date AND t.task_relative_id = $9
+        );
+        """,
+        updated_task["task_name"], updated_task["task_status"], updated_task["task_category"],
+        updated_task["task_description"], updated_task["task_start_dtm"], updated_task["task_end_dtm"],
+        task.tg_user_id, task.business_dt, task.task_relative_id
+    )
+    return {"status": "success", "message": "Task updated"}
+
+
+@app.delete("/tasks/delete")
+async def delete_task(tasks: TasksDelete, conn=Depends(get_db)):
+    if tasks.task_relative_id:
+        result = await conn.execute(
             """
-            SELECT * FROM (
-              SELECT 
-                *,
-                (task_start_dtm::date) AS business_dt,
-                ROW_NUMBER() OVER (
-                  PARTITION BY tg_user_id, (task_start_dtm::date)
-                  ORDER BY task_start_dtm
-                ) AS task_relative_id
-              FROM tasks
-            ) t
-            WHERE 
-              t.tg_user_id = $1 
-              AND t.business_dt = $2::date
-              AND t.task_relative_id = $3;
-            """,
-            task.tg_user_id, task.business_dt, task.task_relative_id
-        )
-        if not current_task:
-            raise HTTPException(status_code=404, detail="Task not found")
-
-        if task.task_start_dtm:
-            task.task_start_dtm = parse_datetime(task.task_start_dtm)
-        if task.task_end_dtm:
-            task.task_end_dtm = parse_datetime(task.task_end_dtm)
-
-        # Обновляем только переданные поля
-        updated_task = {
-            "task_name": task.task_name or current_task["task_name"],
-            "task_status": task.task_status or current_task["task_status"],
-            "task_category": task.task_category or current_task["task_category"],
-            "task_description": task.task_description or current_task["task_description"],
-            "task_start_dtm": task.task_start_dtm or current_task["task_start_dtm"],
-            "task_end_dtm": task.task_end_dtm or current_task["task_end_dtm"],
-        }
-
-        if updated_task["task_start_dtm"] > updated_task["task_end_dtm"]:
-            raise HTTPException(status_code=404, detail="Task start dtm cannot be after end dtm")
-
-        await conn.execute(
-            """
-            UPDATE tasks
-            SET 
-              task_name = $1, 
-              task_status = $2, 
-              task_category = $3,
-              task_description = $4, 
-              task_start_dtm = $5, 
-              task_end_dtm = $6,
-              updated_at=NOW()
+            DELETE FROM tasks
             WHERE id = (
               SELECT id FROM (
                 SELECT 
@@ -263,67 +280,34 @@ async def update_task(task: UpdateTask, conn=Depends(get_db)):
                     ORDER BY task_start_dtm
                   ) AS task_relative_id
                 FROM tasks
-                WHERE tg_user_id = $7
+                WHERE tg_user_id = $1
               ) t
-              WHERE t.business_dt = $8::date AND t.task_relative_id = $9
+              WHERE t.business_dt = $2::date AND t.task_relative_id = $3
             );
             """,
-            updated_task["task_name"], updated_task["task_status"], updated_task["task_category"],
-            updated_task["task_description"], updated_task["task_start_dtm"], updated_task["task_end_dtm"],
-            task.tg_user_id, task.business_dt, task.task_relative_id
+            tasks.tg_user_id, tasks.business_dt, tasks.task_relative_id
         )
-        return {"status": "success", "message": "Task updated"}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
-
-
-@app.delete("/tasks/delete")
-async def delete_task(tasks: TasksDelete, conn=Depends(get_db)):
-    try:
-        if tasks.task_relative_id:
-            result = await conn.execute(
-                """
-                DELETE FROM tasks
-                WHERE id = (
-                  SELECT id FROM (
-                    SELECT 
-                      id,
-                      (task_start_dtm::date) AS business_dt,
-                      ROW_NUMBER() OVER (
-                        PARTITION BY tg_user_id, (task_start_dtm::date)
-                        ORDER BY task_start_dtm
-                      ) AS task_relative_id
-                    FROM tasks
-                    WHERE tg_user_id = $1
-                  ) t
-                  WHERE t.business_dt = $2::date AND t.task_relative_id = $3
-                );
-                """,
-                tasks.tg_user_id, tasks.business_dt, tasks.task_relative_id
-            )
-        else:
-            result = await conn.execute(
-                """
-                DELETE FROM tasks
-                WHERE id IN (
-                  SELECT id FROM (
-                    SELECT 
-                      id,
-                      (task_start_dtm::date) AS business_dt,
-                      ROW_NUMBER() OVER (
-                        PARTITION BY tg_user_id, (task_start_dtm::date)
-                        ORDER BY task_start_dtm
-                      ) AS task_relative_id
-                    FROM tasks
-                    WHERE tg_user_id = $1
-                  ) t
-                  WHERE t.business_dt = $2::date
-                );
-                """,
-                tasks.tg_user_id, tasks.business_dt
-            )
-        if result == "DELETE 0":
-            raise HTTPException(status_code=404, detail="Task not found")
-        return {"status": "success", "message": "Task deleted"}
-    except Exception as e:
-        raise HTTPException(status_code=400, detail=str(e))
+    else:
+        result = await conn.execute(
+            """
+            DELETE FROM tasks
+            WHERE id IN (
+              SELECT id FROM (
+                SELECT 
+                  id,
+                  (task_start_dtm::date) AS business_dt,
+                  ROW_NUMBER() OVER (
+                    PARTITION BY tg_user_id, (task_start_dtm::date)
+                    ORDER BY task_start_dtm
+                  ) AS task_relative_id
+                FROM tasks
+                WHERE tg_user_id = $1
+              ) t
+              WHERE t.business_dt = $2::date
+            );
+            """,
+            tasks.tg_user_id, tasks.business_dt
+        )
+    if result == "DELETE 0":
+        raise HTTPException(status_code=404, detail="Task not found")
+    return {"status": "success", "message": "Task deleted"}
