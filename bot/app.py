@@ -45,10 +45,10 @@ class InitStates(StatesGroup):
 @dp.message(CommandStart())
 async def command_start_handler(message: types.Message, state: FSMContext) -> None:
     await state.set_state(InitStates.started)
-    resp = await db_api.get_user(message.from_user.tg_user_id)
+    resp = await db_api.get_user(message.from_user.id)
     if resp.status_code == 404:
         post_resp = await db_api.create_user(
-            message.from_user.tg_user_id,
+            message.from_user.id,
             message.from_user.username,
             message.from_user.full_name
         )
