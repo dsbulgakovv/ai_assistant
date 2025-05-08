@@ -9,7 +9,7 @@ from logging.config import dictConfig
 import os
 from contextlib import asynccontextmanager
 from pydantic import BaseModel, field_validator
-from typing import Dict, Union, Any
+from typing import Dict, Any, Optional
 
 from log_config import LogConfig
 from datetime import date, datetime
@@ -65,12 +65,12 @@ class UpdateTask(BaseModel):
     business_dt: date
     task_relative_id: int
     tg_user_id: int
-    task_name: Union[None, str]
-    task_status: Union[None, int]
-    task_category: Union[None, int]
-    task_description: Union[None, str]
-    task_start_dtm: Union[None, str]
-    task_end_dtm: Union[None, str]
+    task_name: Optional[None, str]
+    task_status: Optional[None, int]
+    task_category: Optional[None, int]
+    task_description: Optional[None, str]
+    task_start_dtm: Optional[None, str]
+    task_end_dtm: Optional[None, str]
 
 
 class TaskResponse(BaseModel):
