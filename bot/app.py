@@ -15,7 +15,7 @@ from aiogram.fsm.storage.redis import RedisStorage
 from redis.asyncio import Redis
 
 from keyboards.general import start_keyboard
-from handlers import voice_to_text, q_and_a
+from handlers import voice_to_text, q_and_a, calendar
 from utils.database_api import DatabaseAPI
 from texts import instructions
 
@@ -115,7 +115,7 @@ async def set_commands(bot: Bot):
 
 
 async def main() -> None:
-    dp.include_routers(voice_to_text.router, q_and_a.router)
+    dp.include_routers(voice_to_text.router, q_and_a.router, calendar.router)
     bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.MARKDOWN))
     await bot.delete_webhook(drop_pending_updates=True)
     await set_commands(bot)

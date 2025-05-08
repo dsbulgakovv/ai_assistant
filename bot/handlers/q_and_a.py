@@ -80,3 +80,11 @@ class LLMchat(StatesGroup):
 #             await message.answer(markup_text.format(answer), reply_markup=end_keyboard())
 #     else:
 #         await message.answer('Задай вопрос голосом или текстом.', reply_markup=end_keyboard())
+
+
+@router.message(StateFilter(None))
+async def uncertainty_handler(message: types.Message) -> None:
+    await message.answer(
+        "Такой опции нет.\n"
+        "Выбери нужную функцию"
+    )

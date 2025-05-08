@@ -25,12 +25,15 @@ class Calendar(StatesGroup):
 @router.message(F.text.casefold() == 'мой календарь')
 async def start_calendar_handler(message: types.Message, state: FSMContext) -> None:
     await message.answer(
-        "Запиши мне голосовое сообщение и я пришлю его расшифровку.",
+        "Запиши мне голосовое сообщение с нужной задачей или перейди в мануальный режим.",
         reply_markup=end_keyboard()
     )
-    await state.set_state(Calendar.standard_script)
+    await state.set_state(Calendar.start_calendar)
 
 
 @router.message(StateFilter(None))
 async def uncertainty_handler(message: types.Message) -> None:
-    await message.answer(f"Выбери нужную функцию!")
+    await message.answer(
+        "Такой опции нет.\n"
+        "Выбери нужную функцию"
+    )
