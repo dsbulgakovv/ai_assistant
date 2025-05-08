@@ -243,22 +243,8 @@ async def update_task(task: UpdateTask, conn=Depends(get_db)):
             "task_end_dtm": task.task_end_dtm or current_task["task_end_dtm"],
         }
 
-        try:
-            # start_dt = datetime.strptime(current_task["task_start_dtm"].split('+')[0].strip(), '%Y-%m-%d %H:%M:%S.%f')
-            # end_dt = datetime.strptime(current_task["task_end_dtm"].split('+')[0].strip(), '%Y-%m-%d %H:%M:%S.%f')
-            start_dt = datetime(current_task["task_start_dtm"])
-            end_dt = datetime(current_task["task_end_dtm"])
-
-            if start_dt > end_dt:
-                raise HTTPException(
-                    status_code=400,
-                    detail="Task start datetime cannot be after end datetime"
-                )
-        except ValueError as e:
-            raise HTTPException(
-                status_code=400,
-                detail=f"Invalid datetime format: {str(e)}"
-            )
+        if current_task["task_start_dtm"] > current_task["task_end_dtm"]:
+            raise HTTPException(status_code=404, detail="Task start dtm cannot be after end dtm")
 
         await conn.execute(
             """
