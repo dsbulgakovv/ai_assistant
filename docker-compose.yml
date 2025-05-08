@@ -120,7 +120,7 @@ services:
       context: .
       dockerfile: bot/Dockerfile
     depends_on:
-      voice_to_text:
+      voice_to_text_api:
         condition: service_started
     links:
       - voice_to_text_api
