@@ -15,7 +15,6 @@ services:
     ports:
       - "5432:5432"
     volumes:
-#      - ./database/create_db.sql:/docker-entrypoint-initdb.d/init.sql
       - ./pgdata:/var/lib/postgresql/data
     networks:
       - pg-network
@@ -27,10 +26,12 @@ services:
 
   redis:
     image: redis:latest
-    container_name: redis_app
-    command: --port 5370
-    expose:
-      - 5370
+    command: redis-server --port 5370 --save 60 1 --appendonly yes  # автосохранение + AOF
+    ports:
+      - "5370:5370"
+    volumes:
+      - ./redis_data:/data
+    restart: unless-stopped
 
   database_init:
     build:
@@ -102,6 +103,8 @@ services:
     depends_on:
       voice_to_text_api:
         condition: service_started
+      redis:
+        condition: service_started
     links:
       - voice_to_text_api
     ports:
@@ -119,3 +122,7 @@ services:
 networks:
   pg-network:
     driver: bridge
+
+
+volumes:
+  redis_data:
