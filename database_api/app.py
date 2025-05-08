@@ -228,6 +228,8 @@ async def update_task(task: UpdateTask, conn=Depends(get_db)):
             "task_start_dtm": task.task_start_dtm or current_task["task_start_dtm"],
             "task_end_dtm": task.task_end_dtm or current_task["task_end_dtm"],
         }
+        updated_task["task_start_dtm"] = parse_datetime(updated_task["task_start_dtm"])
+        updated_task["task_end_dtm"] = parse_datetime(updated_task["task_end_dtm"])
 
         await conn.execute(
             """
