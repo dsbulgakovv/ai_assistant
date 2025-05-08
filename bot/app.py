@@ -39,18 +39,12 @@ logger.setLevel(logging.DEBUG)
 
 
 class InitStates(StatesGroup):
-    start = State()
+    started = State()
 
 
 @dp.message(CommandStart())
-async def command_start_handler(message: types.Message, state: FSMContext, user_data: dict) -> None:
-    await state.set_state(InitStates.start)
-    # await state.update_data(
-    #     tg_user_id=message.from_user.tg_user_id,
-    #     full_name=message.from_user.full_name,
-    #     username=message.from_user.username
-    # )
-
+async def command_start_handler(message: types.Message, state: FSMContext) -> None:
+    await state.set_state(InitStates.started)
     resp = await db_api.get_user(message.from_user.tg_user_id)
     if resp.status_code == 404:
         post_resp = await db_api.create_user(
@@ -86,13 +80,10 @@ async def command_start_handler(message: types.Message, state: FSMContext, user_
         )
 
 
-
 @dp.message(Command('help'))
 async def command_help_handler(message: types.Message, state: FSMContext) -> None:
     msg = (
-        "Бот умеет:\n"
-        "- расшифровывать аудио сообщение\n"
-        "- что-то еще"
+        instructions.start_instruction
     )
     await message.answer(msg)
     await state.set_state(None)
