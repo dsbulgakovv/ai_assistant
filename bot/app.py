@@ -18,6 +18,8 @@ from redis.asyncio import Redis
 
 from keyboards.general import start_keyboard
 from handlers import voice_to_text, q_and_a
+from utils.database_api import DatabaseAPI
+from texts import instructions
 
 
 TOKEN = os.getenv('BOT_TOKEN')
@@ -28,6 +30,7 @@ storage = RedisStorage(redis=redis_connection)
 
 dp = Dispatcher(storage=storage)
 
+db_api = DatabaseAPI()
 
 router = Router()
 
@@ -42,25 +45,46 @@ class InitStates(StatesGroup):
 @dp.message(CommandStart())
 async def command_start_handler(message: types.Message, state: FSMContext, user_data: dict) -> None:
     await state.set_state(InitStates.start)
-    await state.update_data(
-        tg_user_id=message.from_user.tg_user_id,
-        full_name=message.from_user.full_name,
-        username=message.from_user.username
-    )
+    # await state.update_data(
+    #     tg_user_id=message.from_user.tg_user_id,
+    #     full_name=message.from_user.full_name,
+    #     username=message.from_user.username
+    # )
 
-    if user_data['last_start_cmd_usage'] == str(date.today()):
-        await state.set_state(InitStates.start)
+    resp = await db_api.get_user(message.from_user.tg_user_id)
+    if resp.status_code == 404:
+        post_resp = await db_api.create_user(
+            message.from_user.tg_user_id,
+            message.from_user.username,
+            message.from_user.full_name
+        )
+        if post_resp.status_code == 201:
+            await message.answer(
+                f"Привет, {message.from_user.full_name}!\n"
+                "Профиль создан. Теперь ты можешь ознакомиться с функционалом и начать пользоваться."
+            )
+            await message.answer(
+                instructions.start_instruction
+            )
+            await message.answer(
+                f"Я виртуальный секретарь.\n"
+                "Выбери нужное действие.",
+                reply_markup=start_keyboard()
+            )
+    elif resp.status_code == 200:
         await message.answer(
-            "Я виртуальный ассистент.\nВыбери нужное действие.",
+            f"Привет, {message.from_user.full_name}!\n"
+            "Виртуальный секретарь на связи.\n"
+            "Выбери нужное действие.",
             reply_markup=start_keyboard()
         )
     else:
-        user_data['last_start_cmd_usage'] = str(date.today())
         await message.answer(
-            f"Привет, {message.from_user.full_name}!\n"
-            "Я виртуальный ассистент.\nВыбери нужное действие.",
+            f"INTERNAL SERVER ERROR.\n"
+            f"Please, contact support https://t.me/dm1trybu",
             reply_markup=start_keyboard()
         )
+
 
 
 @dp.message(Command('help'))
