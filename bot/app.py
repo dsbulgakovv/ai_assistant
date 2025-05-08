@@ -3,8 +3,6 @@ import logging
 import os
 import sys
 
-from datetime import date
-
 from aiogram import Bot, Dispatcher, F, Router, types
 from aiogram.filters import Command, CommandStart, StateFilter
 from aiogram.fsm.context import FSMContext
@@ -24,7 +22,6 @@ from texts import instructions
 
 TOKEN = os.getenv('BOT_TOKEN')
 
-# Подключаем Redis
 redis_connection = Redis(host='redis', port=5370, db=0)
 storage = RedisStorage(redis=redis_connection)
 
@@ -91,17 +88,28 @@ async def command_help_handler(message: types.Message, state: FSMContext) -> Non
 
 @dp.message(F.text.casefold() == 'хватит')
 async def process_end_handler(message: types.Message, state: FSMContext) -> None:
-    await message.answer('Закончили', reply_markup=ReplyKeyboardRemove())
+    await message.answer(
+        "Выбери нужное действие",
+        reply_markup=start_keyboard()
+    )
     await state.clear()
 
 
-@dp.message(StateFilter(None), ~(F.text.casefold() == 'расшифровка голоса'), ~(F.text.casefold() == 'задать вопрос'))
+@dp.message(
+    StateFilter(None),
+    ~(F.text.casefold() == 'мой календарь'),
+    ~(F.text.casefold() == 'расшифровка голоса'),
+    ~(F.text.casefold() == 'задать вопрос')
+)
 async def uncertainty_handler(message: types.Message) -> None:
-    await message.answer(f"Выбери нужную функцию!")
+    await message.answer(
+        "Такой опции нет.\n"
+        "Выбери нужную функцию"
+    )
 
 
 async def set_commands(bot: Bot):
-    commands = [BotCommand(command='start', description='Старт'),
+    commands = [BotCommand(command='start', description='Старт/Вернуться в меню'),
                 BotCommand(command='help', description='Справка')]
     await bot.set_my_commands(commands, BotCommandScopeDefault())
 
