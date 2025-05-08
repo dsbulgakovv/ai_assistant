@@ -65,17 +65,17 @@ class UpdateTask(BaseModel):
     business_dt: date
     task_relative_id: int
     tg_user_id: int
-    task_name: Optional[str]
-    task_status: Optional[int]
-    task_category: Optional[int]
-    task_description: Optional[str]
-    task_start_dtm: Optional[str]
-    task_end_dtm: Optional[str]
+    task_name: Optional[str] = None
+    task_status: Optional[int] = None
+    task_category: Optional[int] = None
+    task_description: Optional[str] = None
+    task_start_dtm: Optional[str] = None
+    task_end_dtm: Optional[str] = None
 
 
 class TasksDelete(BaseModel):
     business_dt: date
-    task_relative_id: Optional[int]
+    task_relative_id: Optional[int] = None
     tg_user_id: int
 
 
