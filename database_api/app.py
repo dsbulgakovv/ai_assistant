@@ -121,6 +121,7 @@ async def get_filtered_tasks(
                 tg_user_id = $1
                 AND task_start_dtm::date >= $2
                 AND task_end_dtm::date <= $3
+            ORDER BY task_start_dtm
             """,
             tg_user_id, start_date, end_date
         )
@@ -159,7 +160,7 @@ async def create_task(task: TaskCreate, conn=Depends(get_db)):
                 tg_user_id, task_name, task_status, task_category, task_description,
                 task_start_dtm, task_end_dtm, created_at, updated_at
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
             """,
             task.tg_user_id, task.task_name, task.task_status, task.task_category,
             task.task_description, task.task_start_dtm, task.task_end_dtm
