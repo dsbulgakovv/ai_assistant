@@ -29,6 +29,10 @@ services:
     command: redis-server --port 5370 --save 60 1 --appendonly yes  # автосохранение + AOF
     ports:
       - "5370:5370"
+    expose:
+      - "5370"
+    networks:
+      - pg-network
     volumes:
       - ./redis_data:/data
     restart: unless-stopped
