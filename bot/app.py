@@ -45,14 +45,14 @@ class InitStates(StatesGroup):
 @dp.message(CommandStart())
 async def command_start_handler(message: types.Message, state: FSMContext) -> None:
     await state.set_state(InitStates.started)
-    resp = await db_api.get_user(message.from_user.id)
-    if resp.status_code == 404:
-        post_resp = await db_api.create_user(
+    resp, status = await db_api.get_user(message.from_user.id)
+    if status == 404:
+        post_resp, post_status = await db_api.create_user(
             message.from_user.id,
             message.from_user.username,
             message.from_user.full_name
         )
-        if post_resp.status_code == 201:
+        if post_status == 201:
             await message.answer(
                 f"Привет, {message.from_user.full_name}!\n"
                 "Профиль создан. Теперь ты можешь ознакомиться с функционалом и начать пользоваться."
@@ -65,7 +65,7 @@ async def command_start_handler(message: types.Message, state: FSMContext) -> No
                 "Выбери нужное действие.",
                 reply_markup=start_keyboard()
             )
-    elif resp.status_code == 200:
+    elif status == 200:
         await message.answer(
             f"Привет, {message.from_user.full_name}!\n"
             "Виртуальный секретарь на связи.\n"

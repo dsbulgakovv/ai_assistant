@@ -16,16 +16,16 @@ class DatabaseAPI:
     async def get_user(self, tg_user_id):
         async with ClientSession() as session:
             async with session.get(f"{self.base_url}/users/{tg_user_id}") as resp:
-                response = await resp.json()
-        return response
+                response, status = await resp.json(), resp.status
+        return response, status
 
     async def get_tasks(self, tg_user_id, start_date, end_date):
         async with ClientSession() as session:
             async with session.get(
                     f"{self.base_url}/tasks/{tg_user_id}?start_date={start_date}&end_date={end_date}"
             ) as resp:
-                response = await resp.json()
-        return response
+                response, status = await resp.json(), resp.status
+        return response, status
 
     async def create_user(self, tg_user_id, username, full_name):
         async with ClientSession() as session:
@@ -33,8 +33,8 @@ class DatabaseAPI:
                 f"{self.base_url}/users/add_new",
                 body={"tg_user_id": tg_user_id, "username": username, "full_name": full_name}
             ) as resp:
-                response = await resp.json()
-        return response
+                response, status = await resp.json(), resp.status
+        return response, status
 
     async def create_task(
             self, tg_user_id, task_name, task_status,task_category,
@@ -49,8 +49,8 @@ class DatabaseAPI:
                     "task_start_dtm": task_start_dtm, "task_end_dtm": task_end_dtm
                 }
             ) as resp:
-                response = await resp.json()
-        return response
+                response, status = await resp.json(), resp.status
+        return response, status
 
     async def update_task(
             self, business_dt, task_relative_id, tg_user_id, task_name, task_status,task_category,
@@ -66,8 +66,8 @@ class DatabaseAPI:
                     "task_start_dtm": task_start_dtm, "task_end_dtm": task_end_dtm
                 }
             ) as resp:
-                response = await resp.json()
-        return response
+                response, status = await resp.json(), resp.status
+        return response, status
 
     async def delete_task(
             self, business_dt, task_relative_id, tg_user_id
@@ -77,8 +77,8 @@ class DatabaseAPI:
                 f"{self.base_url}/tasks/delete",
                 body={"business_dt": business_dt, "task_relative_id": task_relative_id, "tg_user_id": tg_user_id}
             ) as resp:
-                response = await resp.json()
-        return response
+                response, status = await resp.json(), resp.status
+        return response, status
 
 
 def main():
