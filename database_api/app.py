@@ -177,6 +177,9 @@ async def create_task(task: Task, conn=Depends(get_db)):
         task_start_dtm = parse_datetime(task.task_start_dtm)
         task_end_dtm = parse_datetime(task.task_end_dtm)
 
+        if task_start_dtm > task_end_dtm:
+            raise HTTPException(status_code=404, detail="Task start dtm cannot be after end dtm")
+
         await conn.execute(
             """
             INSERT INTO tasks (
@@ -219,9 +222,6 @@ async def update_task(task: UpdateTask, conn=Depends(get_db)):
         if not current_task:
             raise HTTPException(status_code=404, detail="Task not found")
 
-        logger.info(task.task_start_dtm)
-        logger.info(task.task_start_dtm)
-
         if task.task_start_dtm:
             task.task_start_dtm = parse_datetime(task.task_start_dtm)
         if task.task_end_dtm:
@@ -236,6 +236,9 @@ async def update_task(task: UpdateTask, conn=Depends(get_db)):
             "task_start_dtm": task.task_start_dtm or current_task["task_start_dtm"],
             "task_end_dtm": task.task_end_dtm or current_task["task_end_dtm"],
         }
+
+        if current_task["task_start_dtm"] > current_task["task_end_dtm"]:
+            raise HTTPException(status_code=404, detail="Task start dtm cannot be after end dtm")
 
         await conn.execute(
             """
