@@ -82,8 +82,8 @@ async def async_main(cfg):
     ]
 
     # Загружаем данные только в пустые таблицы
-    for i in range(len(filenames)):
-        await load_data(engine, dir_path, filenames[i], tables[i])
+    # for i in range(len(filenames)):
+    #     await load_data(engine, dir_path, filenames[i], tables[i])
 
 
 @hydra.main(config_path="configs", config_name="cfg", version_base=None)
