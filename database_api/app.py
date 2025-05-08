@@ -244,8 +244,10 @@ async def update_task(task: UpdateTask, conn=Depends(get_db)):
         }
 
         try:
-            start_dt = datetime.strptime(current_task["task_start_dtm"].split('+')[0].strip(), '%Y-%m-%d %H:%M:%S.%f')
-            end_dt = datetime.strptime(current_task["task_end_dtm"].split('+')[0].strip(), '%Y-%m-%d %H:%M:%S.%f')
+            # start_dt = datetime.strptime(current_task["task_start_dtm"].split('+')[0].strip(), '%Y-%m-%d %H:%M:%S.%f')
+            # end_dt = datetime.strptime(current_task["task_end_dtm"].split('+')[0].strip(), '%Y-%m-%d %H:%M:%S.%f')
+            start_dt = datetime(current_task["task_start_dtm"])
+            end_dt = datetime(current_task["task_end_dtm"])
 
             if start_dt > end_dt:
                 raise HTTPException(
