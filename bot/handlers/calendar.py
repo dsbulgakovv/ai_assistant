@@ -31,13 +31,5 @@ async def start_calendar_handler(message: types.Message, state: FSMContext) -> N
     await state.set_state(Calendar.start_calendar)
 
 
-@router.message(StateFilter(None))
-async def uncertainty_handler(message: types.Message) -> None:
-    await message.answer(
-        "Такой опции нет.\n"
-        "Выбери нужную функцию"
-    )
-
-
 def setup_calendar_handlers(dp):
     dp.include_router(router)

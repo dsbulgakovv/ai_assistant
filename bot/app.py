@@ -24,7 +24,7 @@ logger.setLevel(logging.DEBUG)
 
 
 async def set_commands(bot: Bot):
-    commands = [BotCommand(command='start', description='Старт/Вернуться в меню'),
+    commands = [BotCommand(command='start', description='Старт/Главное меню'),
                 BotCommand(command='help', description='Справка')]
     await bot.set_my_commands(commands, BotCommandScopeDefault())
 

@@ -39,17 +39,17 @@ class LLMchat(StatesGroup):
 #     answer = completion.choices[0].message.content
 #
 #     return answer
-#
-#
-# @router.message(F.text.casefold() == 'задать вопрос')
-# async def q_and_a_start_handler(message: types.Message, state: FSMContext) -> None:
-#     await message.answer(
-#         "Задай вопрос голосом или напиши текстом, а я постараюсь ответить.",
-#         reply_markup=end_keyboard()
-#     )
-#     await state.set_state(LLMchat.answer_questions)
-#
-#
+
+
+@router.message(F.text.casefold() == 'задать вопрос')
+async def q_and_a_start_handler(message: types.Message, state: FSMContext) -> None:
+    await message.answer(
+        "Задай вопрос голосом или напиши текстом, а я постараюсь ответить.",
+        reply_markup=end_keyboard()
+    )
+    await state.set_state(LLMchat.answer_questions)
+
+
 # @router.message(StateFilter(LLMchat.answer_questions))
 # async def q_and_a_process_handler(message: types.Message, bot: Bot, state: FSMContext) -> None:
 #     if message.voice:
@@ -80,14 +80,6 @@ class LLMchat(StatesGroup):
 #             await message.answer(markup_text.format(answer), reply_markup=end_keyboard())
 #     else:
 #         await message.answer('Задай вопрос голосом или текстом.', reply_markup=end_keyboard())
-
-
-@router.message(StateFilter(None))
-async def uncertainty_handler(message: types.Message) -> None:
-    await message.answer(
-        "Такой опции нет.\n"
-        "Выбери нужную функцию"
-    )
 
 
 def setup_q_and_a_handlers(dp):

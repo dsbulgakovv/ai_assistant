@@ -61,7 +61,7 @@ async def command_help_handler(message: types.Message, state: FSMContext) -> Non
     msg = (
         instructions.start_instruction
     )
-    await message.answer(msg)
+    await message.answer(msg, reply_markup=start_keyboard())
     await state.set_state(None)
 
 
@@ -72,19 +72,6 @@ async def process_end_handler(message: types.Message, state: FSMContext) -> None
         reply_markup=start_keyboard()
     )
     await state.clear()
-
-
-@router.message(
-    StateFilter(None),
-    ~(F.text.casefold() == 'мой календарь'),
-    ~(F.text.casefold() == 'расшифровка голоса'),
-    ~(F.text.casefold() == 'задать вопрос')
-)
-async def uncertainty_handler(message: types.Message) -> None:
-    await message.answer(
-        "Такой опции нет.\n"
-        "Выбери нужную функцию"
-    )
 
 
 def setup_start_handlers(dp):

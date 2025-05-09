@@ -53,13 +53,5 @@ async def voice_to_text_process_handler(message: types.Message, bot: Bot, state:
             await message.answer('Пришли голсоовое сообщение', reply_markup=end_keyboard())
 
 
-@router.message(StateFilter(None))
-async def uncertainty_handler(message: types.Message) -> None:
-    await message.answer(
-        "Такой опции нет.\n"
-        "Выбери нужную функцию"
-    )
-
-
 def setup_voice_to_text_handler(dp):
     dp.include_router(router)
