@@ -1,33 +1,23 @@
-import asyncio
-import logging
 import os
 import sys
+import asyncio
+import logging
 
-from aiogram import Bot, Dispatcher, F, Router, types
-from aiogram.filters import Command, CommandStart, StateFilter
-from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import BotCommand, BotCommandScopeDefault, ReplyKeyboardRemove
+from aiogram import Bot, Dispatcher
+from aiogram.types import BotCommand, BotCommandScopeDefault
 from aiogram.client.bot import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.redis import RedisStorage
 
 from redis.asyncio import Redis
 
-from keyboards.general import start_keyboard
 from handlers import setup_handlers
-from utils.database_api import DatabaseAPI
-from texts import instructions
 
 
 TOKEN = os.getenv('BOT_TOKEN')
 
 redis_connection = Redis(host='redis', port=5370, db=0)
 storage = RedisStorage(redis=redis_connection)
-
-dp = Dispatcher(storage=storage)
-
-db_api = DatabaseAPI()
 
 logger = logging.getLogger('aiogram')
 logger.setLevel(logging.DEBUG)
@@ -40,8 +30,11 @@ async def set_commands(bot: Bot):
 
 
 async def main() -> None:
-    dp.include_routers(voice_to_text.router, q_and_a.router, calendar.router)
     bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.MARKDOWN))
+    dp = Dispatcher(storage=storage)
+
+    setup_handlers(dp)
+
     await bot.delete_webhook(drop_pending_updates=True)
     await set_commands(bot)
     await dp.start_polling(bot)
