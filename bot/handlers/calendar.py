@@ -1,7 +1,7 @@
 import logging
 import os
 
-from aiogram import Bot, F, Router, types
+from aiogram import F, Router, types
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
@@ -37,3 +37,7 @@ async def uncertainty_handler(message: types.Message) -> None:
         "Такой опции нет.\n"
         "Выбери нужную функцию"
     )
+
+
+def setup_calendar_handlers(dp):
+    dp.include_router(router)

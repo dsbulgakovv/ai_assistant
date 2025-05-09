@@ -60,3 +60,6 @@ async def uncertainty_handler(message: types.Message) -> None:
         "Выбери нужную функцию"
     )
 
+
+def setup_voice_to_text_handler(dp):
+    dp.include_router(router)

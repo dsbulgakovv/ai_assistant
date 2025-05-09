@@ -8,7 +8,7 @@ from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import ReplyKeyboardRemove
 
 from keyboards.general import start_keyboard, end_keyboard
-from utils.voice_to_text_api import VoiceToTextAPI
+from utils.large_lang_model_api import LLMapi
 
 
 logger = logging.getLogger('aiogram')
@@ -17,7 +17,7 @@ logger.setLevel(logging.DEBUG)
 markup_text = "**Ответ:**\n{}"
 
 router = Router()
-api = VoiceToTextAPI()
+api = LLMapi()
 
 
 class LLMchat(StatesGroup):
@@ -88,3 +88,7 @@ async def uncertainty_handler(message: types.Message) -> None:
         "Такой опции нет.\n"
         "Выбери нужную функцию"
     )
+
+
+def setup_q_and_a_handlers(dp):
+    dp.include_router(router)
