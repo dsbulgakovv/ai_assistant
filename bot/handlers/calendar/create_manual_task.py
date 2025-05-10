@@ -8,11 +8,9 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import ReplyKeyboardRemove, CallbackQuery
 
-from .start import (
-    start_manual_calendar_handler,
-    StartCalendar
-)
+from .start import StartCalendar
 
+from texts import calendar
 from keyboards.calendar import (
     start_calendar_keyboard,
     start_manual_calendar_keyboard,
@@ -57,6 +55,7 @@ async def create_event_task_category_manual_calendar_handler(message: types.Mess
             "Выбери нужное действие",
             reply_markup=start_manual_calendar_keyboard()
         )
+        await state.clear()
         await state.set_state(StartCalendar.start_manual_calendar)
     else:
         if not message.text or message.text.strip() == "":
@@ -82,13 +81,29 @@ async def create_event_task_description_manual_calendar_handler(message: types.M
             "Выбери нужное действие",
             reply_markup=start_manual_calendar_keyboard()
         )
+        await state.clear()
         await state.set_state(StartCalendar.start_manual_calendar)
-    else:
+    elif message.text.lower() == 'к предыдущему шагу':
         await message.answer(
-            "Введи описание события",
-            reply_markup=task_description_manual_calendar_keyboard()
+            "Введи название события заново",
+            reply_markup=task_name_manual_calendar_keyboard()
         )
-        await state.set_state(CreateEvent.waiting_task_description)
+        await state.set_state(CreateEvent.waiting_task_name)
+    else:
+        if message.text not in ['Личное', 'Работа', 'Учеба', 'Семья', 'Здоровье', 'Финансы']:
+            await message.answer(
+                "Такой категории нет."
+                "Выбери категорию события",
+                reply_markup=task_category_manual_calendar_keyboard()
+            )
+            await state.set_state(CreateEvent.waiting_task_category)
+        else:
+            await state.update_data(task_category=message.text)
+            await message.answer(
+                "Введи описание события",
+                reply_markup=task_description_manual_calendar_keyboard()
+            )
+            await state.set_state(CreateEvent.waiting_task_description)
 
 
 @router.message(StateFilter(CreateEvent.waiting_task_description))
@@ -98,14 +113,26 @@ async def create_event_task_start_manual_calendar_handler(message: types.Message
             "Выбери нужное действие",
             reply_markup=start_manual_calendar_keyboard()
         )
+        await state.clear()
         await state.set_state(StartCalendar.start_manual_calendar)
+    elif message.text.lower() == 'к предыдущему шагу':
+        await message.answer(
+            "Выбери категорию события заново",
+            reply_markup=task_category_manual_calendar_keyboard()
+        )
+        await state.set_state(CreateEvent.waiting_task_category)
     else:
+        if message.text.lower() == 'без описания':
+            await state.update_data(task_description=None)
+        else:
+            await state.update_data(task_description=message.text)
         keyboards = task_start_dtm_manual_calendar_keyboard()
         await message.answer(
             "Выбери дату и время начала события",
             reply_markup=keyboards['reply']
         )
         today_dt = datetime.date.today()
+        await state.update_data(start_dt=today_dt)
         await message.answer(
             f"Выбранная дата: {str(today_dt)}",
             reply_markup=keyboards['inline']
@@ -114,13 +141,22 @@ async def create_event_task_start_manual_calendar_handler(message: types.Message
 
 
 @router.message(StateFilter(CreateEvent.waiting_task_start_dtm), F.text.casefold() == 'дальше')
-async def create_event_task_end_manual_calendar_handler(message: types.Message, state: FSMContext) -> None:
+async def create_event_task_end_manual_calendar_handler(
+        callback_query: CallbackQuery, message: types.Message, state: FSMContext) -> None:
     if message.text.lower() == 'отмена':
         await message.answer(
             "Выбери нужное действие",
             reply_markup=start_manual_calendar_keyboard()
         )
+        await state.clear()
         await state.set_state(StartCalendar.start_manual_calendar)
+    elif message.text.lower() == 'к предыдущему шагу':
+        await callback_query.message.edit_reply_markup(reply_markup=None)
+        await message.answer(
+            "Введи описание события заново",
+            reply_markup=task_description_manual_calendar_keyboard()
+        )
+        await state.set_state(CreateEvent.waiting_task_description)
     else:
         keyboards = task_duration_manual_calendar_keyboard()
         await message.answer(
@@ -128,6 +164,7 @@ async def create_event_task_end_manual_calendar_handler(message: types.Message, 
             reply_markup=keyboards['reply']
         )
         cur_dur = '15 мин'
+        await state.update_data(task_duration=cur_dur)
         await message.answer(
             f"Выбранная продолжительность: {cur_dur}",
             reply_markup=keyboards['inline']
@@ -136,16 +173,39 @@ async def create_event_task_end_manual_calendar_handler(message: types.Message, 
 
 
 @router.message(StateFilter(CreateEvent.waiting_task_end_dtm), F.text.casefold() == 'дальше')
-async def create_event_task_approval_manual_calendar_handler(message: types.Message, state: FSMContext) -> None:
+async def create_event_task_approval_manual_calendar_handler(
+        callback_query: CallbackQuery, message: types.Message, state: FSMContext) -> None:
     if message.text.lower() == 'отмена':
         await message.answer(
             "Выбери нужное действие",
             reply_markup=start_manual_calendar_keyboard()
         )
+        await state.clear()
         await state.set_state(StartCalendar.start_manual_calendar)
-    else:
+    elif message.text.lower() == 'к предыдущему шагу':
+        await callback_query.message.edit_reply_markup(reply_markup=None)
+        keyboards = task_start_dtm_manual_calendar_keyboard()
         await message.answer(
-            "ВСЕ СОБЫТИЕ",
+            "Выбери дату и время начала события",
+            reply_markup=keyboards['reply']
+        )
+        today_dt = datetime.date.today()
+        await state.update_data(start_dt=today_dt)
+        await message.answer(
+            f"Выбранная дата: {str(today_dt)}",
+            reply_markup=keyboards['inline']
+        )
+        await state.set_state(CreateEvent.waiting_task_start_dtm)
+    else:
+        data = await state.get_data()
+        await message.answer(
+            calendar.event_desc.format(
+                data.get('task_name'),
+                data.get('start_dt'),
+                data.get('task_duration'),
+                data.get('task_category'),
+                data.get('task_description')
+            ),
             reply_markup=ReplyKeyboardRemove()
         )
         await message.answer(
@@ -157,12 +217,36 @@ async def create_event_task_approval_manual_calendar_handler(message: types.Mess
 
 
 @router.message(StateFilter(CreateEvent.waiting_approval), F.text.casefold() == 'подтвердить')
-async def create_event_task_success_manual_calendar_handler(message: types.Message, state: FSMContext) -> None:
-    await message.answer(
-        "✅ Событие успешно создано!",
-        reply_markup=start_manual_calendar_keyboard()
-    )
-    await state.set_state(StartCalendar.start_manual_calendar)
+async def create_event_task_success_manual_calendar_handler(
+        callback_query: CallbackQuery,message: types.Message, state: FSMContext) -> None:
+    if message.text.lower() == 'отмена':
+        await message.answer(
+            "Выбери нужное действие",
+            reply_markup=start_manual_calendar_keyboard()
+        )
+        await state.clear()
+        await state.set_state(StartCalendar.start_manual_calendar)
+    elif message.text.lower() == 'к предыдущему шагу':
+        await callback_query.message.edit_reply_markup(reply_markup=None)
+        keyboards = task_duration_manual_calendar_keyboard()
+        await message.answer(
+            "Выбери продолжительность события",
+            reply_markup=keyboards['reply']
+        )
+        cur_dur = '15 мин'
+        await state.update_data(task_duration=cur_dur)
+        await message.answer(
+            f"Выбранная продолжительность: {cur_dur}",
+            reply_markup=keyboards['inline']
+        )
+        await state.set_state(CreateEvent.waiting_task_end_dtm)
+    else:
+        await message.answer(
+            "✅ Событие успешно создано!",
+            reply_markup=start_manual_calendar_keyboard()
+        )
+        await state.clear()
+        await state.set_state(StartCalendar.start_manual_calendar)
 
 
 # @router.callback_query()

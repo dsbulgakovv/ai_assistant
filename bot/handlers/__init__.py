@@ -1,6 +1,6 @@
 from .start import setup_start_handlers
 from .calendar.start import setup_calendar_start_handlers
-from .calendar.create_task import setup_calendar_create_task_handlers
+from .calendar.create_manual_task import setup_calendar_create_task_handlers
 
 
 from .voice_to_text import setup_voice_to_text_handler

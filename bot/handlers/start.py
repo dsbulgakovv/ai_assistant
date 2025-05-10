@@ -1,5 +1,5 @@
 from aiogram import F, Router, types
-from aiogram.filters import Command, CommandStart, StateFilter
+from aiogram.filters import Command, CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import ReplyKeyboardRemove
@@ -18,7 +18,7 @@ class InitStates(StatesGroup):
 
 
 @router.message(CommandStart())
-async def command_start_handler(message: types.Message) -> None:
+async def command_start_handler(message: types.Message, state: FSMContext) -> None:
     resp, status = await db_api.get_user(message.from_user.id)
     if status == 404:
         post_resp, post_status = await db_api.create_user(
@@ -52,6 +52,8 @@ async def command_start_handler(message: types.Message) -> None:
             f"Please, contact support https://t.me/dm1trybu",
             reply_markup=ReplyKeyboardRemove()
         )
+    await state.clear()
+    await state.set_state(None)
 
 
 @router.message(Command('help'))
@@ -60,6 +62,7 @@ async def command_help_handler(message: types.Message, state: FSMContext) -> Non
         instructions.start_instruction
     )
     await message.answer(msg, reply_markup=start_keyboard())
+    await state.clear()
     await state.set_state(None)
 
 
@@ -70,6 +73,7 @@ async def process_end_handler(message: types.Message, state: FSMContext) -> None
         reply_markup=start_keyboard()
     )
     await state.clear()
+    await state.set_state(None)
 
 
 def setup_start_handlers(dp):
