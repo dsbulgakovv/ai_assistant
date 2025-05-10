@@ -55,21 +55,21 @@ async def create_event_task_category_manual_calendar_handler(message: types.Mess
     if message.text.lower() == 'отмена':
         await state.set_state(StartCalendar.get_back_to_manual)
         return
-
-    if not message.text or message.text.strip() == "":
-        await message.answer("Название не может быть пустым!")
-        await state.set_state(CreateEvent.waiting_task_name)
-        return
     else:
-        if message.text.lower() == 'стандартное название':
-            await state.update_data(task_name='Новое событие')
+        if not message.text or message.text.strip() == "":
+            await message.answer("Название не может быть пустым!")
+            await state.set_state(CreateEvent.waiting_task_name)
+            return
         else:
-            await state.update_data(task_name=message.text)
-        await message.answer(
-            "Выбери категорию события",
-            reply_markup=task_category_manual_calendar_keyboard()
-        )
-        await state.set_state(CreateEvent.waiting_task_category)
+            if message.text.lower() == 'стандартное название':
+                await state.update_data(task_name='Новое событие')
+            else:
+                await state.update_data(task_name=message.text)
+            await message.answer(
+                "Выбери категорию события",
+                reply_markup=task_category_manual_calendar_keyboard()
+            )
+            await state.set_state(CreateEvent.waiting_task_category)
 
 
 @router.message(StateFilter(CreateEvent.waiting_task_category))
@@ -77,11 +77,12 @@ async def create_event_task_description_manual_calendar_handler(message: types.M
     if message.text.lower() == 'отмена':
         await state.set_state(StartCalendar.get_back_to_manual)
         return
-    await message.answer(
-        "Введи описание события",
-        reply_markup=task_description_manual_calendar_keyboard()
-    )
-    await state.set_state(CreateEvent.waiting_task_description)
+    else:
+        await message.answer(
+            "Введи описание события",
+            reply_markup=task_description_manual_calendar_keyboard()
+        )
+        await state.set_state(CreateEvent.waiting_task_description)
 
 
 @router.message(StateFilter(CreateEvent.waiting_task_description))
@@ -89,18 +90,18 @@ async def create_event_task_start_manual_calendar_handler(message: types.Message
     if message.text.lower() == 'отмена':
         await state.set_state(StartCalendar.get_back_to_manual)
         return
-
-    keyboards = task_start_dtm_manual_calendar_keyboard()
-    await message.answer(
-        "Выбери дату и время начала события",
-        reply_markup=keyboards['reply']
-    )
-    today_dt = datetime.date.today()
-    await message.answer(
-        f"Выбранная дата: {str(today_dt)}",
-        reply_markup=keyboards['inline']
-    )
-    await state.set_state(CreateEvent.waiting_task_start_dtm)
+    else:
+        keyboards = task_start_dtm_manual_calendar_keyboard()
+        await message.answer(
+            "Выбери дату и время начала события",
+            reply_markup=keyboards['reply']
+        )
+        today_dt = datetime.date.today()
+        await message.answer(
+            f"Выбранная дата: {str(today_dt)}",
+            reply_markup=keyboards['inline']
+        )
+        await state.set_state(CreateEvent.waiting_task_start_dtm)
 
 
 @router.message(StateFilter(CreateEvent.waiting_task_start_dtm), F.text.casefold() == 'дальше')
@@ -108,18 +109,18 @@ async def create_event_task_end_manual_calendar_handler(message: types.Message, 
     if message.text.lower() == 'отмена':
         await state.set_state(StartCalendar.get_back_to_manual)
         return
-
-    keyboards = task_duration_manual_calendar_keyboard()
-    await message.answer(
-        "Выбери продолжительность события",
-        reply_markup=keyboards['reply']
-    )
-    cur_dur = '15 мин'
-    await message.answer(
-        f"Выбранная продолжительность: {cur_dur}",
-        reply_markup=keyboards['inline']
-    )
-    await state.set_state(CreateEvent.waiting_task_end_dtm)
+    else:
+        keyboards = task_duration_manual_calendar_keyboard()
+        await message.answer(
+            "Выбери продолжительность события",
+            reply_markup=keyboards['reply']
+        )
+        cur_dur = '15 мин'
+        await message.answer(
+            f"Выбранная продолжительность: {cur_dur}",
+            reply_markup=keyboards['inline']
+        )
+        await state.set_state(CreateEvent.waiting_task_end_dtm)
 
 
 @router.message(StateFilter(CreateEvent.waiting_task_end_dtm), F.text.casefold() == 'дальше')
@@ -127,17 +128,17 @@ async def create_event_task_approval_manual_calendar_handler(message: types.Mess
     if message.text.lower() == 'отмена':
         await state.set_state(StartCalendar.get_back_to_manual)
         return
+    else:
+        await message.answer(
+            "ВСЕ СОБЫТИЕ",
+            reply_markup=ReplyKeyboardRemove()
+        )
+        await message.answer(
+            "Все верно?",
+            reply_markup=task_approval_manual_calendar_keyboard()
+        )
 
-    await message.answer(
-        "ВСЕ СОБЫТИЕ",
-        reply_markup=ReplyKeyboardRemove()
-    )
-    await message.answer(
-        "Все верно?",
-        reply_markup=task_approval_manual_calendar_keyboard()
-    )
-
-    await state.set_state(CreateEvent.waiting_approval)
+        await state.set_state(CreateEvent.waiting_approval)
 
 
 @router.message(StateFilter(CreateEvent.waiting_approval), F.text.casefold() == 'подтвердить')
