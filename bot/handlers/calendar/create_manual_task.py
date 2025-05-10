@@ -140,7 +140,7 @@ async def create_event_task_start_manual_calendar_handler(message: types.Message
         await state.set_state(CreateEvent.waiting_task_start_dtm)
 
 
-@router.message(StateFilter(CreateEvent.waiting_task_start_dtm), F.text.casefold() == 'дальше')
+@router.message(StateFilter(CreateEvent.waiting_task_start_dtm))
 async def create_event_task_end_manual_calendar_handler(message: types.Message, state: FSMContext) -> None:
     if message.text.lower() == 'отмена':
         await message.answer(
@@ -155,7 +155,7 @@ async def create_event_task_end_manual_calendar_handler(message: types.Message, 
             reply_markup=task_description_manual_calendar_keyboard()
         )
         await state.set_state(CreateEvent.waiting_task_description)
-    else:
+    elif message.text.lower() == 'дальше':
         keyboards = task_duration_manual_calendar_keyboard()
         await message.answer(
             "Выбери продолжительность события",
@@ -168,9 +168,11 @@ async def create_event_task_end_manual_calendar_handler(message: types.Message, 
             reply_markup=keyboards['inline']
         )
         await state.set_state(CreateEvent.waiting_task_end_dtm)
+    else:
+        await message.answer("Не та команда")
 
 
-@router.message(StateFilter(CreateEvent.waiting_task_end_dtm), F.text.casefold() == 'дальше')
+@router.message(StateFilter(CreateEvent.waiting_task_end_dtm))
 async def create_event_task_approval_manual_calendar_handler(message: types.Message, state: FSMContext) -> None:
     if message.text.lower() == 'отмена':
         await message.answer(
@@ -192,7 +194,7 @@ async def create_event_task_approval_manual_calendar_handler(message: types.Mess
             reply_markup=keyboards['inline']
         )
         await state.set_state(CreateEvent.waiting_task_start_dtm)
-    else:
+    elif message.text.lower() == 'дальше':
         data = await state.get_data()
         if not data['task_description']:
             data['task_description'] = '...'
@@ -210,11 +212,12 @@ async def create_event_task_approval_manual_calendar_handler(message: types.Mess
             "Все верно?",
             reply_markup=task_approval_manual_calendar_keyboard()
         )
-
         await state.set_state(CreateEvent.waiting_approval)
+    else:
+        await message.answer("Не та команда")
 
 
-@router.message(StateFilter(CreateEvent.waiting_approval), F.text.casefold() == 'подтвердить')
+@router.message(StateFilter(CreateEvent.waiting_approval))
 async def create_event_task_success_manual_calendar_handler(message: types.Message, state: FSMContext) -> None:
     if message.text.lower() == 'отмена':
         await message.answer(
@@ -236,13 +239,15 @@ async def create_event_task_success_manual_calendar_handler(message: types.Messa
             reply_markup=keyboards['inline']
         )
         await state.set_state(CreateEvent.waiting_task_end_dtm)
-    else:
+    elif message.text.lower() == 'подтвердить':
         await message.answer(
             "✅ Событие успешно создано!",
             reply_markup=start_manual_calendar_keyboard()
         )
         await state.clear()
         await state.set_state(StartCalendar.start_manual_calendar)
+    else:
+        await message.answer("Не та команда")
 
 
 # @router.callback_query()
