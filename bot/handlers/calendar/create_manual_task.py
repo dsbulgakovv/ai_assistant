@@ -141,8 +141,7 @@ async def create_event_task_start_manual_calendar_handler(message: types.Message
 
 
 @router.message(StateFilter(CreateEvent.waiting_task_start_dtm), F.text.casefold() == 'дальше')
-async def create_event_task_end_manual_calendar_handler(
-        callback_query: CallbackQuery, message: types.Message, state: FSMContext) -> None:
+async def create_event_task_end_manual_calendar_handler(message: types.Message, state: FSMContext) -> None:
     if message.text.lower() == 'отмена':
         await message.answer(
             "Выбери нужное действие",
@@ -151,7 +150,6 @@ async def create_event_task_end_manual_calendar_handler(
         await state.clear()
         await state.set_state(StartCalendar.start_manual_calendar)
     elif message.text.lower() == 'к предыдущему шагу':
-        await callback_query.message.edit_reply_markup(reply_markup=None)
         await message.answer(
             "Введи описание события заново",
             reply_markup=task_description_manual_calendar_keyboard()
@@ -173,8 +171,7 @@ async def create_event_task_end_manual_calendar_handler(
 
 
 @router.message(StateFilter(CreateEvent.waiting_task_end_dtm), F.text.casefold() == 'дальше')
-async def create_event_task_approval_manual_calendar_handler(
-        callback_query: CallbackQuery, message: types.Message, state: FSMContext) -> None:
+async def create_event_task_approval_manual_calendar_handler(message: types.Message, state: FSMContext) -> None:
     if message.text.lower() == 'отмена':
         await message.answer(
             "Выбери нужное действие",
@@ -183,7 +180,6 @@ async def create_event_task_approval_manual_calendar_handler(
         await state.clear()
         await state.set_state(StartCalendar.start_manual_calendar)
     elif message.text.lower() == 'к предыдущему шагу':
-        await callback_query.message.edit_reply_markup(reply_markup=None)
         keyboards = task_start_dtm_manual_calendar_keyboard()
         await message.answer(
             "Выбери дату и время начала события",
@@ -217,8 +213,7 @@ async def create_event_task_approval_manual_calendar_handler(
 
 
 @router.message(StateFilter(CreateEvent.waiting_approval), F.text.casefold() == 'подтвердить')
-async def create_event_task_success_manual_calendar_handler(
-        callback_query: CallbackQuery,message: types.Message, state: FSMContext) -> None:
+async def create_event_task_success_manual_calendar_handler(message: types.Message, state: FSMContext) -> None:
     if message.text.lower() == 'отмена':
         await message.answer(
             "Выбери нужное действие",
@@ -227,7 +222,6 @@ async def create_event_task_success_manual_calendar_handler(
         await state.clear()
         await state.set_state(StartCalendar.start_manual_calendar)
     elif message.text.lower() == 'к предыдущему шагу':
-        await callback_query.message.edit_reply_markup(reply_markup=None)
         keyboards = task_duration_manual_calendar_keyboard()
         await message.answer(
             "Выбери продолжительность события",
