@@ -18,7 +18,7 @@ class InitStates(StatesGroup):
 
 
 @router.message(CommandStart())
-async def command_start_handler(message: types.Message, state: FSMContext) -> None:
+async def command_start_handler(message: types.Message) -> None:
     resp, status = await db_api.get_user(message.from_user.id)
     if status == 404:
         post_resp, post_status = await db_api.create_user(

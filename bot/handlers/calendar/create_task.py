@@ -8,7 +8,10 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import ReplyKeyboardRemove, CallbackQuery
 
-from .start import StartCalendar
+from .start import (
+    start_manual_calendar_handler,
+    StartCalendar
+)
 
 from keyboards.calendar import (
     start_calendar_keyboard,
@@ -49,11 +52,24 @@ async def create_event_task_name_manual_calendar_handler(message: types.Message,
 
 @router.message(StateFilter(CreateEvent.waiting_task_name))
 async def create_event_task_category_manual_calendar_handler(message: types.Message, state: FSMContext) -> None:
-    await message.answer(
-        "Выбери категорию события",
-        reply_markup=task_category_manual_calendar_keyboard()
-    )
-    await state.set_state(CreateEvent.waiting_task_category)
+    if message.text.lower() == 'отмена':
+        await state.set_state(StartCalendar.get_back_to_manual)
+        return
+
+    if not message.text or message.text.strip() == "":
+        await message.answer("Название не может быть пустым!")
+        await state.set_state(CreateEvent.waiting_task_name)
+        return
+    else:
+        if message.text.lower() == 'стандартное название':
+            await state.update_data(task_name='Новое событие')
+        else:
+            await message.answer(
+                "Выбери категорию события",
+                reply_markup=task_category_manual_calendar_keyboard()
+            )
+            await state.update_data(task_name=message.text)
+            await state.set_state(CreateEvent.waiting_task_category)
 
 
 @router.message(StateFilter(CreateEvent.waiting_task_category))
@@ -112,7 +128,7 @@ async def create_event_task_approval_manual_calendar_handler(message: types.Mess
 @router.message(StateFilter(CreateEvent.waiting_approval), F.text.casefold() == 'подтвердить')
 async def create_event_task_success_manual_calendar_handler(message: types.Message, state: FSMContext) -> None:
     await message.answer(
-        "Событие успешно создано",
+        "✅ Событие успешно создано!",
         reply_markup=start_manual_calendar_keyboard()
     )
     await state.set_state(StartCalendar.start_manual_calendar)
