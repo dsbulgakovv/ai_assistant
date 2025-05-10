@@ -64,12 +64,12 @@ async def create_event_task_category_manual_calendar_handler(message: types.Mess
         if message.text.lower() == 'стандартное название':
             await state.update_data(task_name='Новое событие')
         else:
-            await message.answer(
-                "Выбери категорию события",
-                reply_markup=task_category_manual_calendar_keyboard()
-            )
             await state.update_data(task_name=message.text)
-            await state.set_state(CreateEvent.waiting_task_category)
+        await message.answer(
+            "Выбери категорию события",
+            reply_markup=task_category_manual_calendar_keyboard()
+        )
+        await state.set_state(CreateEvent.waiting_task_category)
 
 
 @router.message(StateFilter(CreateEvent.waiting_task_category))
