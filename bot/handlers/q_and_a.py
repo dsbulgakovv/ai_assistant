@@ -52,7 +52,7 @@ async def q_and_a_process_handler(message: types.Message, bot: Bot, state: FSMCo
                 await message.answer(markup_text.format(answer)[x:x + 4095], reply_markup=end_keyboard())
         else:
             await message.answer(markup_text.format(answer), reply_markup=end_keyboard())
-    elif message.text == 'Хватит':
+    elif message.text == 'Вернуться в меню':
         await message.answer('Закончили', reply_markup=ReplyKeyboardRemove())
         await state.clear()
     elif message.text:

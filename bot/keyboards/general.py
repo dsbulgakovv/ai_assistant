@@ -12,5 +12,5 @@ def start_keyboard() -> ReplyKeyboardMarkup:
 
 def end_keyboard() -> ReplyKeyboardMarkup:
     kb = ReplyKeyboardBuilder()
-    kb.button(text='Хватит')
+    kb.button(text='Вернуться в меню')
     return kb.as_markup(resize_keyboard=True)

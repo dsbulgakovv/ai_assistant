@@ -45,7 +45,7 @@ async def voice_to_text_process_handler(message: types.Message, bot: Bot, state:
         text = await api.transcript(file_name)
         await message.answer(markup_text.format(text['text']), reply_markup=end_keyboard())
     else:
-        if message.text == 'Хватит':
+        if message.text == 'Вернуться в меню':
             await message.answer('Закончили', reply_markup=ReplyKeyboardRemove())
             await state.clear()
         else:
