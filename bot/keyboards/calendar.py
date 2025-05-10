@@ -27,13 +27,13 @@ def task_name_manual_calendar_keyboard() -> ReplyKeyboardMarkup:
 
 def task_category_manual_calendar_keyboard() -> ReplyKeyboardMarkup:
     kb = ReplyKeyboardBuilder()
-    kb.add(KeyboardButton(text='Личное'))
+    kb.row(KeyboardButton(text='Личное'))
     kb.add(KeyboardButton(text='Работа'))
     kb.row()
     kb.add(KeyboardButton(text='Учеба'))
     kb.add(KeyboardButton(text='Семья'))
     kb.row()
-    kb.add(KeyboardButton(text='Здоровье'))
+    kb.row(KeyboardButton(text='Здоровье'))
     kb.add(KeyboardButton(text='Финансы'))
     kb.row(KeyboardButton(text='К предыдущему шагу'))
     kb.row(KeyboardButton(text='Отмена'))
