@@ -132,7 +132,7 @@ async def create_event_task_start_manual_calendar_handler(message: types.Message
             reply_markup=keyboards['reply']
         )
         today_dt = datetime.date.today()
-        await state.update_data(start_dt=today_dt)
+        await state.update_data(start_dt=str(today_dt))
         await message.answer(
             f"Выбранная дата: {str(today_dt)}",
             reply_markup=keyboards['inline']
@@ -190,7 +190,7 @@ async def create_event_task_approval_manual_calendar_handler(
             reply_markup=keyboards['reply']
         )
         today_dt = datetime.date.today()
-        await state.update_data(start_dt=today_dt)
+        await state.update_data(start_dt=str(today_dt))
         await message.answer(
             f"Выбранная дата: {str(today_dt)}",
             reply_markup=keyboards['inline']
