@@ -74,6 +74,9 @@ async def create_event_task_category_manual_calendar_handler(message: types.Mess
 
 @router.message(StateFilter(CreateEvent.waiting_task_category))
 async def create_event_task_description_manual_calendar_handler(message: types.Message, state: FSMContext) -> None:
+    if message.text.lower() == 'отмена':
+        await state.set_state(StartCalendar.get_back_to_manual)
+        return
     await message.answer(
         "Введи описание события",
         reply_markup=task_description_manual_calendar_keyboard()
@@ -83,6 +86,10 @@ async def create_event_task_description_manual_calendar_handler(message: types.M
 
 @router.message(StateFilter(CreateEvent.waiting_task_description))
 async def create_event_task_start_manual_calendar_handler(message: types.Message, state: FSMContext) -> None:
+    if message.text.lower() == 'отмена':
+        await state.set_state(StartCalendar.get_back_to_manual)
+        return
+
     keyboards = task_start_dtm_manual_calendar_keyboard()
     await message.answer(
         "Выбери дату и время начала события",
@@ -98,6 +105,10 @@ async def create_event_task_start_manual_calendar_handler(message: types.Message
 
 @router.message(StateFilter(CreateEvent.waiting_task_start_dtm), F.text.casefold() == 'дальше')
 async def create_event_task_end_manual_calendar_handler(message: types.Message, state: FSMContext) -> None:
+    if message.text.lower() == 'отмена':
+        await state.set_state(StartCalendar.get_back_to_manual)
+        return
+
     keyboards = task_duration_manual_calendar_keyboard()
     await message.answer(
         "Выбери продолжительность события",
@@ -113,6 +124,10 @@ async def create_event_task_end_manual_calendar_handler(message: types.Message, 
 
 @router.message(StateFilter(CreateEvent.waiting_task_end_dtm), F.text.casefold() == 'дальше')
 async def create_event_task_approval_manual_calendar_handler(message: types.Message, state: FSMContext) -> None:
+    if message.text.lower() == 'отмена':
+        await state.set_state(StartCalendar.get_back_to_manual)
+        return
+
     await message.answer(
         "ВСЕ СОБЫТИЕ",
         reply_markup=ReplyKeyboardRemove()
