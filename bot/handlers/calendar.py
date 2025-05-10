@@ -58,7 +58,7 @@ async def start_calendar_handler(message: types.Message, state: FSMContext) -> N
 @router.message(StateFilter(StartCalendar.start_calendar), F.text.casefold() == 'мануальный режим')
 async def start_manual_calendar_handler(message: types.Message, state: FSMContext) -> None:
     await message.answer(
-        "Теперь вы в мануальном режиме заполнения.\n"
+        "Теперь ты в мануальном режиме заполнения.\n"
         "Выбери нужное действие",
         reply_markup=start_manual_calendar_keyboard()
     )
