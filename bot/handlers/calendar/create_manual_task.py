@@ -194,6 +194,8 @@ async def create_event_task_approval_manual_calendar_handler(message: types.Mess
         await state.set_state(CreateEvent.waiting_task_start_dtm)
     else:
         data = await state.get_data()
+        if not data['task_description']:
+            data['task_description'] = '...'
         await message.answer(
             calendar.event_desc.format(
                 data.get('task_name'),
