@@ -119,6 +119,9 @@ services:
       - .env
     environment:
       BOT_TOKEN: $BOT_TOKEN
+      PROJECT_ID: $PROJECT_ID
+      KEY_ID: $KEY_ID
+      KEY_SECRET: $KEY_SECRET
     volumes:
       - ./service_files:/app/service_files
 
