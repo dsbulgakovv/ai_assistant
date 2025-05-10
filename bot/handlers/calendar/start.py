@@ -31,7 +31,6 @@ api = DatabaseAPI()
 class StartCalendar(StatesGroup):
     start_calendar = State()
     start_manual_calendar = State()
-    get_back_to_manual = State()
 
 
 @router.message(F.text.casefold() == 'мой календарь')
@@ -51,15 +50,6 @@ async def start_calendar_handler(message: types.Message, state: FSMContext) -> N
 async def start_manual_calendar_handler(message: types.Message, state: FSMContext) -> None:
     await message.answer(
         "Теперь ты в мануальном режиме.\n"
-        "Выбери нужное действие",
-        reply_markup=start_manual_calendar_keyboard()
-    )
-    await state.set_state(StartCalendar.start_manual_calendar)
-
-
-@router.message(StateFilter(StartCalendar.get_back_to_manual))
-async def back_to_manual_calendar_handler(message: types.Message, state: FSMContext) -> None:
-    await message.answer(
         "Выбери нужное действие",
         reply_markup=start_manual_calendar_keyboard()
     )
