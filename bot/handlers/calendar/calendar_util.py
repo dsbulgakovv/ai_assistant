@@ -6,7 +6,7 @@ from aiogram import Router, types
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram_dialog import Dialog, Window, DialogManager
-from aiogram_dialog.widgets.kbd import Calendar, NumberKeyboard, Button
+from aiogram_dialog.widgets.kbd import Calendar, Button, Select
 from aiogram_dialog.widgets.text import Const, Format
 from aiogram.types import CallbackQuery
 
@@ -19,25 +19,26 @@ router = Router()
 
 class CalendarState(StatesGroup):
     select_date = State()
-    select_time = State()
+    select_hours = State()
+    select_minutes = State()
 
-
-async def process_selected_date(
-        callback: CallbackQuery,
-        widget,
-        manager: DialogManager,
-        selected_date: date
-):
-    await callback.answer(f"Вы выбрали: {selected_date}")
-
-    # Получаем FSMContext из данных менеджера
-    state: FSMContext = manager.middleware_data["state"]
-    await state.update_data(selected_date=str(selected_date))
-
-    await manager.done()  # Закрываем диалог
-
-    # Отправляем сообщение через оригинальный callback
-    await callback.message.answer(f"Выбранная дата: {selected_date}")
+#
+# async def process_selected_date(
+#         callback: CallbackQuery,
+#         widget,
+#         manager: DialogManager,
+#         selected_date: date
+# ):
+#     await callback.answer(f"Вы выбрали: {selected_date}")
+#
+#     # Получаем FSMContext из данных менеджера
+#     state: FSMContext = manager.middleware_data["state"]
+#     await state.update_data(selected_date=str(selected_date))
+#
+#     await manager.done()  # Закрываем диалог
+#
+#     # Отправляем сообщение через оригинальный callback
+#     await callback.message.answer(f"Выбранная дата: {selected_date}")
 
 
 async def on_date_selected(
@@ -46,36 +47,35 @@ async def on_date_selected(
         manager: DialogManager,
         selected_date: date
 ):
+    state: FSMContext = manager.middleware_data["state"]
     await callback.answer()
-    await manager.update_data(selected_date=str(selected_date))
-    await manager.switch_to(CalendarState.select_time)
+    await state.update_data(selected_date=str(selected_date))
+    await manager.switch_to(CalendarState.select_hours)
 
 
-async def on_time_changed(
-        event: Any,
+async def on_hour_selected(
+        callback: CallbackQuery,
         widget: Any,
         manager: DialogManager,
-        value: int
+        hour: str
 ):
-    widget_id = widget.widget_id
-    manager.dialog_data[widget_id] = f"{value:02d}"
+    state: FSMContext = manager.middleware_data["state"]
+    await state.update_data(hours=hour)
+    await manager.switch_to(CalendarState.select_minutes)
 
 
-async def on_time_confirmed(
+async def on_minute_selected(
         callback: CallbackQuery,
-        button: Button,
-        manager: DialogManager
+        widget: Any,
+        manager: DialogManager,
+        minute: str
 ):
-    data = manager.dialog_data
-    hours = data.get("hours", "00")
-    minutes = data.get("minutes", "00")
-    selected_time = f"{hours}:{minutes}"
-
-    # Получаем выбранную дату
-    selected_date = data.get("selected_date")
+    state: FSMContext = manager.middleware_data["state"]
+    data = await state.get_data()
+    selected_date = data['selected_date']
+    selected_time = f"{data['hours']}:{minute}"
     full_datetime = f"{selected_date} {selected_time}"
 
-    # Сохраняем в FSMContext
     state: FSMContext = manager.middleware_data["state"]
     await state.update_data(
         event_datetime=full_datetime,
@@ -83,7 +83,11 @@ async def on_time_confirmed(
     )
 
     await manager.done()
-    await callback.message.answer(f"✅ Выбрано: {full_datetime}")
+    await callback.message.answer(f"Выбрано: {full_datetime}")
+
+
+HOURS = [f"{h:02d}" for h in range(24)]
+MINUTES = [f"{m:02d}" for m in range(0, 60, 5)]
 
 
 calendar_dialog = Dialog(
@@ -93,30 +97,27 @@ calendar_dialog = Dialog(
         state=CalendarState.select_date,
     ),
     Window(
-        Const("⏰ Установите время:"),
-        NumberKeyboard(
+        Const("🕒 Выберите час:"),
+        Select(
+            Format("{item}"),
             id="hours",
-            on_value_changed=on_time_changed,
-            max_value=23
+            items=HOURS,
+            on_click=on_hour_selected
         ),
-        Const(":"),
-        NumberKeyboard(
+        state=CalendarState.select_hours,
+    ),
+    Window(
+        Const("⏰ Выберите минуты:"),
+        Select(
+            Format("{item}"),
             id="minutes",
-            on_value_changed=on_time_changed,
-            max_value=59
+            items=MINUTES,
+            on_click=on_minute_selected
         ),
-        Button(
-            Const("✅ Подтвердить время"),
-            id="confirm_time",
-            on_click=on_time_confirmed
-        ),
-        state=CalendarState.select_time,
-        getter=lambda dialog_manager: {
-            "hours": dialog_manager.dialog_data.get("hours", "12"),
-            "minutes": dialog_manager.dialog_data.get("minutes", "00")
-        }
+        state=CalendarState.select_minutes,
     )
 )
+
 
 # calendar_dialog = Dialog(
 #     Window(

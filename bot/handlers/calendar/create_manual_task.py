@@ -198,10 +198,10 @@ async def create_event_task_end_manual_calendar_handler(message: types.Message, 
         cur_dur = '15 мин'
 
         data = await state.get_data()
-        selected_date = data.get("selected_date")
-        await state.update_data(start_dt=selected_date)
+        selected_datetime = data.get("event_datetime")
+        await state.update_data(start_dt=selected_datetime)
         await state.update_data(task_duration=cur_dur)
-        await state.update_data(end_dt=selected_date)
+        await state.update_data(end_dt=selected_datetime)
         await message.answer(
             f"Выбранная продолжительность: {cur_dur}",
             reply_markup=keyboards['inline']
@@ -243,9 +243,9 @@ async def create_event_task_approval_manual_calendar_handler(
         await state.set_state(CreateEvent.waiting_task_end_dt)
     elif message.text.lower() == 'дальше':
         data = await state.get_data()
-        selected_date = data.get("selected_date")
-        data['end_dt'] = selected_date
-        await state.update_data(end_dt=selected_date)
+        selected_datetime = data.get("event_datetime")
+        data['end_dt'] = selected_datetime
+        await state.update_data(end_dt=selected_datetime)
 
         if not data['task_description']:
             data['task_description'] = '...'
