@@ -45,8 +45,7 @@ class CreateEvent(StatesGroup):
     waiting_approval = State()
 
 
-def get_rounded_datetime(tg_user_id):
-    user_time_zone = await db_api.get_user_timezone(tg_user_id)
+def get_rounded_datetime(user_time_zone):
     utc_time = datetime.now(datetime.UTC)
     local_time = utc_time.astimezone(pytz.timezone(user_time_zone))
 
@@ -189,7 +188,8 @@ async def create_event_task_start_manual_calendar_handler(
         else:
             await state.update_data(task_link=message.text)
 
-        start_nearest_dtm, end_nearest_dtm = get_rounded_datetime(message.from_user.id)
+        user_time_zone = await db_api.get_user_timezone(message.from_user.id)
+        start_nearest_dtm, end_nearest_dtm = get_rounded_datetime(user_time_zone)
         await state.update_data(start_dtm=start_nearest_dtm)
         await state.update_data(end_dtm=end_nearest_dtm)
         await message.answer(
@@ -257,7 +257,8 @@ async def create_event_task_approval_manual_calendar_handler(
         await state.clear()
         await state.set_state(StartCalendar.start_manual_calendar)
     elif message.text.lower() == 'к предыдущему шагу':
-        start_nearest_dtm, end_nearest_dtm = get_rounded_datetime(message.from_user.id)
+        user_time_zone = await db_api.get_user_timezone(message.from_user.id)
+        start_nearest_dtm, end_nearest_dtm = get_rounded_datetime(user_time_zone)
         await state.update_data(start_dtm=start_nearest_dtm)
         await state.update_data(end_dtm=end_nearest_dtm)
         await message.answer(
