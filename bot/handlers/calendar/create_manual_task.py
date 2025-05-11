@@ -154,7 +154,7 @@ async def create_event_task_link_manual_calendar_handler(message: types.Message,
         await state.set_state(CreateEvent.waiting_task_category)
     else:
         if message.text.lower() == 'без описания':
-            await state.update_data(task_description=None)
+            await state.update_data(task_description='...')
         else:
             await state.update_data(task_description=message.text)
 
@@ -275,13 +275,12 @@ async def create_event_task_approval_manual_calendar_handler(
             await state.update_data(event_datetime=None)
             await state.update_data(end_dtm=selected_datetime)
 
-        if not data['task_description']:
-            data['task_description'] = '...'
+        data = await state.get_data()
         await message.answer(
             calendar.event_desc.format(
                 data.get('task_name'),
-                data.get('start_dt'),
-                data.get('end_dt'),
+                data.get('start_dtm'),
+                data.get('end_dtm'),
                 data.get('task_category'),
                 data.get('task_description')
             ),

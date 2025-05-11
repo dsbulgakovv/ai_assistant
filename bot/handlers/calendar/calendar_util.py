@@ -78,12 +78,12 @@ MINUTES = [f"{m:02d}" for m in range(0, 60, 15)]
 
 calendar_dialog = Dialog(
     Window(
-        Const("📅 Выбери дату события:"),
+        Const("📅 Дата"),
         Calendar(id="calendar", on_click=on_date_selected),
         state=CalendarState.select_date,
     ),
     Window(
-        Const("🕒 Выбери час:"),
+        Const("🕒 Часы"),
         Select(
             Format("{item}"),
             id="hours",
@@ -94,7 +94,7 @@ calendar_dialog = Dialog(
         state=CalendarState.select_hours,
     ),
     Window(
-        Const("⏰ Выбери минуты:"),
+        Const("⏰ Минуты"),
         Select(
             Format("{item}"),
             id="minutes",
