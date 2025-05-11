@@ -5,6 +5,7 @@ import os
 import pandas as pd
 import asyncio
 
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy import text, create_engine
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 
@@ -19,10 +20,15 @@ log = logging.getLogger("init_db")
 
 
 async def is_table_empty(engine, table_name):
-    async with AsyncSession(engine) as session:
-        result = await session.execute(text(f"SELECT COUNT(*) FROM {table_name}"))
-        count = result.scalar()
-        return count == 0
+    try:
+        async with AsyncSession(engine) as session:
+            async with session.begin():
+                result = await session.execute(text(f"SELECT COUNT(*) FROM {table_name}"))
+                count = result.scalar()
+                return count == 0
+    except SQLAlchemyError as e:
+        log.error(f"Error checking if table {table_name} is empty: {e}")
+        return True  # Assume table is empty if there's an error
 
 
 async def load_data(engine, dir_path, filename, table):
