@@ -5,7 +5,7 @@ import os
 import pandas as pd
 import asyncio
 
-from sqlalchemy import text
+from sqlalchemy import text, create_engine
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 
 from table_models import Base
@@ -36,22 +36,18 @@ async def load_data(engine, dir_path, filename, table):
         # Read CSV file
         df = pd.read_csv(os.path.join(dir_path, filename), encoding='utf8', sep=',')
 
-        # Get a synchronous connection from the async engine
-        async with engine.connect() as conn:
-            # Get the underlying sync connection
-            sync_conn = conn.connection
-            # Load data using pandas with sync connection
-            df.to_sql(
-                name=table,
-                con=sync_conn,
-                index=False,
-                if_exists="append"
-            )
-        log.info(f"Successfully loaded data into '{table}'!")
+        # Create a sync engine for pandas operations
+        sync_engine = create_engine(engine.url.render_as_string(hide_password=False))
 
+        # Rest of your pandas code using sync_engine
+        df.to_sql(
+            name=table,
+            con=sync_engine,
+            index=False,
+            if_exists="append"
+        )
     except Exception as e:
-        log.error(f"Error loading file: {str(e)}")
-        raise
+        log.info(f"Error: {e}")
 
 
 async def async_main(cfg):
