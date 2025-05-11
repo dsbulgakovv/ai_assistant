@@ -198,27 +198,32 @@ async def create_event_task_approval_manual_calendar_handler(
             "Выбери дату начала события",
             reply_markup=task_start_dt_manual_calendar_keyboard()
         )
-        # today_dt = datetime.date.today()
-        # await state.update_data(start_dt=str(today_dt))
         await dialog_manager.start(
             CalendarState.select_date,
             mode=StartMode.RESET_STACK
         )
         await state.set_state(CreateEvent.waiting_task_start_dtm)
     elif message.text.lower() == 'изменить дату завершения':
+        await message.answer(
+            "Выбери дату завершения события",
+            reply_markup=task_start_dt_manual_calendar_keyboard()
+        )
         await dialog_manager.start(
             CalendarState.select_date,
             mode=StartMode.RESET_STACK
         )
-        ...
+        await state.set_state(CreateEvent.waiting_task_end_dtm)
     elif message.text.lower() == 'дальше':
         data = await state.get_data()
+        selected_date = data.get("selected_date")
+        await state.update_data(end_dt=selected_date)
         if not data['task_description']:
             data['task_description'] = '...'
         await message.answer(
             calendar.event_desc.format(
                 data.get('task_name'),
                 data.get('start_dt'),
+                data.get('end_dt'),
                 data.get('task_duration'),
                 data.get('task_category'),
                 data.get('task_description')
