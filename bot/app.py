@@ -32,7 +32,6 @@ async def set_commands(bot: Bot):
 async def main() -> None:
     bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.MARKDOWN))
     dp = Dispatcher(storage=storage)
-
     setup_handlers(dp)
 
     await bot.delete_webhook(drop_pending_updates=True)

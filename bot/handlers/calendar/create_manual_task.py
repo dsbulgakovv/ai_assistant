@@ -8,8 +8,12 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import ReplyKeyboardRemove, CallbackQuery
 
+from aiogram_dialog import DialogManager
+from aiogram_dialog.api.entities import StartMode
+
 from .start import StartCalendar
 
+from .calendar_util import CalendarState
 from texts import calendar
 from keyboards.calendar import (
     start_calendar_keyboard,
@@ -107,7 +111,8 @@ async def create_event_task_description_manual_calendar_handler(message: types.M
 
 
 @router.message(StateFilter(CreateEvent.waiting_task_description))
-async def create_event_task_start_manual_calendar_handler(message: types.Message, state: FSMContext) -> None:
+async def create_event_task_start_manual_calendar_handler(
+        message: types.Message, state: FSMContext, dialog_manager: DialogManager) -> None:
     if message.text.lower() == 'отмена':
         await message.answer(
             "Выбери нужное действие",
@@ -133,9 +138,13 @@ async def create_event_task_start_manual_calendar_handler(message: types.Message
         )
         today_dt = datetime.date.today()
         await state.update_data(start_dt=str(today_dt))
-        await message.answer(
-            f"Выбранная дата: {str(today_dt)}",
-            reply_markup=keyboards['inline']
+        # await message.answer(
+        #     f"Выбранная дата: {str(today_dt)}",
+        #     reply_markup=keyboards['inline']
+        # )
+        await dialog_manager.start(
+            CalendarState.select_date,
+            mode=StartMode.RESET_STACK
         )
         await state.set_state(CreateEvent.waiting_task_start_dtm)
 
@@ -162,6 +171,11 @@ async def create_event_task_end_manual_calendar_handler(message: types.Message, 
             reply_markup=keyboards['reply']
         )
         cur_dur = '15 мин'
+
+        data = await state.get_data()
+        selected_date = data.get("selected_date")
+        await state.update_data(start_dt=str(selected_date))
+
         await state.update_data(task_duration=cur_dur)
         await message.answer(
             f"Выбранная продолжительность: {cur_dur}",
