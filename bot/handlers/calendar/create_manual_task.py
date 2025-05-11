@@ -14,7 +14,7 @@ from aiogram_dialog.api.entities import StartMode
 from .start import StartCalendar
 
 from .calendar_util import CalendarState
-from texts import calendar
+from texts import build_event_full_info
 from keyboards.calendar import (
     start_calendar_keyboard,
     start_manual_calendar_keyboard,
@@ -192,7 +192,7 @@ async def create_event_task_start_manual_calendar_handler(
         await state.update_data(end_dtm=end_nearest_dtm)
         await message.answer(
             f"Выбери дату и время начала события.\n"
-            f"Нажми **Дальше**, чтобы выбрать ближайшую: {start_nearest_dtm}",
+            f"Нажми <b>Дальше</b>, чтобы выбрать ближайшую: {start_nearest_dtm}",
             reply_markup=task_start_dt_manual_calendar_keyboard()
         )
         await dialog_manager.start(
@@ -232,7 +232,7 @@ async def create_event_task_end_manual_calendar_handler(
         end_nearest_dtm = data.get('end_dtm')
         await message.answer(
             "Выбери дату и время заверешния события.\n"
-            f"Нажми **Дальше**, чтобы выбрать ближайшую: {end_nearest_dtm}",
+            f"Нажми <b>Дальше</b>, чтобы выбрать ближайшую: {end_nearest_dtm}",
             reply_markup=task_duration_manual_calendar_keyboard()
         )
         await dialog_manager.start(
@@ -260,7 +260,7 @@ async def create_event_task_approval_manual_calendar_handler(
         await state.update_data(end_dtm=end_nearest_dtm)
         await message.answer(
             f"Выбери дату и время начала события.\n"
-            f"Нажми **Дальше**, чтобы выбрать ближайшую: {start_nearest_dtm}",
+            f"Нажми <b>Дальше</b>, чтобы выбрать ближайшую: {start_nearest_dtm}",
             reply_markup=task_start_dt_manual_calendar_keyboard()
         )
         await dialog_manager.start(
@@ -277,7 +277,7 @@ async def create_event_task_approval_manual_calendar_handler(
 
         data = await state.get_data()
         await message.answer(
-            calendar.event_desc.format(
+            build_event_full_info(
                 data.get('task_name'),
                 data.get('start_dtm'),
                 data.get('end_dtm'),
@@ -311,7 +311,7 @@ async def create_event_task_success_manual_calendar_handler(
         end_nearest_dtm = data.get('end_dtm')
         await message.answer(
             "Выбери дату и время заверешния события.\n"
-            f"Нажми **Дальше**, чтобы выбрать ближайшую: {end_nearest_dtm}",
+            f"Нажми <b>Дальше</b>, чтобы выбрать ближайшую: {end_nearest_dtm}",
             reply_markup=task_duration_manual_calendar_keyboard()
         )
         await dialog_manager.start(
