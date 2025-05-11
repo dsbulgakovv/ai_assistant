@@ -6,7 +6,7 @@ from aiogram import Router, types
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import StatesGroup, State
 from aiogram_dialog import Dialog, Window, DialogManager
-from aiogram_dialog.widgets.kbd import Calendar, Button, Select
+from aiogram_dialog.widgets.kbd import Calendar, Button, Select, Group
 from aiogram_dialog.widgets.text import Const, Format
 from aiogram.types import CallbackQuery
 
@@ -80,12 +80,15 @@ calendar_dialog = Dialog(
     ),
     Window(
         Const("🕒 Часы"),
-        Select(
-            Format("{item}"),
-            id="hours",
-            items=HOURS,
-            on_click=on_hour_selected,
-            item_id_getter=lambda x: x,
+        Group(
+            Select(
+                Format("{item}"),
+                id="hours",
+                items=HOURS,
+                on_click=on_hour_selected,
+                item_id_getter=lambda x: x,
+            ),
+            width=6
         ),
         state=CalendarState.select_hours,
     ),
