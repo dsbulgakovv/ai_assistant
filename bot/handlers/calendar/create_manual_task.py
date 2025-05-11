@@ -192,7 +192,7 @@ async def create_event_task_start_manual_calendar_handler(
         await state.update_data(end_dtm=end_nearest_dtm)
         await message.answer(
             f"Выбери дату и время начала события.\n"
-            f"Нажми 'Дальше', чтобы выбрать ближайшую: {start_nearest_dtm}",
+            f"Нажми *Дальше*, чтобы выбрать ближайшую: {start_nearest_dtm}",
             reply_markup=task_start_dt_manual_calendar_keyboard()
         )
         await dialog_manager.start(
@@ -231,8 +231,8 @@ async def create_event_task_end_manual_calendar_handler(
         data = await state.get_data()
         end_nearest_dtm = data.get('end_dtm')
         await message.answer(
-            "Выбери дату и время заверешния события"
-            f"Нажми 'Дальше', чтобы выбрать ближайшую: {end_nearest_dtm}",
+            "Выбери дату и время заверешния события.\n"
+            f"Нажми *Дальше*, чтобы выбрать ближайшую: {end_nearest_dtm}",
             reply_markup=task_duration_manual_calendar_keyboard()
         )
         await dialog_manager.start(
@@ -260,7 +260,7 @@ async def create_event_task_approval_manual_calendar_handler(
         await state.update_data(end_dtm=end_nearest_dtm)
         await message.answer(
             f"Выбери дату и время начала события.\n"
-            f"Нажми 'Дальше', чтобы выбрать ближайшую: {start_nearest_dtm}",
+            f"Нажми *Дальше*, чтобы выбрать ближайшую: {start_nearest_dtm}",
             reply_markup=task_start_dt_manual_calendar_keyboard()
         )
         await dialog_manager.start(
@@ -309,8 +309,8 @@ async def create_event_task_success_manual_calendar_handler(
         data = await state.get_data()
         end_nearest_dtm = data.get('end_dtm')
         await message.answer(
-            "Выбери дату и время заверешния события"
-            f"Нажми 'Дальше', чтобы выбрать ближайшую: {end_nearest_dtm}",
+            "Выбери дату и время заверешния события.\n"
+            f"Нажми *Дальше*, чтобы выбрать ближайшую: {end_nearest_dtm}",
             reply_markup=task_duration_manual_calendar_keyboard()
         )
         await dialog_manager.start(
@@ -327,26 +327,6 @@ async def create_event_task_success_manual_calendar_handler(
         await state.set_state(StartCalendar.start_manual_calendar)
     else:
         await message.answer("Не та команда")
-
-
-# @router.callback_query()
-# async def callback_handler(callback: CallbackQuery, state: FSMContext, project_data: dict):
-#     if callback.data == "main_menu":
-#         await show_menu(callback.message, state)
-#     elif callback.data == "about_us":
-#         await cmd_info(callback.message, state)
-#     elif callback.data == "show_gallery":
-#         await show_gallery(callback.message, state)
-#     elif callback.data == "show_more":
-#         await state.set_state(InitStates.show_more_gallery)
-#         await show_more_gallery(callback.message, state)
-#     elif callback.data == "get_estimation":
-#         await get_estimation(callback.message, state)
-#     elif callback.data == "change_data":
-#         await state.set_state(EstimationStates.square_metres)
-#         await get_square_metres(callback.message, state)
-#     elif callback.data == "all_right_data":
-#         await show_price(callback.message, state, project_data)
 
 
 def setup_calendar_create_task_handlers(dp):
