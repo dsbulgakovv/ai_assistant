@@ -46,6 +46,14 @@ def task_description_manual_calendar_keyboard() -> ReplyKeyboardMarkup:
     return kb.as_markup(resize_keyboard=True)
 
 
+def task_link_manual_calendar_keyboard() -> ReplyKeyboardMarkup:
+    kb = ReplyKeyboardBuilder()
+    kb.row(KeyboardButton(text='Без ссылки'))
+    kb.row(KeyboardButton(text='К предыдущему шагу'))
+    kb.row(KeyboardButton(text='Отмена'))
+    return kb.as_markup(resize_keyboard=True)
+
+
 def task_start_dt_manual_calendar_keyboard() -> (InlineKeyboardMarkup, ReplyKeyboardMarkup):
     kb = ReplyKeyboardBuilder()
     kb.row(KeyboardButton(text='Дальше'))

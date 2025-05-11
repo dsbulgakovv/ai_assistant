@@ -21,6 +21,7 @@ from keyboards.calendar import (
     task_name_manual_calendar_keyboard,
     task_category_manual_calendar_keyboard,
     task_description_manual_calendar_keyboard,
+    task_link_manual_calendar_keyboard,
     task_start_dt_manual_calendar_keyboard,
     task_duration_manual_calendar_keyboard,
     task_approval_manual_calendar_keyboard
@@ -38,8 +39,11 @@ class CreateEvent(StatesGroup):
     waiting_task_name = State()
     waiting_task_category = State()
     waiting_task_description = State()
-    waiting_task_start_dtm = State()
-    waiting_task_end_dtm = State()
+    waiting_task_link = State()
+    waiting_task_start_dt = State()
+    waiting_task_start_time = State()
+    waiting_task_end_dt = State()
+    waiting_task_end_time = State()
     waiting_approval = State()
 
 
@@ -111,8 +115,7 @@ async def create_event_task_description_manual_calendar_handler(message: types.M
 
 
 @router.message(StateFilter(CreateEvent.waiting_task_description))
-async def create_event_task_start_manual_calendar_handler(
-        message: types.Message, state: FSMContext, dialog_manager: DialogManager) -> None:
+async def create_event_task_link_manual_calendar_handler(message: types.Message, state: FSMContext) -> None:
     if message.text.lower() == 'отмена':
         await message.answer(
             "Выбери нужное действие",
@@ -133,20 +136,15 @@ async def create_event_task_start_manual_calendar_handler(
             await state.update_data(task_description=message.text)
 
         await message.answer(
-            "Выбери дату начала события",
-            reply_markup=task_start_dt_manual_calendar_keyboard()
+            "Добавим ссылку на встречу?",
+            reply_markup=task_link_manual_calendar_keyboard()
         )
-        # today_dt = datetime.date.today()
-        # await state.update_data(start_dt=str(today_dt))
-        await dialog_manager.start(
-            CalendarState.select_date,
-            mode=StartMode.RESET_STACK
-        )
-        await state.set_state(CreateEvent.waiting_task_start_dtm)
+        await state.set_state(CreateEvent.waiting_task_link)
 
 
-@router.message(StateFilter(CreateEvent.waiting_task_start_dtm))
-async def create_event_task_end_manual_calendar_handler(message: types.Message, state: FSMContext) -> None:
+@router.message(StateFilter(CreateEvent.waiting_task_link))
+async def create_event_task_start_manual_calendar_handler(
+        message: types.Message, state: FSMContext, dialog_manager: DialogManager) -> None:
     if message.text.lower() == 'отмена':
         await message.answer(
             "Выбери нужное действие",
@@ -160,6 +158,38 @@ async def create_event_task_end_manual_calendar_handler(message: types.Message, 
             reply_markup=task_description_manual_calendar_keyboard()
         )
         await state.set_state(CreateEvent.waiting_task_description)
+    else:
+        if message.text.lower() == 'без ссылки':
+            await state.update_data(task_link=None)
+        else:
+            await state.update_data(task_link=message.text)
+
+        await message.answer(
+            "Выбери дату начала события",
+            reply_markup=task_start_dt_manual_calendar_keyboard()
+        )
+        await dialog_manager.start(
+            CalendarState.select_date,
+            mode=StartMode.RESET_STACK
+        )
+        await state.set_state(CreateEvent.waiting_task_start_dt)
+
+
+@router.message(StateFilter(CreateEvent.waiting_task_start_dt))
+async def create_event_task_end_manual_calendar_handler(message: types.Message, state: FSMContext) -> None:
+    if message.text.lower() == 'отмена':
+        await message.answer(
+            "Выбери нужное действие",
+            reply_markup=start_manual_calendar_keyboard()
+        )
+        await state.clear()
+        await state.set_state(StartCalendar.start_manual_calendar)
+    elif message.text.lower() == 'к предыдущему шагу':
+        await message.answer(
+            "Добавим ссылку на встречу?",
+            reply_markup=task_link_manual_calendar_keyboard()
+        )
+        await state.set_state(CreateEvent.waiting_task_link)
     elif message.text.lower() == 'дальше':
         keyboards = task_duration_manual_calendar_keyboard()
         await message.answer(
@@ -178,12 +208,12 @@ async def create_event_task_end_manual_calendar_handler(message: types.Message, 
             f"Выбранная продолжительность: {cur_dur}",
             reply_markup=keyboards['inline']
         )
-        await state.set_state(CreateEvent.waiting_task_end_dtm)
+        await state.set_state(CreateEvent.waiting_task_end_dt)
     else:
         await message.answer("Не та команда")
 
 
-@router.message(StateFilter(CreateEvent.waiting_task_end_dtm))
+@router.message(StateFilter(CreateEvent.waiting_task_end_dt))
 async def create_event_task_approval_manual_calendar_handler(
         message: types.Message, state: FSMContext, dialog_manager: DialogManager) -> None:
     if message.text.lower() == 'отмена':
@@ -202,7 +232,7 @@ async def create_event_task_approval_manual_calendar_handler(
             CalendarState.select_date,
             mode=StartMode.RESET_STACK
         )
-        await state.set_state(CreateEvent.waiting_task_start_dtm)
+        await state.set_state(CreateEvent.waiting_task_start_dt)
     elif message.text.lower() == 'изменить дату завершения':
         await message.answer(
             "Выбери дату завершения события",
@@ -212,7 +242,7 @@ async def create_event_task_approval_manual_calendar_handler(
             CalendarState.select_date,
             mode=StartMode.RESET_STACK
         )
-        await state.set_state(CreateEvent.waiting_task_end_dtm)
+        await state.set_state(CreateEvent.waiting_task_end_dt)
     elif message.text.lower() == 'дальше':
         data = await state.get_data()
         selected_date = data.get("selected_date")
@@ -262,7 +292,7 @@ async def create_event_task_success_manual_calendar_handler(message: types.Messa
             f"Выбранная продолжительность: {cur_dur}",
             reply_markup=keyboards['inline']
         )
-        await state.set_state(CreateEvent.waiting_task_end_dtm)
+        await state.set_state(CreateEvent.waiting_task_end_dt)
     elif message.text.lower() == 'подтвердить':
         await message.answer(
             "✅ Событие успешно создано!",
