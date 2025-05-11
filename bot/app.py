@@ -7,7 +7,7 @@ from aiogram import Bot, Dispatcher
 from aiogram.types import BotCommand, BotCommandScopeDefault
 from aiogram.client.bot import DefaultBotProperties
 from aiogram.enums import ParseMode
-from aiogram.fsm.storage.redis import RedisStorage
+from aiogram.fsm.storage.redis import RedisStorage, DefaultKeyBuilder
 
 from redis.asyncio import Redis
 
@@ -17,7 +17,7 @@ from handlers import setup_handlers
 TOKEN = os.getenv('BOT_TOKEN')
 
 redis_connection = Redis(host='redis', port=5370, db=0)
-storage = RedisStorage(redis=redis_connection)
+storage = RedisStorage(redis=redis_connection, key_builder=DefaultKeyBuilder(with_destiny=True))
 
 logger = logging.getLogger('aiogram')
 logger.setLevel(logging.DEBUG)
