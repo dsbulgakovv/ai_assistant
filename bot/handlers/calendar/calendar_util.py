@@ -102,7 +102,8 @@ calendar_dialog = Dialog(
             Format("{item}"),
             id="hours",
             items=HOURS,
-            on_click=on_hour_selected
+            on_click=on_hour_selected,
+            item_id_getter=lambda x: x,
         ),
         state=CalendarState.select_hours,
     ),
@@ -112,7 +113,8 @@ calendar_dialog = Dialog(
             Format("{item}"),
             id="minutes",
             items=MINUTES,
-            on_click=on_minute_selected
+            on_click=on_minute_selected,
+            item_id_getter=lambda x: x,
         ),
         state=CalendarState.select_minutes,
     )
