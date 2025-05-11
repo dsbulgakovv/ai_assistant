@@ -20,7 +20,7 @@ def start_manual_calendar_keyboard() -> ReplyKeyboardMarkup:
 
 def task_name_manual_calendar_keyboard() -> ReplyKeyboardMarkup:
     kb = ReplyKeyboardBuilder()
-    kb.row(KeyboardButton(text='Стандартное название'))
+    kb.row(KeyboardButton(text='Без названия'))
     kb.row(KeyboardButton(text='Отмена'))
     return kb.as_markup(resize_keyboard=True)
 

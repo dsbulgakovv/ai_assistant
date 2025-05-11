@@ -41,9 +41,7 @@ class CreateEvent(StatesGroup):
     waiting_task_description = State()
     waiting_task_link = State()
     waiting_task_start_dt = State()
-    waiting_task_start_time = State()
     waiting_task_end_dt = State()
-    waiting_task_end_time = State()
     waiting_approval = State()
 
 
@@ -71,7 +69,7 @@ async def create_event_task_category_manual_calendar_handler(message: types.Mess
             await state.set_state(CreateEvent.waiting_task_name)
             return
         else:
-            if message.text.lower() == 'стандартное название':
+            if message.text.lower() == 'без названия':
                 await state.update_data(task_name='Новое событие')
             else:
                 await state.update_data(task_name=message.text)
@@ -163,7 +161,8 @@ async def create_event_task_start_manual_calendar_handler(
             await state.update_data(task_link=None)
         else:
             await state.update_data(task_link=message.text)
-
+        today_dt = datetime.date.today()
+        await state.update_data(start_dt=str(today_dt))
         await message.answer(
             "Выбери дату начала события",
             reply_markup=task_start_dt_manual_calendar_keyboard()
@@ -201,7 +200,6 @@ async def create_event_task_end_manual_calendar_handler(message: types.Message, 
         data = await state.get_data()
         selected_date = data.get("selected_date")
         await state.update_data(start_dt=selected_date)
-
         await state.update_data(task_duration=cur_dur)
         await state.update_data(end_dt=selected_date)
         await message.answer(
