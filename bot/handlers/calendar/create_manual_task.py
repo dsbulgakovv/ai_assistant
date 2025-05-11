@@ -71,6 +71,19 @@ def get_rounded_datetime(user_time_zone):
     return formatted_cur, formatted_next
 
 
+def map_task_category(str_category):
+    categories_mapping = {
+        'Работа': 1,
+        'Учеба': 2,
+        'Личное': 3,
+        'Здоровье': 4,
+        'Финансы': 5,
+        'Семья': 6
+    }
+
+    return categories_mapping[str_category]
+
+
 @router.message(StateFilter(StartCalendar.start_manual_calendar), F.text.casefold() == 'создать новое событие')
 async def create_event_task_name_manual_calendar_handler(message: types.Message, state: FSMContext) -> None:
     await message.answer(
@@ -326,7 +339,7 @@ async def create_event_task_success_manual_calendar_handler(
         data = await state.get_data()
         await db_api.create_task(
             message.from_user.id,
-            data['task_name'], 1, data['task_category'],
+            data['task_name'], 1, map_task_category(data['task_category']),
             data['task_description'], data['task_link'], data['start_dtm'], data['end_dtm']
         )
         await message.answer(
