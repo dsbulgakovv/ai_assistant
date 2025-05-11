@@ -71,6 +71,15 @@ def get_rounded_datetime(user_time_zone):
     return formatted_cur, formatted_next
 
 
+def convert_date_string(input_date_str: str, timezone_str: str) -> str:
+    dt_naive = datetime.strptime(input_date_str, "%d.%m.%Y %H:%M")
+    tz = pytz.timezone(timezone_str)
+    dt_local = tz.localize(dt_naive)
+    formatted_date = dt_local.strftime("%Y-%m-%d %H:%M:%S.000 %z")
+
+    return formatted_date
+
+
 def map_task_category(str_category):
     categories_mapping = {
         'Работа': 1,
@@ -205,6 +214,7 @@ async def create_event_task_start_manual_calendar_handler(
         start_nearest_dtm, end_nearest_dtm = get_rounded_datetime(user_time_zone)
         await state.update_data(start_dtm=start_nearest_dtm)
         await state.update_data(end_dtm=end_nearest_dtm)
+        await state.update_data(timezone=user_time_zone)
         await message.answer(
             f"Выбери дату и время начала события.\n"
             f"Нажми <b>Дальше</b>, чтобы выбрать ближайшую: {start_nearest_dtm}",
@@ -274,6 +284,7 @@ async def create_event_task_approval_manual_calendar_handler(
         start_nearest_dtm, end_nearest_dtm = get_rounded_datetime(user_time_zone)
         await state.update_data(start_dtm=start_nearest_dtm)
         await state.update_data(end_dtm=end_nearest_dtm)
+        await state.update_data(timezone=user_time_zone)
         await message.answer(
             f"Выбери дату и время начала события.\n"
             f"Нажми <b>Дальше</b>, чтобы выбрать ближайшую: {start_nearest_dtm}",
@@ -340,7 +351,9 @@ async def create_event_task_success_manual_calendar_handler(
         await db_api.create_task(
             message.from_user.id,
             data['task_name'], 1, map_task_category(data['task_category']),
-            data['task_description'], data['task_link'], data['start_dtm'], data['end_dtm']
+            data['task_description'], data['task_link'],
+            convert_date_string(data['start_dtm']),
+            convert_date_string(data['end_dtm'])
         )
         await message.answer(
             "✅ Событие успешно создано!",
