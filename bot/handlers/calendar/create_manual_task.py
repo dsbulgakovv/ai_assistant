@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import pytz
 import logging
 
 from aiogram import F, Router, types
@@ -31,7 +32,7 @@ logger = logging.getLogger('aiogram')
 logger.setLevel(logging.DEBUG)
 
 router = Router()
-api = DatabaseAPI()
+db_api = DatabaseAPI()
 
 
 class CreateEvent(StatesGroup):
@@ -44,20 +45,22 @@ class CreateEvent(StatesGroup):
     waiting_approval = State()
 
 
-def get_rounded_datetime():
-    now = datetime.now()
+def get_rounded_datetime(tg_user_id):
+    user_time_zone = await db_api.get_user_timezone(tg_user_id)
+    utc_time = datetime.now(datetime.UTC)
+    local_time = utc_time.astimezone(pytz.timezone(user_time_zone))
 
     # Округляем до ближайших 30 минут
-    minute = now.minute
+    minute = local_time.minute
     if minute < 15:
         # Округляем вниз до полного часа
-        rounded = now.replace(minute=0, second=0, microsecond=0)
+        rounded = local_time.replace(minute=0, second=0, microsecond=0)
     elif 15 <= minute < 45:
         # Округляем до 30 минут
-        rounded = now.replace(minute=30, second=0, microsecond=0)
+        rounded = local_time.replace(minute=30, second=0, microsecond=0)
     else:
         # Округляем вверх до следующего часа
-        rounded = (now.replace(minute=0, second=0, microsecond=0)
+        rounded = (local_time.replace(minute=0, second=0, microsecond=0)
                    + timedelta(hours=1))
 
     next_rounded = rounded + timedelta(minutes=30)
@@ -186,7 +189,7 @@ async def create_event_task_start_manual_calendar_handler(
         else:
             await state.update_data(task_link=message.text)
 
-        start_nearest_dtm, end_nearest_dtm = get_rounded_datetime()
+        start_nearest_dtm, end_nearest_dtm = get_rounded_datetime(message.from_user.id)
         await state.update_data(start_dtm=start_nearest_dtm)
         await state.update_data(end_dtm=end_nearest_dtm)
         await message.answer(
@@ -254,7 +257,7 @@ async def create_event_task_approval_manual_calendar_handler(
         await state.clear()
         await state.set_state(StartCalendar.start_manual_calendar)
     elif message.text.lower() == 'к предыдущему шагу':
-        start_nearest_dtm, end_nearest_dtm = get_rounded_datetime()
+        start_nearest_dtm, end_nearest_dtm = get_rounded_datetime(message.from_user.id)
         await state.update_data(start_dtm=start_nearest_dtm)
         await state.update_data(end_dtm=end_nearest_dtm)
         await message.answer(
@@ -319,6 +322,12 @@ async def create_event_task_success_manual_calendar_handler(
         )
         await state.set_state(CreateEvent.waiting_task_end_dt)
     elif message.text.lower() == 'подтвердить':
+        data = await state.get_data()
+        await db_api.create_task(
+            message.from_user.id,
+            data['task_name'], 1, data['task_category'],
+            data['task_description'], data['task_link'], data['start_dtm'], data['end_dtm']
+        )
         await message.answer(
             "✅ Событие успешно создано!",
             reply_markup=start_manual_calendar_keyboard()

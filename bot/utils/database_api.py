@@ -19,6 +19,12 @@ class DatabaseAPI:
                 response, status = await resp.json(), resp.status
         return response, status
 
+    async def get_user_timezone(self, tg_user_id):
+        async with ClientSession() as session:
+            async with session.get(f"{self.base_url}/users/{tg_user_id}") as resp:
+                response = await resp.json()['timezone']
+        return response
+
     async def get_tasks(self, tg_user_id, start_date, end_date):
         async with ClientSession() as session:
             async with session.get(

@@ -24,7 +24,9 @@ async def command_start_handler(message: types.Message, state: FSMContext) -> No
         post_resp, post_status = await db_api.create_user(
             message.from_user.id,
             message.from_user.username,
-            message.from_user.full_name
+            message.from_user.full_name,
+            'Europe/Moscow',
+            'rus'
         )
         if post_status == 201:
             await message.answer(
