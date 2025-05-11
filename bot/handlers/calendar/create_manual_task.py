@@ -216,7 +216,9 @@ async def create_event_task_approval_manual_calendar_handler(
     elif message.text.lower() == 'дальше':
         data = await state.get_data()
         selected_date = data.get("selected_date")
+        data['end_dt'] = selected_date
         await state.update_data(end_dt=selected_date)
+
         if not data['task_description']:
             data['task_description'] = '...'
         await message.answer(

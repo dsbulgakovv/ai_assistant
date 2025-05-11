@@ -35,12 +35,12 @@ async def process_selected_date(
     await manager.done()  # Закрываем диалог
 
     # Отправляем сообщение через оригинальный callback
-    await callback.message.answer(f"Дата {selected_date} сохранена. Продолжаем...")
+    await callback.message.answer(f"Выбранная дата: {selected_date}")
 
 
 calendar_dialog = Dialog(
     Window(
-        Const("Выберите дату:"),
+        Const("Календарь"),
         Calendar(id="calendar", on_click=process_selected_date),
         state=CalendarState.select_date,
     )
