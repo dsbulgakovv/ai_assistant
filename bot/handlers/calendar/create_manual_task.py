@@ -183,7 +183,7 @@ async def create_event_task_start_manual_calendar_handler(
         await state.set_state(CreateEvent.waiting_task_description)
     else:
         if message.text.lower() == 'без ссылки':
-            await state.update_data(task_link=None)
+            await state.update_data(task_link='Нет ссылки на событие')
         else:
             await state.update_data(task_link=message.text)
 
@@ -282,6 +282,7 @@ async def create_event_task_approval_manual_calendar_handler(
                 data.get('start_dtm'),
                 data.get('end_dtm'),
                 data.get('task_category'),
+                data.get('task_link'),
                 data.get('task_description')
             ),
             reply_markup=ReplyKeyboardRemove()
