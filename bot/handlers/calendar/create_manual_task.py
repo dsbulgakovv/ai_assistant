@@ -1,6 +1,6 @@
-from datetime import datetime, timedelta
 import pytz
 import logging
+from datetime import datetime, timedelta, timezone
 
 from aiogram import F, Router, types
 from aiogram.filters import StateFilter
@@ -46,7 +46,7 @@ class CreateEvent(StatesGroup):
 
 
 def get_rounded_datetime(user_time_zone):
-    utc_time = datetime.now(datetime.UTC)
+    utc_time = datetime.now(timezone.utc)
     local_time = utc_time.astimezone(pytz.timezone(user_time_zone))
 
     # Округляем до ближайших 30 минут
