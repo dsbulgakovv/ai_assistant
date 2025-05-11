@@ -352,8 +352,8 @@ async def create_event_task_success_manual_calendar_handler(
             message.from_user.id,
             data['task_name'], 1, map_task_category(data['task_category']),
             data['task_description'], data['task_link'],
-            convert_date_string(data['start_dtm']),
-            convert_date_string(data['end_dtm'])
+            convert_date_string(data['start_dtm'], data['timezone']),
+            convert_date_string(data['end_dtm'], data['timezone'])
         )
         await message.answer(
             "✅ Событие успешно создано!",
