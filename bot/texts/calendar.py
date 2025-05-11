@@ -9,6 +9,6 @@ def build_event_full_info(title, start_date, end_date, category, info, descripti
         f"🕓 <b>Дата завершения:</b> <code>{h(end_date)}</code>\n"
         f"🏷️ <b>Категория:</b> {h(category)}\n"
         "━━━━━━━━━━━━━━\n"
-        f"ℹ️ <i>{h(info)}</i>\n"
+        f"<i>{h(info)}</i>\n"
         f"{h(description)}"
     )

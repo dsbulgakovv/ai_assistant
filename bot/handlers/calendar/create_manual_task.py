@@ -1,6 +1,5 @@
 from datetime import datetime, timedelta
 import logging
-import os
 
 from aiogram import F, Router, types
 from aiogram.filters import StateFilter

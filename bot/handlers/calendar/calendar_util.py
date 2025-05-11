@@ -68,11 +68,7 @@ async def on_minute_selected(
     await callback.message.answer(f"Выбрано: {full_datetime}")
 
 
-HOURS = [
-    [f"{h:02d}" for h in range(9)],
-    [f"{h:02d}" for h in range(9, 18)],
-    [f"{h:02d}" for h in range(18, 24)]
-]
+HOURS = [f"{h:02d}" for h in range(24)]
 MINUTES = [f"{m:02d}" for m in range(0, 60, 15)]
 
 
