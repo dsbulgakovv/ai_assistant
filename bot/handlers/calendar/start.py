@@ -11,12 +11,6 @@ from aiogram.types import ReplyKeyboardRemove, CallbackQuery
 from keyboards.calendar import (
     start_calendar_keyboard,
     start_manual_calendar_keyboard,
-    task_name_manual_calendar_keyboard,
-    task_category_manual_calendar_keyboard,
-    task_description_manual_calendar_keyboard,
-    task_start_dtm_manual_calendar_keyboard,
-    task_duration_manual_calendar_keyboard,
-    task_approval_manual_calendar_keyboard
 )
 from utils.database_api import DatabaseAPI
 
