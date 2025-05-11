@@ -186,10 +186,10 @@ async def create_task(task: Task, conn=Depends(get_db)):
             tg_user_id, task_name, task_status, task_category, task_description, task_link,
             task_start_dtm, task_end_dtm, created_at, updated_at
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
         """,
-        task.tg_user_id, task.task_name, task.task_status, task.task_category, task.task_link,
-        task.task_description, task_start_dtm, task_end_dtm
+        task.tg_user_id, task.task_name, task.task_status, task.task_category, task.task_description,
+        task.task_link, task_start_dtm, task_end_dtm
     )
     return {"status": "success", "message": "Task created"}
 
