@@ -360,6 +360,7 @@ async def create_event_task_success_manual_calendar_handler(
             reply_markup=start_manual_calendar_keyboard()
         )
         await state.clear()
+        await dialog_manager.close_manager()
         await state.set_state(StartCalendar.start_manual_calendar)
     else:
         await message.answer("Не та команда")
