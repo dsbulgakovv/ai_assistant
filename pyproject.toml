@@ -36,6 +36,7 @@ pandas = "^2.2.3"
 asyncpg = "^0.30.0"
 fastapi = "^0.111.0"
 asyncio = "^3.4.3"
+psycopg2-binary = "^2.9.10"
 
 [build-system]
 requires = ["poetry-core"]
