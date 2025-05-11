@@ -14,7 +14,7 @@ from aiogram_dialog.api.entities import StartMode
 from .start import StartCalendar
 
 from .calendar_util import CalendarState
-from texts import build_event_full_info
+from texts.calendar import build_event_full_info
 from keyboards.calendar import (
     start_calendar_keyboard,
     start_manual_calendar_keyboard,
