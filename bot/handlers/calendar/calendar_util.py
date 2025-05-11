@@ -30,7 +30,7 @@ async def process_selected_date(
 
     # Получаем FSMContext из данных менеджера
     state: FSMContext = manager.middleware_data["state"]
-    await state.update_data(selected_date=selected_date)
+    await state.update_data(selected_date=str(selected_date))
 
     await manager.done()  # Закрываем диалог
 

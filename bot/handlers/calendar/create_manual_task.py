@@ -21,7 +21,7 @@ from keyboards.calendar import (
     task_name_manual_calendar_keyboard,
     task_category_manual_calendar_keyboard,
     task_description_manual_calendar_keyboard,
-    task_start_dtm_manual_calendar_keyboard,
+    task_start_dt_manual_calendar_keyboard,
     task_duration_manual_calendar_keyboard,
     task_approval_manual_calendar_keyboard
 )
@@ -131,17 +131,13 @@ async def create_event_task_start_manual_calendar_handler(
             await state.update_data(task_description=None)
         else:
             await state.update_data(task_description=message.text)
-        keyboards = task_start_dtm_manual_calendar_keyboard()
+
         await message.answer(
-            "Выбери дату и время начала события",
-            reply_markup=keyboards['reply']
+            "Выбери дату начала события",
+            reply_markup=task_start_dt_manual_calendar_keyboard()
         )
-        today_dt = datetime.date.today()
-        await state.update_data(start_dt=str(today_dt))
-        # await message.answer(
-        #     f"Выбранная дата: {str(today_dt)}",
-        #     reply_markup=keyboards['inline']
-        # )
+        # today_dt = datetime.date.today()
+        # await state.update_data(start_dt=str(today_dt))
         await dialog_manager.start(
             CalendarState.select_date,
             mode=StartMode.RESET_STACK
@@ -174,9 +170,10 @@ async def create_event_task_end_manual_calendar_handler(message: types.Message, 
 
         data = await state.get_data()
         selected_date = data.get("selected_date")
-        await state.update_data(start_dt=str(selected_date))
+        await state.update_data(start_dt=selected_date)
 
         await state.update_data(task_duration=cur_dur)
+        await state.update_data(end_dt=selected_date)
         await message.answer(
             f"Выбранная продолжительность: {cur_dur}",
             reply_markup=keyboards['inline']
@@ -187,7 +184,8 @@ async def create_event_task_end_manual_calendar_handler(message: types.Message, 
 
 
 @router.message(StateFilter(CreateEvent.waiting_task_end_dtm))
-async def create_event_task_approval_manual_calendar_handler(message: types.Message, state: FSMContext) -> None:
+async def create_event_task_approval_manual_calendar_handler(
+        message: types.Message, state: FSMContext, dialog_manager: DialogManager) -> None:
     if message.text.lower() == 'отмена':
         await message.answer(
             "Выбери нужное действие",
@@ -196,18 +194,23 @@ async def create_event_task_approval_manual_calendar_handler(message: types.Mess
         await state.clear()
         await state.set_state(StartCalendar.start_manual_calendar)
     elif message.text.lower() == 'к предыдущему шагу':
-        keyboards = task_start_dtm_manual_calendar_keyboard()
         await message.answer(
-            "Выбери дату и время начала события",
-            reply_markup=keyboards['reply']
+            "Выбери дату начала события",
+            reply_markup=task_start_dt_manual_calendar_keyboard()
         )
-        today_dt = datetime.date.today()
-        await state.update_data(start_dt=str(today_dt))
-        await message.answer(
-            f"Выбранная дата: {str(today_dt)}",
-            reply_markup=keyboards['inline']
+        # today_dt = datetime.date.today()
+        # await state.update_data(start_dt=str(today_dt))
+        await dialog_manager.start(
+            CalendarState.select_date,
+            mode=StartMode.RESET_STACK
         )
         await state.set_state(CreateEvent.waiting_task_start_dtm)
+    elif message.text.lower() == 'изменить дату завершения':
+        await dialog_manager.start(
+            CalendarState.select_date,
+            mode=StartMode.RESET_STACK
+        )
+        ...
     elif message.text.lower() == 'дальше':
         data = await state.get_data()
         if not data['task_description']:

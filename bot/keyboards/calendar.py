@@ -46,16 +46,13 @@ def task_description_manual_calendar_keyboard() -> ReplyKeyboardMarkup:
     return kb.as_markup(resize_keyboard=True)
 
 
-def task_start_dtm_manual_calendar_keyboard() -> (InlineKeyboardMarkup, ReplyKeyboardMarkup):
-    start_button_1 = InlineKeyboardButton(text="В ближайший час", callback_data="15_min")
-    show_start_inline_kb = InlineKeyboardMarkup(inline_keyboard=[[start_button_1]])
-
+def task_start_dt_manual_calendar_keyboard() -> (InlineKeyboardMarkup, ReplyKeyboardMarkup):
     kb = ReplyKeyboardBuilder()
     kb.row(KeyboardButton(text='Дальше'))
     kb.row(KeyboardButton(text='К предыдущему шагу'))
     kb.row(KeyboardButton(text='Отмена'))
 
-    return {'inline': show_start_inline_kb, 'reply': kb.as_markup(resize_keyboard=True)}
+    return kb.as_markup(resize_keyboard=True)
 
 
 def task_duration_manual_calendar_keyboard() -> (InlineKeyboardMarkup, ReplyKeyboardMarkup):
@@ -71,6 +68,7 @@ def task_duration_manual_calendar_keyboard() -> (InlineKeyboardMarkup, ReplyKeyb
     ])
 
     kb = ReplyKeyboardBuilder()
+    kb.row(KeyboardButton(text='Изменить дату завершения'))
     kb.row(KeyboardButton(text='Дальше'))
     kb.row(KeyboardButton(text='К предыдущему шагу'))
     kb.row(KeyboardButton(text='Отмена'))
