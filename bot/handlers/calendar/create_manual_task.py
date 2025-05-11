@@ -1,4 +1,4 @@
-import datetime
+from datetime import datetime, timedelta
 import logging
 import os
 
@@ -43,6 +43,31 @@ class CreateEvent(StatesGroup):
     waiting_task_start_dt = State()
     waiting_task_end_dt = State()
     waiting_approval = State()
+
+
+def get_rounded_datetime():
+    now = datetime.now()
+
+    # Округляем до ближайших 30 минут
+    minute = now.minute
+    if minute < 15:
+        # Округляем вниз до полного часа
+        rounded = now.replace(minute=0, second=0, microsecond=0)
+    elif 15 <= minute < 45:
+        # Округляем до 30 минут
+        rounded = now.replace(minute=30, second=0, microsecond=0)
+    else:
+        # Округляем вверх до следующего часа
+        rounded = (now.replace(minute=0, second=0, microsecond=0)
+                   + timedelta(hours=1))
+
+    next_rounded = rounded + timedelta(minutes=30)
+
+    # Форматируем в строку дд.мм.гггг чч:мм
+    formatted_cur = rounded.strftime("%d.%m.%Y %H:%M")
+    formatted_next = next_rounded.strftime("%d.%m.%Y %H:%M")
+
+    return formatted_cur, formatted_next
 
 
 @router.message(StateFilter(StartCalendar.start_manual_calendar), F.text.casefold() == 'создать новое событие')
@@ -161,10 +186,11 @@ async def create_event_task_start_manual_calendar_handler(
             await state.update_data(task_link=None)
         else:
             await state.update_data(task_link=message.text)
-        today_dt = datetime.date.today()
-        await state.update_data(start_dt=str(today_dt))
+        start_nearest_dtm, end_nearest_dtm = get_rounded_datetime()
+        await state.update_data(start_dt=start_nearest_dtm)
+        await state.update_data(start_dt=end_nearest_dtm)
         await message.answer(
-            "Выбери дату начала события",
+            "Выбери дату и время начала события",
             reply_markup=task_start_dt_manual_calendar_keyboard()
         )
         await dialog_manager.start(
@@ -190,22 +216,14 @@ async def create_event_task_end_manual_calendar_handler(message: types.Message, 
         )
         await state.set_state(CreateEvent.waiting_task_link)
     elif message.text.lower() == 'дальше':
-        keyboards = task_duration_manual_calendar_keyboard()
         await message.answer(
-            "Выбери продолжительность события",
-            reply_markup=keyboards['reply']
+            "Выбери дату и время заверешния события",
+            reply_markup=task_duration_manual_calendar_keyboard()
         )
-        cur_dur = '15 мин'
-
         data = await state.get_data()
         selected_datetime = data.get("event_datetime")
         await state.update_data(start_dt=selected_datetime)
-        await state.update_data(task_duration=cur_dur)
         await state.update_data(end_dt=selected_datetime)
-        await message.answer(
-            f"Выбранная продолжительность: {cur_dur}",
-            reply_markup=keyboards['inline']
-        )
         await state.set_state(CreateEvent.waiting_task_end_dt)
     else:
         await message.answer("Не та команда")
@@ -222,6 +240,9 @@ async def create_event_task_approval_manual_calendar_handler(
         await state.clear()
         await state.set_state(StartCalendar.start_manual_calendar)
     elif message.text.lower() == 'к предыдущему шагу':
+        start_nearest_dtm, end_nearest_dtm = get_rounded_datetime()
+        await state.update_data(start_dtm=start_nearest_dtm)
+        await state.update_data(end_dtm=end_nearest_dtm)
         await message.answer(
             "Выбери дату начала события",
             reply_markup=task_start_dt_manual_calendar_keyboard()
@@ -233,7 +254,7 @@ async def create_event_task_approval_manual_calendar_handler(
         await state.set_state(CreateEvent.waiting_task_start_dt)
     elif message.text.lower() == 'изменить дату завершения':
         await message.answer(
-            "Выбери дату завершения события",
+            "Выбери дату и время завершения события",
             reply_markup=task_start_dt_manual_calendar_keyboard()
         )
         await dialog_manager.start(
@@ -244,8 +265,8 @@ async def create_event_task_approval_manual_calendar_handler(
     elif message.text.lower() == 'дальше':
         data = await state.get_data()
         selected_datetime = data.get("event_datetime")
-        data['end_dt'] = selected_datetime
-        await state.update_data(end_dt=selected_datetime)
+        data['end_dtm'] = selected_datetime
+        await state.update_data(end_dtm=selected_datetime)
 
         if not data['task_description']:
             data['task_description'] = '...'
@@ -254,7 +275,6 @@ async def create_event_task_approval_manual_calendar_handler(
                 data.get('task_name'),
                 data.get('start_dt'),
                 data.get('end_dt'),
-                data.get('task_duration'),
                 data.get('task_category'),
                 data.get('task_description')
             ),
@@ -279,17 +299,14 @@ async def create_event_task_success_manual_calendar_handler(message: types.Messa
         await state.clear()
         await state.set_state(StartCalendar.start_manual_calendar)
     elif message.text.lower() == 'к предыдущему шагу':
-        keyboards = task_duration_manual_calendar_keyboard()
         await message.answer(
-            "Выбери продолжительность события",
-            reply_markup=keyboards['reply']
+            "Выбери дату и время заверешния события",
+            reply_markup=task_duration_manual_calendar_keyboard()
         )
-        cur_dur = '15 мин'
-        await state.update_data(task_duration=cur_dur)
-        await message.answer(
-            f"Выбранная продолжительность: {cur_dur}",
-            reply_markup=keyboards['inline']
-        )
+        data = await state.get_data()
+        selected_datetime = data.get("event_datetime")
+        await state.update_data(start_dt=selected_datetime)
+        await state.update_data(end_dt=selected_datetime)
         await state.set_state(CreateEvent.waiting_task_end_dt)
     elif message.text.lower() == 'подтвердить':
         await message.answer(

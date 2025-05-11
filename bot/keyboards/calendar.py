@@ -64,24 +64,13 @@ def task_start_dt_manual_calendar_keyboard() -> (InlineKeyboardMarkup, ReplyKeyb
 
 
 def task_duration_manual_calendar_keyboard() -> (InlineKeyboardMarkup, ReplyKeyboardMarkup):
-    dur_button_1 = InlineKeyboardButton(text="15 мин", callback_data="15_min")
-    dur_button_2 = InlineKeyboardButton(text="30 мин", callback_data="30_min")
-    dur_button_3 = InlineKeyboardButton(text="1 час", callback_data="60_min")
-    dur_button_4 = InlineKeyboardButton(text="2 часа", callback_data="120_min")
-    dur_button_5 = InlineKeyboardButton(text="3 часа", callback_data="180_min")
-    dur_button_6 = InlineKeyboardButton(text="До конца дня", callback_data="all_rest")
-    show_dur_inline_kb = InlineKeyboardMarkup(inline_keyboard=[
-        [dur_button_1, dur_button_2, dur_button_3],
-        [dur_button_4, dur_button_5, dur_button_6]
-    ])
-
     kb = ReplyKeyboardBuilder()
-    kb.row(KeyboardButton(text='Изменить дату завершения'))
     kb.row(KeyboardButton(text='Дальше'))
+    kb.row(KeyboardButton(text='Изменить дату завершения'))
     kb.row(KeyboardButton(text='К предыдущему шагу'))
     kb.row(KeyboardButton(text='Отмена'))
 
-    return {'inline': show_dur_inline_kb, 'reply': kb.as_markup(resize_keyboard=True)}
+    return kb.as_markup(resize_keyboard=True)
 
 
 def task_approval_manual_calendar_keyboard() -> ReplyKeyboardMarkup:

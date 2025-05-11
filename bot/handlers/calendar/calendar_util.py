@@ -22,24 +22,6 @@ class CalendarState(StatesGroup):
     select_hours = State()
     select_minutes = State()
 
-#
-# async def process_selected_date(
-#         callback: CallbackQuery,
-#         widget,
-#         manager: DialogManager,
-#         selected_date: date
-# ):
-#     await callback.answer(f"Вы выбрали: {selected_date}")
-#
-#     # Получаем FSMContext из данных менеджера
-#     state: FSMContext = manager.middleware_data["state"]
-#     await state.update_data(selected_date=str(selected_date))
-#
-#     await manager.done()  # Закрываем диалог
-#
-#     # Отправляем сообщение через оригинальный callback
-#     await callback.message.answer(f"Выбранная дата: {selected_date}")
-
 
 async def on_date_selected(
         callback: CallbackQuery,
@@ -49,7 +31,7 @@ async def on_date_selected(
 ):
     state: FSMContext = manager.middleware_data["state"]
     await callback.answer()
-    await state.update_data(selected_date=str(selected_date))
+    await state.update_data(selected_date=selected_date.strftime("%d.%m.%Y"))
     await manager.switch_to(CalendarState.select_hours)
 
 
@@ -86,18 +68,22 @@ async def on_minute_selected(
     await callback.message.answer(f"Выбрано: {full_datetime}")
 
 
-HOURS = [f"{h:02d}" for h in range(24)]
-MINUTES = [f"{m:02d}" for m in range(0, 60, 5)]
+HOURS = [
+    [f"{h:02d}" for h in range(9)],
+    [f"{h:02d}" for h in range(9, 18)],
+    [f"{h:02d}" for h in range(18, 24)]
+]
+MINUTES = [f"{m:02d}" for m in range(0, 60, 15)]
 
 
 calendar_dialog = Dialog(
     Window(
-        Const("📅 Выберите дату события:"),
+        Const("📅 Выбери дату события:"),
         Calendar(id="calendar", on_click=on_date_selected),
         state=CalendarState.select_date,
     ),
     Window(
-        Const("🕒 Выберите час:"),
+        Const("🕒 Выбери час:"),
         Select(
             Format("{item}"),
             id="hours",
@@ -108,7 +94,7 @@ calendar_dialog = Dialog(
         state=CalendarState.select_hours,
     ),
     Window(
-        Const("⏰ Выберите минуты:"),
+        Const("⏰ Выбери минуты:"),
         Select(
             Format("{item}"),
             id="minutes",
@@ -121,20 +107,8 @@ calendar_dialog = Dialog(
 )
 
 
-# calendar_dialog = Dialog(
-#     Window(
-#         Const("Календарь"),
-#         Calendar(id="calendar", on_click=process_selected_date),
-#         state=CalendarState.select_date,
-#     )
-# )
-
-
-# Регистрируем диалог в роутере
-router.include_router(calendar_dialog)
-
-
 def setup_calendar_dialogue_select_date_handlers(dp):
     from aiogram_dialog import setup_dialogs
+    router.include_router(calendar_dialog)
     dp.include_router(router)
     setup_dialogs(dp)
