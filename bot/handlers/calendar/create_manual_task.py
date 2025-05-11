@@ -186,11 +186,13 @@ async def create_event_task_start_manual_calendar_handler(
             await state.update_data(task_link=None)
         else:
             await state.update_data(task_link=message.text)
+
         start_nearest_dtm, end_nearest_dtm = get_rounded_datetime()
-        await state.update_data(start_dt=start_nearest_dtm)
-        await state.update_data(start_dt=end_nearest_dtm)
+        await state.update_data(start_dtm=start_nearest_dtm)
+        await state.update_data(end_dtm=end_nearest_dtm)
         await message.answer(
-            "Выбери дату и время начала события",
+            f"Выбери дату и время начала события.\n"
+            f"Нажми 'Дальше', чтобы выбрать ближайшую: {start_nearest_dtm}",
             reply_markup=task_start_dt_manual_calendar_keyboard()
         )
         await dialog_manager.start(
@@ -201,7 +203,8 @@ async def create_event_task_start_manual_calendar_handler(
 
 
 @router.message(StateFilter(CreateEvent.waiting_task_start_dt))
-async def create_event_task_end_manual_calendar_handler(message: types.Message, state: FSMContext) -> None:
+async def create_event_task_end_manual_calendar_handler(
+        message: types.Message, state: FSMContext, dialog_manager: DialogManager) -> None:
     if message.text.lower() == 'отмена':
         await message.answer(
             "Выбери нужное действие",
@@ -216,14 +219,26 @@ async def create_event_task_end_manual_calendar_handler(message: types.Message, 
         )
         await state.set_state(CreateEvent.waiting_task_link)
     elif message.text.lower() == 'дальше':
-        await message.answer(
-            "Выбери дату и время заверешния события",
-            reply_markup=task_duration_manual_calendar_keyboard()
-        )
         data = await state.get_data()
         selected_datetime = data.get("event_datetime")
-        await state.update_data(start_dt=selected_datetime)
-        await state.update_data(end_dt=selected_datetime)
+        if selected_datetime:
+            await state.update_data(event_datetime=None)
+            await state.update_data(start_dtm=selected_datetime)
+            after_selected_datetime = (
+                datetime.strptime(selected_datetime, "%d.%m.%Y %H:%M") + timedelta(minutes=30)
+            ).strftime("%d.%m.%Y %H:%M")
+            await state.update_data(end_dtm=after_selected_datetime)
+        data = await state.get_data()
+        end_nearest_dtm = data.get('end_dtm')
+        await message.answer(
+            "Выбери дату и время заверешния события"
+            f"Нажми 'Дальше', чтобы выбрать ближайшую: {end_nearest_dtm}",
+            reply_markup=task_duration_manual_calendar_keyboard()
+        )
+        await dialog_manager.start(
+            CalendarState.select_date,
+            mode=StartMode.RESET_STACK
+        )
         await state.set_state(CreateEvent.waiting_task_end_dt)
     else:
         await message.answer("Не та команда")
@@ -244,7 +259,8 @@ async def create_event_task_approval_manual_calendar_handler(
         await state.update_data(start_dtm=start_nearest_dtm)
         await state.update_data(end_dtm=end_nearest_dtm)
         await message.answer(
-            "Выбери дату начала события",
+            f"Выбери дату и время начала события.\n"
+            f"Нажми 'Дальше', чтобы выбрать ближайшую: {start_nearest_dtm}",
             reply_markup=task_start_dt_manual_calendar_keyboard()
         )
         await dialog_manager.start(
@@ -252,21 +268,12 @@ async def create_event_task_approval_manual_calendar_handler(
             mode=StartMode.RESET_STACK
         )
         await state.set_state(CreateEvent.waiting_task_start_dt)
-    elif message.text.lower() == 'изменить дату завершения':
-        await message.answer(
-            "Выбери дату и время завершения события",
-            reply_markup=task_start_dt_manual_calendar_keyboard()
-        )
-        await dialog_manager.start(
-            CalendarState.select_date,
-            mode=StartMode.RESET_STACK
-        )
-        await state.set_state(CreateEvent.waiting_task_end_dt)
     elif message.text.lower() == 'дальше':
         data = await state.get_data()
         selected_datetime = data.get("event_datetime")
-        data['end_dtm'] = selected_datetime
-        await state.update_data(end_dtm=selected_datetime)
+        if selected_datetime:
+            await state.update_data(event_datetime=None)
+            await state.update_data(end_dtm=selected_datetime)
 
         if not data['task_description']:
             data['task_description'] = '...'
@@ -290,7 +297,8 @@ async def create_event_task_approval_manual_calendar_handler(
 
 
 @router.message(StateFilter(CreateEvent.waiting_approval))
-async def create_event_task_success_manual_calendar_handler(message: types.Message, state: FSMContext) -> None:
+async def create_event_task_success_manual_calendar_handler(
+        message: types.Message, state: FSMContext, dialog_manager: DialogManager) -> None:
     if message.text.lower() == 'отмена':
         await message.answer(
             "Выбери нужное действие",
@@ -299,14 +307,17 @@ async def create_event_task_success_manual_calendar_handler(message: types.Messa
         await state.clear()
         await state.set_state(StartCalendar.start_manual_calendar)
     elif message.text.lower() == 'к предыдущему шагу':
+        data = await state.get_data()
+        end_nearest_dtm = data.get('end_dtm')
         await message.answer(
-            "Выбери дату и время заверешния события",
+            "Выбери дату и время заверешния события"
+            f"Нажми 'Дальше', чтобы выбрать ближайшую: {end_nearest_dtm}",
             reply_markup=task_duration_manual_calendar_keyboard()
         )
-        data = await state.get_data()
-        selected_datetime = data.get("event_datetime")
-        await state.update_data(start_dt=selected_datetime)
-        await state.update_data(end_dt=selected_datetime)
+        await dialog_manager.start(
+            CalendarState.select_date,
+            mode=StartMode.RESET_STACK
+        )
         await state.set_state(CreateEvent.waiting_task_end_dt)
     elif message.text.lower() == 'подтвердить':
         await message.answer(

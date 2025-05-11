@@ -66,7 +66,6 @@ def task_start_dt_manual_calendar_keyboard() -> (InlineKeyboardMarkup, ReplyKeyb
 def task_duration_manual_calendar_keyboard() -> (InlineKeyboardMarkup, ReplyKeyboardMarkup):
     kb = ReplyKeyboardBuilder()
     kb.row(KeyboardButton(text='Дальше'))
-    kb.row(KeyboardButton(text='Изменить дату завершения'))
     kb.row(KeyboardButton(text='К предыдущему шагу'))
     kb.row(KeyboardButton(text='Отмена'))
 
