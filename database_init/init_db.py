@@ -40,7 +40,7 @@ async def load_data(engine, dir_path, filename, table):
         async with AsyncSession(engine) as session:
             async with session.begin():
                 # Используем временный sync connection для pandas to_sql
-                with engine.begin() as sync_conn:
+                async with engine.begin() as sync_conn:
                     df.to_sql(
                         name=table,
                         con=sync_conn,
