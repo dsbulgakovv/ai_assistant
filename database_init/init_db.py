@@ -28,26 +28,26 @@ async def is_table_empty(engine, table_name):
 async def load_data(engine, dir_path, filename, table):
     log.info(f"Checking test file '{filename}' for table '{table}'...")
     try:
-        # Проверяем, пуста ли таблица
+        # Check if table is empty
         if not await is_table_empty(engine, table):
             log.info(f'Table "{table}" already contains data, skipping...')
             return
 
-        # Чтение CSV файла
+        # Read CSV file
         df = pd.read_csv(os.path.join(dir_path, filename), encoding='utf8', sep=',')
 
-        # Создаем таблицу и загружаем данные
-        async with AsyncSession(engine) as session:
-            async with session.begin():
-                # Используем временный sync connection для pandas to_sql
-                async with engine.begin() as sync_conn:
-                    df.to_sql(
-                        name=table,
-                        con=sync_conn,
-                        index=False,
-                        if_exists="append"  # Изменено на "append" вместо "fail"
-                    )
-                log.info(f"Successfully loaded data into '{table}'!")
+        # Get a synchronous connection from the async engine
+        async with engine.connect() as conn:
+            # Get the underlying sync connection
+            sync_conn = conn.connection
+            # Load data using pandas with sync connection
+            df.to_sql(
+                name=table,
+                con=sync_conn,
+                index=False,
+                if_exists="append"
+            )
+        log.info(f"Successfully loaded data into '{table}'!")
 
     except Exception as e:
         log.error(f"Error loading file: {str(e)}")
