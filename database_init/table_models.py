@@ -14,6 +14,8 @@ class User(Base):
     full_name = Column(String(100))
     reg_dt = Column(DateTime(timezone=True), server_default=func.now())
     last_usage_dt = Column(DateTime(timezone=True), server_default=func.now())
+    timezone = Column(String(50))
+    lang = Column(String(5))
 
 
 class Task(Base):
@@ -25,6 +27,7 @@ class Task(Base):
     task_status = Column(Integer, unique=False)
     task_category = Column(Integer, unique=False)
     task_description = Column(String(300))
+    task_link = Column(String(300))
     task_start_dtm = Column(DateTime(timezone=True), index=True, server_default=func.now())
     task_end_dtm = Column(DateTime(timezone=True), server_default=func.now())
     created_at = Column(DateTime(timezone=True), server_default=func.now())

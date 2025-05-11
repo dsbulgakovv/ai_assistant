@@ -49,6 +49,8 @@ class UserCreate(BaseModel):
     tg_user_id: int
     username: str
     full_name: str
+    timezone: str
+    lang: str
 
 
 class Task(BaseModel):
@@ -57,6 +59,7 @@ class Task(BaseModel):
     task_status: int
     task_category: int
     task_description: str
+    task_link: str
     task_start_dtm: str
     task_end_dtm: str
 
@@ -69,6 +72,7 @@ class UpdateTask(BaseModel):
     task_status: Optional[int] = None
     task_category: Optional[int] = None
     task_description: Optional[str] = None
+    task_link: Optional[str] = None
     task_start_dtm: Optional[str] = None
     task_end_dtm: Optional[str] = None
 
@@ -157,11 +161,13 @@ async def get_filtered_tasks(
 async def create_user(user: UserCreate, conn=Depends(get_db)):
     await conn.execute(
         """
-        INSERT INTO users (tg_user_id, username, full_name, reg_dt, last_usage_dt)
-        VALUES ($1, $2, $3, NOW(), NOW())
+        INSERT INTO users (
+            tg_user_id, username, full_name, reg_dt, last_usage_dt, timezone, lang
+        )
+        VALUES ($1, $2, $3, NOW(), NOW(), $4, $5)
         ON CONFLICT (tg_user_id) DO NOTHING
         """,
-        user.tg_user_id, user.username, user.full_name
+        user.tg_user_id, user.username, user.full_name, user.timezone, user.lang
     )
     return {"status": "success", "message": "User created or already exists"}
 
@@ -177,12 +183,12 @@ async def create_task(task: Task, conn=Depends(get_db)):
     await conn.execute(
         """
         INSERT INTO tasks (
-            tg_user_id, task_name, task_status, task_category, task_description,
+            tg_user_id, task_name, task_status, task_category, task_description, task_link,
             task_start_dtm, task_end_dtm, created_at, updated_at
         )
         VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW())
         """,
-        task.tg_user_id, task.task_name, task.task_status, task.task_category,
+        task.tg_user_id, task.task_name, task.task_status, task.task_category, task.task_link,
         task.task_description, task_start_dtm, task_end_dtm
     )
     return {"status": "success", "message": "Task created"}

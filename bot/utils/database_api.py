@@ -27,18 +27,21 @@ class DatabaseAPI:
                 response, status = await resp.json(), resp.status
         return response, status
 
-    async def create_user(self, tg_user_id, username, full_name):
+    async def create_user(self, tg_user_id, username, full_name, timezone, lang):
         async with ClientSession() as session:
             async with session.post(
                 f"{self.base_url}/users/add_new",
-                json={"tg_user_id": tg_user_id, "username": username, "full_name": full_name}
+                json={
+                    "tg_user_id": tg_user_id, "username": username, "full_name": full_name,
+                    "timezone": timezone, "lang": lang
+                }
             ) as resp:
                 response, status = await resp.json(), resp.status
         return response, status
 
     async def create_task(
             self, tg_user_id, task_name, task_status,task_category,
-            task_description, task_start_dtm, task_end_dtm
+            task_description, task_link, task_start_dtm, task_end_dtm
     ):
         async with ClientSession() as session:
             async with session.post(
@@ -46,7 +49,7 @@ class DatabaseAPI:
                 json={
                     "tg_user_id": tg_user_id, "task_name": task_name, "task_status": task_status,
                     "task_category": task_category, "task_description": task_description,
-                    "task_start_dtm": task_start_dtm, "task_end_dtm": task_end_dtm
+                    "task_link": task_link, "task_start_dtm": task_start_dtm, "task_end_dtm": task_end_dtm
                 }
             ) as resp:
                 response, status = await resp.json(), resp.status
@@ -54,7 +57,7 @@ class DatabaseAPI:
 
     async def update_task(
             self, business_dt, task_relative_id, tg_user_id, task_name, task_status,task_category,
-            task_description, task_start_dtm, task_end_dtm
+            task_description, task_link, task_start_dtm, task_end_dtm
     ):
         async with ClientSession() as session:
             async with session.put(
@@ -63,7 +66,7 @@ class DatabaseAPI:
                     "business_dt": business_dt, "task_relative_id": task_relative_id,
                     "tg_user_id": tg_user_id, "task_name": task_name, "task_status": task_status,
                     "task_category": task_category, "task_description": task_description,
-                    "task_start_dtm": task_start_dtm, "task_end_dtm": task_end_dtm
+                    "task_link": task_link, "task_start_dtm": task_start_dtm, "task_end_dtm": task_end_dtm
                 }
             ) as resp:
                 response, status = await resp.json(), resp.status

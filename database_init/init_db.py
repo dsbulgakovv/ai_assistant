@@ -73,17 +73,17 @@ async def async_main(cfg):
 
     dir_path = cfg.data.dir_path
     filenames = [
-        cfg.data.filenames.users, cfg.data.filenames.tasks,
+        # cfg.data.filenames.users, cfg.data.filenames.tasks,
         cfg.data.filenames.task_statuses_dict, cfg.data.filenames.task_categories_dict
     ]
     tables = [
-        cfg.db.tables.users, cfg.db.tables.tasks,
+        # cfg.db.tables.users, cfg.db.tables.tasks,
         cfg.db.tables.task_statuses_dict, cfg.db.tables.task_categories_dict
     ]
 
     # Загружаем данные только в пустые таблицы
-    # for i in range(len(filenames)):
-    #     await load_data(engine, dir_path, filenames[i], tables[i])
+    for i in range(len(filenames)):
+        await load_data(engine, dir_path, filenames[i], tables[i])
 
 
 @hydra.main(config_path="configs", config_name="cfg", version_base=None)
