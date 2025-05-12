@@ -35,6 +35,18 @@ class ShowEvent(StatesGroup):
     waiting_events_show_end = State()
 
 
+def map_task_category(idx_category):
+    categories_mapping = {
+        1: 'Работа',
+        2: 'Учеба',
+        3: 'Личное',
+        4: 'Здоровье',
+        5: 'Финансы',
+        6: 'Семья'
+    }
+    return categories_mapping[idx_category]
+
+
 @router.message(StateFilter(StartCalendar.start_manual_calendar), F.text.casefold() == 'посмотреть предстоящие события')
 async def show_nearest_events_manual_calendar_handler(message: types.Message, state: FSMContext) -> None:
     await message.answer(
@@ -148,7 +160,7 @@ async def show_event_details(callback: types.CallbackQuery, state: FSMContext):
     event = events[event_num - 1]
     event['start_dtm'] = datetime.fromisoformat(event['task_start_dtm']).strftime("%d.%m.%Y %H:%M")
     event['end_dtm'] = datetime.fromisoformat(event['task_start_dtm']).strftime("%d.%m.%Y %H:%M")
-
+    event['task_category'] = map_task_category(event['task_category'])
     # Формируем текст с полным описанием
     text = build_event_full_info(
         event['task_name'],
