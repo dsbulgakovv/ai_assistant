@@ -55,11 +55,16 @@ async def close_show_nearest_events_manual_calendar_handler(message: types.Messa
     await state.set_state(StartCalendar.start_manual_calendar)
 
 
+async def get_events_for_date(user_id: int, date_str: str):
+    events = await db_api.get_tasks(user_id, date_str, date_str)
+
+    # Возвращаем список словарей с событиями
+    return events
+
+
 async def show_events(message: types.Message, state: FSMContext, day_offset=0):
     # Получаем текущую дату с учетом смещения
     user_time_zone = await db_api.get_user_timezone(message.from_user.id)
-    await state.update_data(timezone=user_time_zone)
-
     utc_time = datetime.now(timezone.utc)
     local_time = utc_time.astimezone(pytz.timezone(user_time_zone))
     date_str = local_time.strftime("%Y-%m-%d")
@@ -166,14 +171,6 @@ async def back_to_events_list(callback: types.CallbackQuery, state: FSMContext):
     # Возвращаемся к списку событий
     await show_events(callback.message, state, day_offset)
     await callback.answer()
-
-
-# Пример функции для получения событий (замените на свою реализацию)
-async def get_events_for_date(user_id: int, date_str: str):
-    events = await db_api.get_tasks(user_id, date_str, date_str)
-
-    # Возвращаем список словарей с событиями
-    return events
 
 
 
