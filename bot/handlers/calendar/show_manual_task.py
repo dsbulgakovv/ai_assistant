@@ -45,7 +45,7 @@ async def show_nearest_events_manual_calendar_handler(message: types.Message, st
     await state.set_state(ShowEvent.waiting_events_show_end)
 
 
-@router.message(StateFilter(ShowEvent.waiting_events_show_end), F.text.casefold() == 'вернуться в меню')
+@router.message(StateFilter(ShowEvent.waiting_events_show_end), F.text.casefold() == 'вернуться назад')
 async def close_show_nearest_events_manual_calendar_handler(message: types.Message, state: FSMContext) -> None:
     await message.answer(
         "Выбери нужное действие",

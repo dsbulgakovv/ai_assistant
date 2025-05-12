@@ -137,6 +137,6 @@ def change_delete_task_inline_keyboard(day_offset: int, event_num: int) -> Inlin
 
 def only_back_to_manual_calendar_menu_keyboard() -> ReplyKeyboardMarkup:
     kb = ReplyKeyboardBuilder()
-    kb.row(KeyboardButton(text='Вернуться в меню'))
+    kb.row(KeyboardButton(text='Вернуться назад'))
     return kb.as_markup(resize_keyboard=True)
 # -----------------------------------------
