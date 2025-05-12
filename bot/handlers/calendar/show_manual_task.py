@@ -82,6 +82,7 @@ async def show_events(message: types.Message, state: FSMContext, day_offset=0):
     # Формируем текст сообщения
     text = f"События на <b>{date_str}</b>:\n\n"
     for event in events:
+        logger.info(events)
         logger.info(event)
         start_time = datetime.fromisoformat(event['task_start_dtm']).time().strftime("%H:%M")
         text += f"<b>{event['task_relative_id']}.</b> {event['task_name']} <code>{start_time}</code>\n"
