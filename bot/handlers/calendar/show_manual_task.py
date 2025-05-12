@@ -65,6 +65,8 @@ async def get_events_for_date(user_id: int, date_str: str):
 async def show_events(message: types.Message, state: FSMContext, day_offset=0):
     # Получаем текущую дату с учетом смещения
     user_time_zone = await db_api.get_user_timezone(message.from_user.id)
+    if not user_time_zone:
+        user_time_zone = "Europe/Moscow"
     utc_time = datetime.now(timezone.utc)
     local_time = utc_time.astimezone(pytz.timezone(user_time_zone))
     date_str = local_time.strftime("%Y-%m-%d")
