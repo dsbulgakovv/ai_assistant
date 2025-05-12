@@ -82,10 +82,10 @@ async def show_events(message: types.Message, state: FSMContext, day_offset=0):
     # Формируем текст сообщения
     text = f"События на <b>{date_str}</b>:\n\n"
     for i in range(len(events)):
-        event = events[i]
-        logger.info(event)
-        start_time = datetime.fromisoformat(event['task_start_dtm']).time().strftime("%H:%M")
-        text += f"<b>{event['task_relative_id']}.</b> {event['task_name']} <code>{start_time}</code>\n"
+        cur_event = events[i]
+        logger.info(cur_event)
+        start_time = datetime.fromisoformat(cur_event['task_start_dtm']).time().strftime("%H:%M")
+        text += f"<b>{cur_event['task_relative_id']}.</b> {cur_event['task_name']} <code>{start_time}</code>\n"
 
     left_right_inline_with_nums_kb = swiping_tasks_with_nums_inline_keyboard(events, day_offset)
 
