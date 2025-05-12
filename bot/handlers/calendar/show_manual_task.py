@@ -60,10 +60,9 @@ async def show_events(message: types.Message, state: FSMContext, day_offset=0):
     user_time_zone = await db_api.get_user_timezone(message.from_user.id)
     await state.update_data(timezone=user_time_zone)
 
-    current_date = datetime.now(timezone.utc) + timedelta(days=day_offset)
-    tz = pytz.timezone(user_time_zone)
-    dt_local = tz.localize(current_date)
-    date_str = dt_local.strftime("%Y-%m-%d")
+    utc_time = datetime.now(timezone.utc)
+    local_time = utc_time.astimezone(pytz.timezone(user_time_zone))
+    date_str = local_time.strftime("%Y-%m-%d")
 
     # Здесь получаем события из вашего API/Redis
     events = await get_events_for_date(message.from_user.id, date_str)
