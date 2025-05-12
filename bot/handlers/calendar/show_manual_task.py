@@ -65,15 +65,14 @@ async def show_events(message: types.Message, state: FSMContext, day_offset=0):
     date_str = local_time.strftime("%Y-%m-%d")
 
     # Здесь получаем события из вашего API/Redis
-    events = await get_events_for_date(message.from_user.id, date_str)
-    logger.info(events)
+    events, status = await get_events_for_date(message.from_user.id, date_str)
     await state.update_data(
         current_date=date_str,
         events=events,
         day_offset=day_offset
     )
 
-    if not events:
+    if status == 404:
         # Если событий нет
         left_right_inline_no_nums_kb = swiping_tasks_no_nums_inline_keyboard(day_offset)
         await message.answer(f"На {date_str} событий нет.", reply_markup=left_right_inline_no_nums_kb)
@@ -82,9 +81,7 @@ async def show_events(message: types.Message, state: FSMContext, day_offset=0):
 
     # Формируем текст сообщения
     text = f"События на <b>{date_str}</b>:\n\n"
-    for i in range(len(events)):
-        cur_event = events[i]
-        logger.info(cur_event)
+    for cur_event in events:
         start_time = datetime.fromisoformat(cur_event['task_start_dtm']).time().strftime("%H:%M")
         text += f"<b>{cur_event['task_relative_id']}.</b> {cur_event['task_name']} <code>{start_time}</code>\n"
 
