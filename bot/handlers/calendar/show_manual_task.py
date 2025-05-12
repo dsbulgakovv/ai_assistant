@@ -66,6 +66,7 @@ async def show_events(message: types.Message, state: FSMContext, day_offset=0):
 
     # Здесь получаем события из вашего API/Redis
     events = await get_events_for_date(message.from_user.id, date_str)
+    logger.info(events)
     await state.update_data(
         current_date=date_str,
         events=events,
