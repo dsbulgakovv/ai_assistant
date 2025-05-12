@@ -6,7 +6,7 @@ from aiogram import F, Router, types
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from aiogram.types import ReplyKeyboardRemove, CallbackQuery
+from aiogram.types import ReplyKeyboardRemove
 
 from aiogram_dialog import DialogManager
 from aiogram_dialog.api.entities import StartMode
