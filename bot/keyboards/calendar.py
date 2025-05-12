@@ -114,7 +114,6 @@ def swiping_tasks_with_nums_inline_keyboard(events: list, day_offset: int) -> In
 
 
 def swiping_tasks_no_nums_inline_keyboard(day_offset: int) -> InlineKeyboardMarkup:
-    """Создает клавиатуру для навигации по дням без номеров событий"""
     buttons = [
         [
             InlineKeyboardButton(text="←", callback_data=f"prev_day_{day_offset}"),

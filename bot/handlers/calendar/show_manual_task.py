@@ -82,7 +82,7 @@ async def show_events(message: types.Message, state: FSMContext, day_offset=0):
     if status == 404:
         # Если событий нет
         left_right_inline_no_nums_kb = swiping_tasks_no_nums_inline_keyboard(day_offset)
-        await message.answer(f"На {date_str} событий нет.", reply_markup=left_right_inline_no_nums_kb)
+        await message.answer(f"На {date_str} событий нет", reply_markup=left_right_inline_no_nums_kb)
         await state.set_state(ShowEvent.waiting_events_show_end)
         return
 
@@ -146,6 +146,8 @@ async def show_event_details(callback: types.CallbackQuery, state: FSMContext):
         return
 
     event = events[event_num - 1]
+    event['start_dtm'] = datetime.fromisoformat(event['task_start_dtm']).strftime("%d.%m.%Y %H:%M")
+    event['end_dtm'] = datetime.fromisoformat(event['task_start_dtm']).strftime("%d.%m.%Y %H:%M")
 
     # Формируем текст с полным описанием
     text = build_event_full_info(
