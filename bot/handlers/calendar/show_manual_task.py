@@ -38,9 +38,10 @@ class ShowEvent(StatesGroup):
 @router.message(StateFilter(StartCalendar.start_manual_calendar), F.text.casefold() == 'посмотреть предстоящие события')
 async def show_nearest_events_manual_calendar_handler(message: types.Message, state: FSMContext) -> None:
     await message.answer(
-        "Введи название события",
-        reply_markup=only_back_to_manual_calendar_menu()
+        "Ваши события",
+        reply_markup=only_back_to_manual_calendar_menu_keyboard()
     )
+    await show_events(message, state)
     await state.set_state(ShowEvent.waiting_events_show_end)
 
 
@@ -169,21 +170,6 @@ async def back_to_events_list(callback: types.CallbackQuery, state: FSMContext):
     # Возвращаемся к списку событий
     await show_events(callback.message, state, day_offset)
     await callback.answer()
-
-
-@router.message(StateFilter(ShowEvent.waiting_events_show), F.text.casefold() == "мои события на сегодня")
-async def handle_show_events(message: types.Message, state: FSMContext):
-    await show_events(message, state)
-
-
-@router.message(StateFilter(ShowEvent.waiting_events_show_end), F.text.casefold() == "вернуться в меню")
-async def return_to_menu(message: types.Message, state: FSMContext):
-    await state.clear()
-    # Здесь добавьте ваш код для возврата в главное меню
-    await message.answer("Вы вернулись в главное меню", reply_markup=ReplyKeyboardMarkup(
-        keyboard=[[types.KeyboardButton(text="Мои события на сегодня")]],
-        resize_keyboard=True
-    ))
 
 
 # Пример функции для получения событий (замените на свою реализацию)
