@@ -122,14 +122,17 @@ def swiping_tasks_no_nums_inline_keyboard(day_offset) -> InlineKeyboardMarkup:
     return keyboard
 
 
-def change_delete_task_inline_keyboard(event_num) -> InlineKeyboardMarkup:
-    keyboard = InlineKeyboardMarkup()
-    keyboard.row(
-        InlineKeyboardButton("Изменить", callback_data=f"edit_{event_num}"),
-        InlineKeyboardButton("Удалить", callback_data=f"delete_{event_num}")
-    )
-    keyboard.add(InlineKeyboardButton("Назад", callback_data=f"back_to_list_{day_offset}"))
-    return keyboard
+def change_delete_task_inline_keyboard(day_offset: int, event_num: int) -> InlineKeyboardMarkup:
+    buttons = [
+        [
+            InlineKeyboardButton(text="Изменить", callback_data=f"edit_{event_num}"),
+            InlineKeyboardButton(text="Удалить", callback_data=f"delete_{event_num}")
+        ],
+        [
+            InlineKeyboardButton(text="Назад", callback_data=f"back_to_list_{day_offset}")
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
 def only_back_to_manual_calendar_menu_keyboard() -> ReplyKeyboardMarkup:
