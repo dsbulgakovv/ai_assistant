@@ -155,7 +155,7 @@ async def show_event_details(callback: types.CallbackQuery, state: FSMContext):
     text += f"📝 {event['description']}\n"
 
     # Создаем клавиатуру с действиями
-    delete_change_inline_kb = change_delete_task_inline_keyboard(day_offset)
+    delete_change_inline_kb = change_delete_task_inline_keyboard(day_offset, event_num)
 
     # Редактируем сообщение
     await callback.message.edit_text(text, reply_markup=delete_change_inline_kb)
