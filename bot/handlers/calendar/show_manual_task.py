@@ -55,25 +55,18 @@ async def close_show_nearest_events_manual_calendar_handler(message: types.Messa
     await state.set_state(StartCalendar.start_manual_calendar)
 
 
-
-
-
-
-
-
-
-
-
-
 async def show_events(message: types.Message, state: FSMContext, day_offset=0):
     # Получаем текущую дату с учетом смещения
-    current_date = datetime.now() + timedelta(days=day_offset)
-    date_str = current_date.strftime("%Y-%m-%d")
+    user_time_zone = await db_api.get_user_timezone(message.from_user.id)
+    await state.update_data(timezone=user_time_zone)
+
+    current_date = datetime.now(timezone.utc) + timedelta(days=day_offset)
+    tz = pytz.timezone(user_time_zone)
+    dt_local = tz.localize(current_date)
+    date_str = dt_local.strftime("%Y-%m-%d")
 
     # Здесь получаем события из вашего API/Redis
     events = await get_events_for_date(message.from_user.id, date_str)
-
-    # Сохраняем текущую дату и события в FSM
     await state.update_data(
         current_date=date_str,
         events=events,
@@ -88,9 +81,10 @@ async def show_events(message: types.Message, state: FSMContext, day_offset=0):
         return
 
     # Формируем текст сообщения
-    text = f"События на {date_str}:\n\n"
+    text = f"События на <b>{date_str}</b>:\n\n"
     for i, event in enumerate(events, 1):
-        text += f"{i}. {event['title']} ({event['time']})\n"
+        start_time = datetime.fromisoformat(event['task_start_dtm']).time().strftime("%H:%M")
+        text += f"<b>{event['task_relative_id']}.</b> {event['task_name']} <code>{start_time}</code>\n"
 
     left_right_inline_with_nums_kb = swiping_tasks_with_nums_inline_keyboard(events, day_offset)
 
@@ -148,11 +142,14 @@ async def show_event_details(callback: types.CallbackQuery, state: FSMContext):
     event = events[event_num - 1]
 
     # Формируем текст с полным описанием
-    text = f"Событие {event_num}:\n\n"
-    text += f"📌 {event['title']}\n"
-    text += f"🕒 {event['time']}\n"
-    text += f"📅 {event['date']}\n"
-    text += f"📝 {event['description']}\n"
+    text = build_event_full_info(
+        event['task_name'],
+        event['start_dtm'],
+        event['end_dtm'],
+        event['task_category'],
+        event['task_link'],
+        event['task_description']
+    )
 
     # Создаем клавиатуру с действиями
     delete_change_inline_kb = change_delete_task_inline_keyboard(day_offset, event_num)
@@ -174,22 +171,22 @@ async def back_to_events_list(callback: types.CallbackQuery, state: FSMContext):
 
 # Пример функции для получения событий (замените на свою реализацию)
 async def get_events_for_date(user_id: int, date_str: str):
-    # Здесь должна быть ваша реализация получения событий из Redis/API
+    events = await db_api.get_tasks(user_id, date_str, date_str)
+
     # Возвращаем список словарей с событиями
-    return [
-        {
-            "title": "Встреча с клиентом",
-            "time": "10:00",
-            "date": date_str,
-            "description": "Обсуждение нового проекта"
-        },
-        {
-            "title": "Обед",
-            "time": "13:00",
-            "date": date_str,
-            "description": "Кафе на углу"
-        }
-    ]
+    return events
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
