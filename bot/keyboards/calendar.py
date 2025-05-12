@@ -113,13 +113,15 @@ def swiping_tasks_with_nums_inline_keyboard(events: list, day_offset: int) -> In
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-def swiping_tasks_no_nums_inline_keyboard(day_offset) -> InlineKeyboardMarkup:
-    keyboard = InlineKeyboardMarkup()
-    keyboard.row(
-        InlineKeyboardButton("←", callback_data=f"prev_day_{day_offset}"),
-        InlineKeyboardButton("→", callback_data=f"next_day_{day_offset}")
-    )
-    return keyboard
+def swiping_tasks_no_nums_inline_keyboard(day_offset: int) -> InlineKeyboardMarkup:
+    """Создает клавиатуру для навигации по дням без номеров событий"""
+    buttons = [
+        [
+            InlineKeyboardButton(text="←", callback_data=f"prev_day_{day_offset}"),
+            InlineKeyboardButton(text="→", callback_data=f"next_day_{day_offset}")
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
 def change_delete_task_inline_keyboard(day_offset: int, event_num: int) -> InlineKeyboardMarkup:
