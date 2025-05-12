@@ -66,7 +66,6 @@ async def show_events(message: types.Message, state: FSMContext, day_offset=0):
 
     # Здесь получаем события из вашего API/Redis
     events = await get_events_for_date(message.from_user.id, date_str)
-    logger.info(events)
     await state.update_data(
         current_date=date_str,
         events=events,
@@ -82,7 +81,8 @@ async def show_events(message: types.Message, state: FSMContext, day_offset=0):
 
     # Формируем текст сообщения
     text = f"События на <b>{date_str}</b>:\n\n"
-    for i, event in enumerate(events, 1):
+    for event in events:
+        logger.info(event)
         start_time = datetime.fromisoformat(event['task_start_dtm']).time().strftime("%H:%M")
         text += f"<b>{event['task_relative_id']}.</b> {event['task_name']} <code>{start_time}</code>\n"
 
