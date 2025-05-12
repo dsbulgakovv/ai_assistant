@@ -91,22 +91,26 @@ def cancel_process_keyboard() -> ReplyKeyboardMarkup:
 
 
 # ------ MANUAL TASK SHOW INTERACTION ------
-def swiping_tasks_with_nums_inline_keyboard(events, day_offset) -> InlineKeyboardMarkup:
-    # Создаем клавиатуру
-    keyboard = InlineKeyboardMarkup()
+def swiping_tasks_with_nums_inline_keyboard(events: list, day_offset: int) -> InlineKeyboardMarkup:
+    # Создаем список кнопок
+    buttons = list()
 
-    # Кнопки переключения дней
-    keyboard.row(
-        InlineKeyboardButton("←", callback_data=f"prev_day_{day_offset}"),
-        InlineKeyboardButton("→", callback_data=f"next_day_{day_offset}")
-    )
+    # Добавляем кнопки навигации по дням
+    buttons.append([
+        InlineKeyboardButton(text="←", callback_data=f"prev_day_{day_offset}"),
+        InlineKeyboardButton(text="→", callback_data=f"next_day_{day_offset}")
+    ])
 
-    # Кнопки с номерами событий
-    event_buttons = [
-        InlineKeyboardButton(str(i), callback_data=f"event_{i}_{day_offset}")
-        for i in range(1, len(events) + 1)
-    ]
-    return keyboard.row(*event_buttons)
+    # Добавляем кнопки с номерами событий
+    if events:
+        event_buttons = [
+            InlineKeyboardButton(text=str(i), callback_data=f"event_{i}_{day_offset}")
+            for i in range(1, len(events) + 1)
+        ]
+        buttons.append(event_buttons)
+
+    # Создаем клавиатуру с кнопками
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
 def swiping_tasks_no_nums_inline_keyboard(day_offset) -> InlineKeyboardMarkup:
