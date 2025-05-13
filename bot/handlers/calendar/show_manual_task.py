@@ -82,6 +82,7 @@ async def show_events(message: types.Message, state: FSMContext):
         day_offset = data['day_offset']
     else:
         day_offset = 0
+        await state.update_data(day_offset=day_offset)
 
     target_date_str = (cur_date + timedelta(days=day_offset)).strftime("%Y-%m-%d")
 
@@ -148,6 +149,7 @@ async def handle_day_navigation(callback: types.CallbackQuery, state: FSMContext
     direction = callback.data.split('_')[0]
     # current_offset = int(callback.data.split('_')[-1])
     data = await state.get_data()
+    logger.info(data)
     current_offset = data['day_offset']
 
     # Вычисляем новое смещение
