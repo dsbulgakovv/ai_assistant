@@ -148,7 +148,7 @@ def choice_change_task_inline_keyboard() -> InlineKeyboardMarkup:
             InlineKeyboardButton(text="Ссылку", callback_data=f"editing_task_link"),
             InlineKeyboardButton(text="Описание", callback_data=f"editing_task_description")
         ],
-        [InlineKeyboardButton(text="Назад", callback_data=f"back_to_list_")]
+        [InlineKeyboardButton(text="Назад", callback_data=f"back_to_change_delete_task")]
     ]
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
