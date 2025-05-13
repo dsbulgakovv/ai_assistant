@@ -77,13 +77,19 @@ async def get_events_for_date(user_id: int, date_str: str):
     return events
 
 
-async def show_events(message: types.Message, state: FSMContext, day_offset=0):
+async def show_events(message: types.Message, state: FSMContext):
+
     # Получаем текущую дату с учетом смещения
     data = await state.get_data()
     user_timezone = data['user_timezone']
     utc_time = datetime.now(timezone.utc)
     local_time = utc_time.astimezone(pytz.timezone(user_timezone))
     date_str = local_time.strftime("%Y-%m-%d")
+
+    if 'day_offset' in data:
+        day_offset = data['day_offset']
+    else:
+        day_offset = 0
 
     # Здесь получаем события из вашего API/Redis
     events, status = await get_events_for_date(data['tg_user_id'], date_str)
@@ -185,9 +191,9 @@ async def show_event_details(callback: types.CallbackQuery, state: FSMContext):
 async def back_to_events_list(callback: types.CallbackQuery, state: FSMContext):
     # Получаем смещение из callback_data
     day_offset = int(callback.data.split('_')[-1])
-
+    await state.update_data(day_offset=day_offset)
     # Возвращаемся к списку событий
-    await show_events(callback.message, state, day_offset)
+    await show_events(callback.message, state)
     await callback.answer()
 
 
