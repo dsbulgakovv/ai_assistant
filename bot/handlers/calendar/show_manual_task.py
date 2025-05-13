@@ -97,7 +97,7 @@ async def show_events(message: types.Message, state: FSMContext, day_offset=0):
         # Если событий нет
         left_right_inline_no_nums_kb = swiping_tasks_no_nums_inline_keyboard(day_offset)
         await message.answer(f"На {date_str} событий нет", reply_markup=left_right_inline_no_nums_kb)
-        # await state.set_state(ShowEvent.waiting_events_show_end)
+        await state.set_state(ShowEvent.waiting_events_show_end)
         return
 
     # Формируем текст сообщения
@@ -118,7 +118,7 @@ async def show_events(message: types.Message, state: FSMContext, day_offset=0):
                 text=text,
                 reply_markup=left_right_inline_with_nums_kb
             )
-            # await state.set_state(ShowEvent.waiting_events_show_end)
+            await state.set_state(ShowEvent.waiting_events_show_end)
             return
         except Exception as e:
             logger.debug(e)
@@ -129,7 +129,7 @@ async def show_events(message: types.Message, state: FSMContext, day_offset=0):
     #
     # # Сохраняем ID сообщения в состоянии
     await state.update_data(events_message_id=msg.message_id)
-    # await state.set_state(ShowEvent.waiting_events_show_end)
+    await state.set_state(ShowEvent.waiting_events_show_end)
 
 
 @router.callback_query(F.data.startswith(('prev_day_', 'next_day_')), StateFilter(ShowEvent.waiting_events_show_end))
