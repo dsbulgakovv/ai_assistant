@@ -87,15 +87,27 @@ async def show_events(message: types.Message, state: FSMContext):
 
     # Здесь получаем события из вашего API/Redis
     events, status = await db_api.get_tasks(data['tg_user_id'], target_date_str, target_date_str)
-    await state.update_data(
-        events=events,
-        day_offset=day_offset
-    )
+    await state.update_data(events=events)
 
+    # Если событий нет
     if status == 404:
-        # Если событий нет
         left_right_inline_no_nums_kb = swiping_tasks_no_nums_inline_keyboard(day_offset)
-        await message.answer(f"На {target_date_str} событий нет", reply_markup=left_right_inline_no_nums_kb)
+        text = f"На {target_date_str} событий нет"
+        if 'events_message_id' in data:
+            try:
+                await message.bot.edit_message_text(
+                    chat_id=message.chat.id,
+                    message_id=data['events_message_id'],
+                    text=text,
+                    reply_markup=left_right_inline_no_nums_kb
+                )
+            except Exception as e:
+                logger.debug(e)
+                pass
+        else:
+            await message.answer(text, reply_markup=left_right_inline_no_nums_kb)
+            await state.set_state(ShowEvent.waiting_events_show_end)
+
         await state.set_state(ShowEvent.waiting_events_show_end)
         return
 
@@ -108,7 +120,6 @@ async def show_events(message: types.Message, state: FSMContext):
     left_right_inline_with_nums_kb = swiping_tasks_with_nums_inline_keyboard(events, day_offset)
 
     # Если у нас уже есть message_id в состоянии, редактируем сообщение
-    data = await state.get_data()
     if 'events_message_id' in data:
         try:
             await message.bot.edit_message_text(
