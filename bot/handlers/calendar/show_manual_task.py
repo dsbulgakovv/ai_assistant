@@ -20,7 +20,8 @@ from keyboards.calendar import (
     only_back_to_manual_calendar_menu_keyboard,
     swiping_tasks_with_nums_inline_keyboard,
     swiping_tasks_no_nums_inline_keyboard,
-    change_delete_task_inline_keyboard
+    change_delete_task_inline_keyboard,
+    choice_change_task_inline_keyboard
 )
 from utils.database_api import DatabaseAPI
 
@@ -47,6 +48,7 @@ def map_task_category(idx_category):
     return categories_mapping[idx_category]
 
 
+# ------------------------ SHOWING EVENTS ------------------------
 @router.message(StateFilter(StartCalendar.start_manual_calendar), F.text.casefold() == 'посмотреть предстоящие события')
 async def show_nearest_events_manual_calendar_handler(message: types.Message, state: FSMContext) -> None:
     await message.answer(
@@ -82,7 +84,7 @@ async def show_events(message: types.Message, state: FSMContext):
         day_offset = data['day_offset']
     else:
         day_offset = 0
-        await state.update_data(day_offset=day_offset)
+        await state.update_data(day_offset=day_offset, cur_date=cur_date)
 
     target_date_str = (cur_date + timedelta(days=day_offset)).strftime("%Y-%m-%d")
 
@@ -205,9 +207,35 @@ async def show_event_details(callback: types.CallbackQuery, state: FSMContext):
 
     # Редактируем сообщение
     await callback.message.edit_text(text, reply_markup=delete_change_inline_kb)
+    await state.update_data(one_event_text=text)
+    await callback.answer()
+# ----------------------------------------------------------------
+
+
+# ------------------------ CHANGING EVENT ------------------------
+@router.callback_query(F.data.startswith('edit_'), StateFilter(ShowEvent.waiting_events_show_end))
+async def edit_event_start(callback: types.CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    event_num = int(callback.data.split('_')[-1])
+    await state.update_data(editing_event_num=event_num)
+    await callback.message.edit_text(data['one_event_text'], reply_markup=choice_change_task_inline_keyboard())
     await callback.answer()
 
 
+# @router.callback_query(F.data.startswith('editing_task_name'), StateFilter(ShowEvent.waiting_events_show_end))
+# async def editing_task_name_event_start(callback: types.CallbackQuery, state: FSMContext):
+#     data = await state.get_data()
+#
+#     ...
+#
+#     # удалить сообщение с задачей изменяемой и дать ввод реактирования
+#     await callback.message.edit_text(..., reply_markup=choice_change_task_inline_keyboard())
+#     await callback.answer()
+
+
+# cur_date
+
+# ---------------------------- GO BACK ---------------------------
 @router.callback_query(F.data.startswith('back_to_list_'), StateFilter(ShowEvent.waiting_events_show_end))
 async def back_to_events_list(callback: types.CallbackQuery, state: FSMContext):
     # Получаем смещение из callback_data
@@ -216,9 +244,6 @@ async def back_to_events_list(callback: types.CallbackQuery, state: FSMContext):
     # Возвращаемся к списку событий
     await show_events(callback.message, state)
     await callback.answer()
-
-
-# он забирает айди бота из сообщения вместо айди юзера и еще не удаляет сообщения а новые добавляет
 
 
 
