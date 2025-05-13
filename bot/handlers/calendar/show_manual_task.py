@@ -142,7 +142,9 @@ async def show_events(message: types.Message, state: FSMContext):
 async def handle_day_navigation(callback: types.CallbackQuery, state: FSMContext):
     # Получаем направление и текущее смещение
     direction = callback.data.split('_')[0]
-    current_offset = int(callback.data.split('_')[-1])
+    # current_offset = int(callback.data.split('_')[-1])
+    data = await state.get_data()
+    current_offset = data['day_offset']
 
     # Вычисляем новое смещение
     new_offset = current_offset - 1 if direction == "prev" else current_offset + 1
