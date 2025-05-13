@@ -116,7 +116,7 @@ async def show_events(message: types.Message, state: FSMContext):
         return
 
     # Формируем текст сообщения
-    text = f"События на <b>{target_date_str}</b>:\n\n"
+    text = f"События на <b>{target_date_str}</b>\n\n"
     for cur_event in events:
         start_time = (
             datetime
