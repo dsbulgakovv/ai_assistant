@@ -106,7 +106,8 @@ async def show_events(message: types.Message, state: FSMContext):
                 logger.debug(e)
                 pass
         else:
-            await message.answer(text, reply_markup=left_right_inline_no_nums_kb)
+            msg = await message.answer(text, reply_markup=left_right_inline_no_nums_kb)
+            await state.update_data(events_message_id=msg.message_id)
             await state.set_state(ShowEvent.waiting_events_show_end)
 
         await state.set_state(ShowEvent.waiting_events_show_end)
@@ -137,7 +138,7 @@ async def show_events(message: types.Message, state: FSMContext):
 
     # # Иначе отправляем новое сообщение
     msg = await message.answer(text, reply_markup=left_right_inline_with_nums_kb)
-    #
+
     # # Сохраняем ID сообщения в состоянии
     await state.update_data(events_message_id=msg.message_id)
     await state.set_state(ShowEvent.waiting_events_show_end)
@@ -149,7 +150,6 @@ async def handle_day_navigation(callback: types.CallbackQuery, state: FSMContext
     direction = callback.data.split('_')[0]
     # current_offset = int(callback.data.split('_')[-1])
     data = await state.get_data()
-    logger.info(data)
     current_offset = data['day_offset']
 
     # Вычисляем новое смещение
