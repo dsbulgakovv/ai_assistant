@@ -186,7 +186,7 @@ async def show_event_details(callback: types.CallbackQuery, state: FSMContext):
         .astimezone(pytz.timezone(user_timezone)).strftime("%d.%m.%Y %H:%M")
     )
     event['end_dtm'] = (
-        datetime.fromisoformat(event['task_start_dtm'])
+        datetime.fromisoformat(event['task_end_dtm'])
         .astimezone(pytz.timezone(user_timezone)).strftime("%d.%m.%Y %H:%M")
     )
     event['task_category'] = map_task_category(event['task_category'])
