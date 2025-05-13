@@ -53,6 +53,10 @@ async def show_nearest_events_manual_calendar_handler(message: types.Message, st
         "Ваши события",
         reply_markup=only_back_to_manual_calendar_menu_keyboard()
     )
+    user_timezone = await db_api.get_user_timezone(message.from_user.id)
+    if not user_timezone:
+        user_timezone = "Europe/Moscow"
+    await state.update_data(user_timezone=user_timezone, tg_user_id=message.from_user.id)
     await show_events(message, state)
     await state.set_state(ShowEvent.waiting_events_show_end)
 
@@ -69,22 +73,20 @@ async def close_show_nearest_events_manual_calendar_handler(message: types.Messa
 
 async def get_events_for_date(user_id: int, date_str: str):
     events = await db_api.get_tasks(user_id, date_str, date_str)
-
     # Возвращаем список словарей с событиями
     return events
 
 
 async def show_events(message: types.Message, state: FSMContext, day_offset=0):
     # Получаем текущую дату с учетом смещения
-    user_time_zone = await db_api.get_user_timezone(message.from_user.id)
-    if not user_time_zone:
-        user_time_zone = "Europe/Moscow"
+    data = await state.get_data()
+    user_timezone = data['user_timezone']
     utc_time = datetime.now(timezone.utc)
-    local_time = utc_time.astimezone(pytz.timezone(user_time_zone))
+    local_time = utc_time.astimezone(pytz.timezone(user_timezone))
     date_str = local_time.strftime("%Y-%m-%d")
 
     # Здесь получаем события из вашего API/Redis
-    events, status = await get_events_for_date(message.from_user.id, date_str)
+    events, status = await get_events_for_date(data['tg_user_id'], date_str)
     await state.update_data(
         current_date=date_str,
         events=events,
@@ -189,7 +191,7 @@ async def back_to_events_list(callback: types.CallbackQuery, state: FSMContext):
     await callback.answer()
 
 
-
+# он забирает айди бота из сообщения вместо айди юзера и еще не удаляет сообщения а новые добавляет
 
 
 
