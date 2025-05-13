@@ -116,7 +116,12 @@ async def show_events(message: types.Message, state: FSMContext):
     # Формируем текст сообщения
     text = f"События на <b>{target_date_str}</b>:\n\n"
     for cur_event in events:
-        start_time = datetime.fromisoformat(cur_event['task_start_dtm']).time().strftime("%H:%M")
+        start_time = (
+            datetime
+            .fromisoformat(cur_event['task_start_dtm'])
+            .astimezone(pytz.timezone(user_timezone))
+            .time().strftime("%H:%M")
+        )
         text += f"<b>{cur_event['task_relative_id']}.</b> <code>{start_time}</code> - {cur_event['task_name']}\n"
 
     left_right_inline_with_nums_kb = swiping_tasks_with_nums_inline_keyboard(events, day_offset)
@@ -169,14 +174,21 @@ async def show_event_details(callback: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     events = data['events']
     day_offset = data['day_offset']
+    user_timezone = data['user_timezone']
 
     if event_num < 1 or event_num > len(events):
         await callback.answer("Неверный номер события")
         return
 
     event = events[event_num - 1]
-    event['start_dtm'] = datetime.fromisoformat(event['task_start_dtm']).strftime("%d.%m.%Y %H:%M")
-    event['end_dtm'] = datetime.fromisoformat(event['task_start_dtm']).strftime("%d.%m.%Y %H:%M")
+    event['start_dtm'] = (
+        datetime.fromisoformat(event['task_start_dtm'])
+        .astimezone(pytz.timezone(user_timezone)).strftime("%d.%m.%Y %H:%M")
+    )
+    event['end_dtm'] = (
+        datetime.fromisoformat(event['task_start_dtm'])
+        .astimezone(pytz.timezone(user_timezone)).strftime("%d.%m.%Y %H:%M")
+    )
     event['task_category'] = map_task_category(event['task_category'])
     # Формируем текст с полным описанием
     text = build_event_full_info(
