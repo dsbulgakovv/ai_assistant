@@ -95,7 +95,7 @@ async def show_events(message: types.Message, state: FSMContext):
     # Если событий нет
     if status == 404:
         left_right_inline_no_nums_kb = swiping_tasks_no_nums_inline_keyboard(day_offset)
-        text = f"На {target_date_str} событий нет"
+        text = f"На <b>{target_date_str}</b> событий нет"
         if 'events_message_id' in data:
             try:
                 await message.bot.edit_message_text(
