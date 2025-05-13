@@ -138,8 +138,8 @@ def change_delete_task_inline_keyboard(day_offset: int, event_num: int) -> Inlin
 
 def choice_change_task_inline_keyboard() -> InlineKeyboardMarkup:
     buttons = [
-        [InlineKeyboardButton(text="Дату начала ", callback_data=f"editing_start_dtm")],
-        [InlineKeyboardButton(text="Дату завершения", callback_data=f"editing_end_dtm")],
+        [InlineKeyboardButton(text="Дату и время начала ", callback_data=f"editing_start_dtm")],
+        [InlineKeyboardButton(text="Дату и время завершения", callback_data=f"editing_end_dtm")],
         [
             InlineKeyboardButton(text="Название", callback_data=f"editing_task_name"),
             InlineKeyboardButton(text="Категорию", callback_data=f"editing_task_category")
