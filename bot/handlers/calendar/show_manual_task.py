@@ -71,30 +71,23 @@ async def close_show_nearest_events_manual_calendar_handler(message: types.Messa
     await state.set_state(StartCalendar.start_manual_calendar)
 
 
-async def get_events_for_date(user_id: int, date_str: str):
-    events = await db_api.get_tasks(user_id, date_str, date_str)
-    # Возвращаем список словарей с событиями
-    return events
-
-
 async def show_events(message: types.Message, state: FSMContext):
-
     # Получаем текущую дату с учетом смещения
     data = await state.get_data()
     user_timezone = data['user_timezone']
     utc_time = datetime.now(timezone.utc)
-    local_time = utc_time.astimezone(pytz.timezone(user_timezone))
-    date_str = local_time.strftime("%Y-%m-%d")
+    cur_date = utc_time.astimezone(pytz.timezone(user_timezone))
 
     if 'day_offset' in data:
         day_offset = data['day_offset']
     else:
         day_offset = 0
 
+    target_date_str = (cur_date + timedelta(days=day_offset)).strftime("%Y-%m-%d")
+
     # Здесь получаем события из вашего API/Redis
-    events, status = await get_events_for_date(data['tg_user_id'], date_str)
+    events, status = await db_api.get_tasks(data['tg_user_id'], target_date_str, target_date_str)
     await state.update_data(
-        current_date=date_str,
         events=events,
         day_offset=day_offset
     )
@@ -102,12 +95,12 @@ async def show_events(message: types.Message, state: FSMContext):
     if status == 404:
         # Если событий нет
         left_right_inline_no_nums_kb = swiping_tasks_no_nums_inline_keyboard(day_offset)
-        await message.answer(f"На {date_str} событий нет", reply_markup=left_right_inline_no_nums_kb)
+        await message.answer(f"На {target_date_str} событий нет", reply_markup=left_right_inline_no_nums_kb)
         await state.set_state(ShowEvent.waiting_events_show_end)
         return
 
     # Формируем текст сообщения
-    text = f"События на <b>{date_str}</b>:\n\n"
+    text = f"События на <b>{target_date_str}</b>:\n\n"
     for cur_event in events:
         start_time = datetime.fromisoformat(cur_event['task_start_dtm']).time().strftime("%H:%M")
         text += f"<b>{cur_event['task_relative_id']}.</b> <code>{start_time}</code> - {cur_event['task_name']}\n"
