@@ -84,7 +84,7 @@ async def show_events(message: types.Message, state: FSMContext):
         day_offset = data['day_offset']
     else:
         day_offset = 0
-        await state.update_data(day_offset=day_offset, cur_date=cur_date)
+        await state.update_data(day_offset=day_offset, cur_date=cur_date.strftime("%Y-%m-%d"))
 
     target_date_str = (cur_date + timedelta(days=day_offset)).strftime("%Y-%m-%d")
 
