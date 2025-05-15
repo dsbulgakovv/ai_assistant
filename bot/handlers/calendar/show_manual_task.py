@@ -311,6 +311,8 @@ async def approved_save_editing_task(callback: types.CallbackQuery, state: FSMCo
     await state.update_data(events_message_id=callback.message.message_id)
     data = await state.get_data()
     event = data['events'][data['editing_event_num'] - 1]
+    logger.info(data)
+    logger.info(event)
     business_dt = convert_to_business_dt(event['start_dtm'], data['user_timezone'])
     task_start_dtm = convert_date_string(event['start_dtm'], data['user_timezone'])
     task_end_dtm = convert_date_string(event['end_dtm'], data['user_timezone'])
