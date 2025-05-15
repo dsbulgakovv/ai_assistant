@@ -320,9 +320,6 @@ async def approved_save_editing_task(callback: types.CallbackQuery, state: FSMCo
     await state.update_data(events_message_id=callback.message.message_id)
     data = await state.get_data()
     event = data['events'][data['editing_event_num'] - 1]
-    logger.info(data)
-    logger.info(event)
-    # business_dt = convert_to_business_dt(event['task_start_dtm'], data['user_timezone'])
     task_start_dtm = localize_db_date(event['task_start_dtm'], data['user_timezone'])
     task_end_dtm = localize_db_date(event['task_end_dtm'], data['user_timezone'])
     _, status = await db_api.update_task(
@@ -340,7 +337,8 @@ async def approved_save_editing_task(callback: types.CallbackQuery, state: FSMCo
             f"Please, contact support https://t.me/dm1trybu"
         )
     delete_change_inline_kb = change_delete_task_inline_keyboard(data['day_offset'], data['editing_event_num'])
-    await callback.message.edit_text(data['one_event_text'], reply_markup=delete_change_inline_kb)
+    await callback.message.delete()
+    await callback.message.answer(data['one_event_text'], reply_markup=delete_change_inline_kb)
     await callback.answer()
 
 
