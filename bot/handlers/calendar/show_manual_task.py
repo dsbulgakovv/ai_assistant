@@ -88,10 +88,11 @@ def localize_db_date(input_date_str: str, timezone_str: str) -> str:
 
 
 def convert_to_business_dt(input_date_str: str, timezone_str: str) -> str:
-    dt_naive = datetime.strptime(input_date_str, "%d.%m.%Y %H:%M")
-    tz = pytz.timezone(timezone_str)
-    dt_local = tz.localize(dt_naive)
-    formatted_date = dt_local.strftime("%Y-%m-%d")
+    formatted_date = (
+        datetime.fromisoformat(input_date_str)
+        .astimezone(pytz.timezone(timezone_str))
+        .strftime("%Y-%m-%d")
+    )
     return formatted_date
 
 
