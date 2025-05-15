@@ -310,14 +310,15 @@ async def editing_task_name_event_start(message: types.Message, state: FSMContex
 async def approved_save_editing_task(callback: types.CallbackQuery, state: FSMContext):
     await state.update_data(events_message_id=callback.message.message_id)
     data = await state.get_data()
-    business_dt = convert_to_business_dt(data['task_start_dtm'], data['user_timezone'])
-    task_start_dtm = convert_date_string(data['task_start_dtm'], data['user_timezone'])
-    task_end_dtm = convert_date_string(data['task_end_dtm'], data['user_timezone'])
+    event = data['events'][data['editing_event_num'] - 1]
+    business_dt = convert_to_business_dt(event['start_dtm'], data['user_timezone'])
+    task_start_dtm = convert_date_string(event['start_dtm'], data['user_timezone'])
+    task_end_dtm = convert_date_string(event['end_dtm'], data['user_timezone'])
     _, status = await db_api.update_task(
         business_dt=business_dt, task_relative_id=data['editing_event_num'],
-        tg_user_id=data['tg_user_id'], task_name=data['task_name'],
-        task_status=2, task_category=map_task_category_from_str(data['task_category']),
-        task_description=data['task_description'], task_link=data['task_link'],
+        tg_user_id=data['tg_user_id'], task_name=event['task_name'],
+        task_status=2, task_category=map_task_category_from_str(event['task_category']),
+        task_description=event['task_description'], task_link=event['task_link'],
         task_start_dtm=task_start_dtm, task_end_dtm=task_end_dtm
     )
     if status == 200:

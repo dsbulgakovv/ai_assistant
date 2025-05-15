@@ -164,7 +164,7 @@ def only_back_to_manual_calendar_menu_keyboard() -> ReplyKeyboardMarkup:
 def editing_approve_task() -> InlineKeyboardMarkup:
     buttons = [
         [
-            InlineKeyboardButton(text="Изменить", callback_data="approve_new_edit")
+            InlineKeyboardButton(text="Подтвердить изменение", callback_data="approve_new_edit")
         ]
     ]
     return InlineKeyboardMarkup(inline_keyboard=buttons)
