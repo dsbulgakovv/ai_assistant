@@ -245,8 +245,8 @@ async def editing_task_name_event_start(callback: types.CallbackQuery, state: FS
 
     # удалить сообщение с задачей изменяемой и дать ввод реактирования
     await callback.message.edit_text("Введите новое название", reply_markup=None)
-    await state.set_state(ChangeEvent.approving_new_event_name)
     await callback.answer()
+    await state.set_state(ChangeEvent.approving_new_event_name)
 
 
 @router.callback_query(StateFilter(ChangeEvent.approving_new_event_name))
