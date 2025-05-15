@@ -3,7 +3,7 @@ import logging
 from datetime import datetime, timedelta, timezone
 
 from aiogram import F, Router, types
-from aiogram.filters import StateFilter
+from aiogram.filters import StateFilter, or_f
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import ReplyKeyboardRemove, CallbackQuery
@@ -36,6 +36,15 @@ class ShowEvent(StatesGroup):
     waiting_events_show_end = State()
 
 
+class ChangeEvent(StatesGroup):
+    approving_new_event_name = State()
+    approving_new_event_category = State()
+    approving_new_event_description = State()
+    approving_new_event_link = State()
+    approving_new_event_start = State()
+    approving_new_event_end = State()
+
+
 def map_task_category(idx_category):
     categories_mapping = {
         1: 'Работа',
@@ -63,7 +72,15 @@ async def show_nearest_events_manual_calendar_handler(message: types.Message, st
     await state.set_state(ShowEvent.waiting_events_show_end)
 
 
-@router.message(StateFilter(ShowEvent.waiting_events_show_end), F.text.casefold() == 'вернуться назад')
+@router.message(
+    or_f(
+        StateFilter(ShowEvent.waiting_events_show_end), StateFilter(ShowEvent.waiting_events_show_end),
+        StateFilter(ShowEvent.waiting_events_show_end), StateFilter(ShowEvent.waiting_events_show_end),
+        StateFilter(ShowEvent.waiting_events_show_end), StateFilter(ShowEvent.waiting_events_show_end),
+        StateFilter(ShowEvent.waiting_events_show_end)
+    ),
+    F.text.casefold() == 'вернуться назад'
+)
 async def close_show_nearest_events_manual_calendar_handler(message: types.Message, state: FSMContext) -> None:
     await message.answer(
         "Выбери нужное действие",
@@ -222,18 +239,32 @@ async def edit_event_start(callback: types.CallbackQuery, state: FSMContext):
     await callback.answer()
 
 
-# @router.callback_query(F.data.startswith('editing_task_name'), StateFilter(ShowEvent.waiting_events_show_end))
-# async def editing_task_name_event_start(callback: types.CallbackQuery, state: FSMContext):
-#     data = await state.get_data()
-#
-#     ...
-#
-#     # удалить сообщение с задачей изменяемой и дать ввод реактирования
-#     await callback.message.edit_text(..., reply_markup=choice_change_task_inline_keyboard())
-#     await callback.answer()
+@router.callback_query(F.data.startswith('editing_task_name'), StateFilter(ShowEvent.waiting_events_show_end))
+async def editing_task_name_event_start(callback: types.CallbackQuery, state: FSMContext):
+    # data = await state.get_data()
+
+    # удалить сообщение с задачей изменяемой и дать ввод реактирования
+    await callback.message.edit_text("Введите новое название", reply_markup=None)
+    await callback.answer()
+    await state.set_state(ChangeEvent.approving_new_event_name)
+
+
+@router.callback_query(StateFilter(ShowEvent.waiting_events_show_end))
+async def editing_task_name_event_start(message: types.Message, state: FSMContext):
+    data = await state.get_data()
+    new_name = message.text
+    logger.info(data)
+    # await ...
+    await state.set_state(ShowEvent.waiting_events_show_end)
 
 
 # cur_date
+# approving_new_event_name = State()
+# approving_new_event_category = State()
+# approving_new_event_description = State()
+# approving_new_event_link = State()
+# approving_new_event_start = State()
+# approving_new_event_end = State()
 
 
 @router.callback_query(F.data.startswith('back_to_change_delete_task'), StateFilter(ShowEvent.waiting_events_show_end))
