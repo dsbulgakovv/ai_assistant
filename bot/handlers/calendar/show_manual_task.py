@@ -95,6 +95,12 @@ def convert_to_business_dt(input_date_str: str, timezone_str: str) -> str:
     return formatted_date
 
 
+def days_diff(date1, date2):
+    d1 = datetime.strptime(date1, "%Y-%m-%d").date()
+    d2 = datetime.strptime(date2, "%Y-%m-%d").date()
+    return abs((d2 - d1).days)
+
+
 # ------------------------ SHOWING EVENTS ------------------------
 @router.message(StateFilter(StartCalendar.start_manual_calendar), F.text.casefold() == 'посмотреть предстоящие события')
 async def show_nearest_events_manual_calendar_handler(message: types.Message, state: FSMContext) -> None:
@@ -295,8 +301,10 @@ async def editing_task_name_event_start(message: types.Message, state: FSMContex
     data = await state.get_data()
     user_timezone = data['user_timezone']
     event = data['events'][data['editing_event_num'] - 1]
-    event['task_name'] = new_name
+    new_event_info = event.copy()
+    new_event_info['task_name'] = new_name
     new_text = form_one_event_detailed(event, user_timezone)
+    await state.update_data(new_event_info=new_event_info)
     await message.answer(new_text, reply_markup=editing_approve_task())
     await state.update_data(one_event_text=new_text)
     await state.set_state(ShowEvent.waiting_events_show_end)
@@ -319,11 +327,12 @@ async def editing_task_name_event_start(message: types.Message, state: FSMContex
 async def approved_save_editing_task(callback: types.CallbackQuery, state: FSMContext):
     await state.update_data(events_message_id=callback.message.message_id)
     data = await state.get_data()
-    event = data['events'][data['editing_event_num'] - 1]
+    event = data['new_event_info']
+    business_dt = convert_to_business_dt(event['task_start_dtm'], data['user_timezone'])
     task_start_dtm = localize_db_date(event['task_start_dtm'], data['user_timezone'])
     task_end_dtm = localize_db_date(event['task_end_dtm'], data['user_timezone'])
     _, status = await db_api.update_task(
-        business_dt=event['business_dt'], task_relative_id=data['editing_event_num'],
+        business_dt=business_dt, task_relative_id=data['editing_event_num'],
         tg_user_id=data['tg_user_id'], task_name=event['task_name'],
         task_status=2, task_category=event['task_category'],
         task_description=event['task_description'], task_link=event['task_link'],
@@ -337,6 +346,17 @@ async def approved_save_editing_task(callback: types.CallbackQuery, state: FSMCo
             f"Please, contact support https://t.me/dm1trybu"
         )
     delete_change_inline_kb = change_delete_task_inline_keyboard(data['day_offset'], data['editing_event_num'])
+    global_task_id = event['id']
+    events, _ = await db_api.get_tasks(data['tg_user_id'], business_dt, business_dt)
+
+    result = next(filter(lambda x: x["id"] == global_task_id, events), None)
+    new_task_relative_id = result['task_relative_id']
+
+    new_day_offset = days_diff(data['cur_date'], business_dt)
+
+    await state.update_data(
+        events=events, editing_event_num=new_task_relative_id, day_offset=new_day_offset
+    )
     await callback.message.delete()
     await callback.message.answer(data['one_event_text'], reply_markup=delete_change_inline_kb)
     await callback.answer()
