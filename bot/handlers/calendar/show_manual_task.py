@@ -329,11 +329,12 @@ async def approved_save_editing_task(callback: types.CallbackQuery, state: FSMCo
     await state.update_data(events_message_id=callback.message.message_id)
     data = await state.get_data()
     event = data['new_event_info']
+    task_global_id = event['id']
     business_dt = convert_to_business_dt(event['task_start_dtm'], data['user_timezone'])
     task_start_dtm = localize_db_date(event['task_start_dtm'], data['user_timezone'])
     task_end_dtm = localize_db_date(event['task_end_dtm'], data['user_timezone'])
     _, status = await db_api.update_task(
-        business_dt=business_dt, task_relative_id=data['editing_event_num'],
+        task_global_id=task_global_id,
         tg_user_id=data['tg_user_id'], task_name=event['task_name'],
         task_status=2, task_category=event['task_category'],
         task_description=event['task_description'], task_link=event['task_link'],
@@ -346,11 +347,11 @@ async def approved_save_editing_task(callback: types.CallbackQuery, state: FSMCo
             f"INTERNAL SERVER ERROR.\n"
             f"Please, contact support https://t.me/dm1trybu"
         )
+        return
     delete_change_inline_kb = change_delete_task_inline_keyboard(data['day_offset'], data['editing_event_num'])
-    global_task_id = event['id']
     events, _ = await db_api.get_tasks(data['tg_user_id'], business_dt, business_dt)
 
-    result = next(filter(lambda x: x["id"] == global_task_id, events), None)
+    result = next(filter(lambda x: x["id"] == task_global_id, events), None)
     new_task_relative_id = result['task_relative_id']
 
     new_day_offset = days_diff(data['cur_date'], business_dt)

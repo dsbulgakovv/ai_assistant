@@ -62,17 +62,16 @@ class DatabaseAPI:
         return response, status
 
     async def update_task(
-            self, business_dt, task_relative_id, tg_user_id, task_name, task_status,task_category,
+            self, task_global_id, tg_user_id, task_name, task_status, task_category,
             task_description, task_link, task_start_dtm, task_end_dtm
     ):
         async with ClientSession() as session:
             async with session.put(
                 f"{self.base_url}/tasks/update",
                 json={
-                    "business_dt": business_dt, "task_relative_id": task_relative_id,
-                    "tg_user_id": tg_user_id, "task_name": task_name, "task_status": task_status,
-                    "task_category": task_category, "task_description": task_description,
-                    "task_link": task_link, "task_start_dtm": task_start_dtm, "task_end_dtm": task_end_dtm
+                    "id": task_global_id, "tg_user_id": tg_user_id, "task_name": task_name, "task_status": task_status,
+                    "task_category": task_category, "task_description": task_description, "task_link": task_link,
+                    "task_start_dtm": task_start_dtm, "task_end_dtm": task_end_dtm
                 }
             ) as resp:
                 response, status = await resp.json(), resp.status
