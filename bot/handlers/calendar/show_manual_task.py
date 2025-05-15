@@ -250,6 +250,7 @@ async def show_event_details(callback: types.CallbackQuery, state: FSMContext):
         return
 
     event = events[event_num - 1]
+    logger.info(event)
     text = form_one_event_detailed(event, user_timezone)
 
     # Создаем клавиатуру с действиями
@@ -313,11 +314,11 @@ async def approved_save_editing_task(callback: types.CallbackQuery, state: FSMCo
     event = data['events'][data['editing_event_num'] - 1]
     logger.info(data)
     logger.info(event)
-    business_dt = convert_to_business_dt(event['start_dtm'], data['user_timezone'])
-    task_start_dtm = convert_date_string(event['start_dtm'], data['user_timezone'])
-    task_end_dtm = convert_date_string(event['end_dtm'], data['user_timezone'])
+    # business_dt = convert_to_business_dt(event['task_start_dtm'], data['user_timezone'])
+    task_start_dtm = convert_date_string(event['task_start_dtm'], data['user_timezone'])
+    task_end_dtm = convert_date_string(event['task_end_dtm'], data['user_timezone'])
     _, status = await db_api.update_task(
-        business_dt=business_dt, task_relative_id=data['editing_event_num'],
+        business_dt=event['business_dt'], task_relative_id=data['editing_event_num'],
         tg_user_id=data['tg_user_id'], task_name=event['task_name'],
         task_status=2, task_category=map_task_category_from_str(event['task_category']),
         task_description=event['task_description'], task_link=event['task_link'],
