@@ -2,57 +2,30 @@ import os
 import json
 from aiohttp import ClientSession
 
-project_id = os.getenv('PROJECT_ID')
-api_key = os.getenv('KEY_ID')
-api_secret = os.getenv('KEY_SECRET')
+
+api_token = os.getenv('SERVERSPACE_API_KEY')
+model = os.getenv('SERVERSPACE_MODEL')
 
 
 class LLMapi:
     def __init__(self):
-        self.api_completions_url = "https://api.cloud.ru/api/gigacube/openai/v1/completions"
-        self.key_id = api_key
-        self.key_secret = api_secret
-
-    async def health_check(self):
-        async with ClientSession() as session:
-            async with session.get(
-                f"{self.base_url}"
-            ) as resp:
-                response = await resp.json()
-        return response
-
-    async def get_auth_token(self) -> str:
-        auth_url = "https://iam.api.cloud.ru/api/v1/auth/token"
-        payload = {
-            "keyId": self.key_id,
-            "secret": self.key_secret
-        }
-
-        async with ClientSession() as session:
-            async with session.post(
-                    auth_url,
-                    headers={"Content-Type": "application/json"},
-                    data=json.dumps(payload)
-            ) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    return data.get("access_token")  # Предполагаем, что токен возвращается в поле "access_token"
-                else:
-                    text = await response.text()
-                    raise Exception(f"Auth failed: {text}")
+        self.api_completions_url = "https://gpt.serverspace.ru/v1/chat/completions"
+        self.api_token = api_token
+        self.model = model
 
     async def prompt_answer(
-        self, prompt: str, model: str, temperature: float
+        self, messages: list, temperature: float, top_p: float, max_tokens: int
     ):
-        token = await self.get_auth_token()
         payload = {
-            "model": model,
-            "prompt": [prompt],
-            "temperature": temperature,
-            # Другие параметры по необходимости
+          "model": self.model,
+          "max_tokens": max_tokens,
+          "top_p": top_p,
+          "temperature": temperature,
+          "messages": messages
         }
         headers = {
-            "Authorization": f"Bearer {token}",
+            "Authorization": f"Bearer {self.api_token}",
+            "Accept": "application/json",
             "Content-Type": "application/json"
         }
         async with ClientSession() as session:
@@ -60,15 +33,19 @@ class LLMapi:
                 f"{self.api_completions_url}",
                 headers=headers,
                 data=json.dumps(payload)
-            ) as resp:
-                response = await resp.json()
-        return response
+            ) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    return data
+                else:
+                    text = await response.text()
+                    raise Exception(f"Request failed: {text}")
 
 
 def main():
     api_use = LLMapi()
-    resp = api_use.health_check()
-    print(resp)
+    # resp = api_use.health_check()
+    # print(resp)
 
 
 if __name__ == '__main__':
