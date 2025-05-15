@@ -249,7 +249,7 @@ async def editing_task_name_event_start(callback: types.CallbackQuery, state: FS
     await state.set_state(ChangeEvent.approving_new_event_name)
 
 
-@router.callback_query(StateFilter(ChangeEvent.approving_new_event_name))
+@router.message(StateFilter(ChangeEvent.approving_new_event_name))
 async def editing_task_name_event_start(message: types.Message, state: FSMContext):
     data = await state.get_data()
     new_name = message.text
