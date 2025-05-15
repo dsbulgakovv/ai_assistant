@@ -1,5 +1,7 @@
-from fastapi import FastAPI, Depends, Query, HTTPException
+from fastapi import FastAPI, Depends, Query, HTTPException, Request
 from fastapi.responses import JSONResponse
+
+import time
 
 import asyncpg
 
@@ -106,6 +108,26 @@ def parse_datetime(dt_str):
 async def get_db():
     async with app.state.pool.acquire() as connection:
         yield connection
+
+
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start_time = time.time()
+
+    # Логируем входящий запрос
+    logger.info(f"Request: {request.method} {request.url}")
+    logger.debug(f"Headers: {request.headers}")
+    logger.debug(f"Query params: {request.query_params}")
+    logger.debug(f"Body: {await request.body()}")
+
+    response = await call_next(request)
+
+    # Логируем ответ
+    process_time = time.time() - start_time
+    logger.info(f"Response: {response.status_code} (Time: {process_time:.2f}s)")
+    logger.debug(f"Response headers: {response.headers}")
+
+    return response
 
 
 @app.get("/")
