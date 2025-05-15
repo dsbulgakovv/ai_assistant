@@ -303,7 +303,7 @@ async def editing_task_name_event_start(message: types.Message, state: FSMContex
     event = data['events'][data['editing_event_num'] - 1]
     new_event_info = event.copy()
     new_event_info['task_name'] = new_name
-    new_text = form_one_event_detailed(event, user_timezone)
+    new_text = form_one_event_detailed(new_event_info, user_timezone)
     await state.update_data(new_event_info=new_event_info)
     await message.answer(new_text, reply_markup=editing_approve_task())
     await state.update_data(one_event_text=new_text)
