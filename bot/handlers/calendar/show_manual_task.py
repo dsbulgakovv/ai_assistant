@@ -21,7 +21,8 @@ from keyboards.calendar import (
     swiping_tasks_with_nums_inline_keyboard,
     swiping_tasks_no_nums_inline_keyboard,
     change_delete_task_inline_keyboard,
-    choice_change_task_inline_keyboard
+    choice_change_task_inline_keyboard,
+    editing_approve_task
 )
 from utils.database_api import DatabaseAPI
 
@@ -55,6 +56,34 @@ def map_task_category(idx_category):
         6: 'Семья'
     }
     return categories_mapping[idx_category]
+
+
+def map_task_category_from_str(str_category):
+    categories_mapping = {
+        'Работа': 1,
+        'Учеба': 2,
+        'Личное': 3,
+        'Здоровье': 4,
+        'Финансы': 5,
+        'Семья': 6
+    }
+    return categories_mapping[str_category]
+
+
+def convert_date_string(input_date_str: str, timezone_str: str) -> str:
+    dt_naive = datetime.strptime(input_date_str, "%d.%m.%Y %H:%M")
+    tz = pytz.timezone(timezone_str)
+    dt_local = tz.localize(dt_naive)
+    formatted_date = dt_local.strftime("%Y-%m-%d %H:%M:%S.000 %z")
+    return formatted_date
+
+
+def convert_to_business_dt(input_date_str: str, timezone_str: str) -> str:
+    dt_naive = datetime.strptime(input_date_str, "%d.%m.%Y %H:%M")
+    tz = pytz.timezone(timezone_str)
+    dt_local = tz.localize(dt_naive)
+    formatted_date = dt_local.strftime("%Y-%m-%d")
+    return formatted_date
 
 
 # ------------------------ SHOWING EVENTS ------------------------
@@ -172,7 +201,6 @@ async def show_events(message: types.Message, state: FSMContext):
 async def handle_day_navigation(callback: types.CallbackQuery, state: FSMContext):
     # Получаем направление и текущее смещение
     direction = callback.data.split('_')[0]
-    # current_offset = int(callback.data.split('_')[-1])
     data = await state.get_data()
     current_offset = data['day_offset']
 
@@ -185,21 +213,7 @@ async def handle_day_navigation(callback: types.CallbackQuery, state: FSMContext
     await callback.answer()
 
 
-@router.callback_query(F.data.startswith('event_'), StateFilter(ShowEvent.waiting_events_show_end))
-async def show_event_details(callback: types.CallbackQuery, state: FSMContext):
-    # Получаем номер события из callback_data
-    event_num = int(callback.data.split('_')[1])
-
-    data = await state.get_data()
-    events = data['events']
-    day_offset = data['day_offset']
-    user_timezone = data['user_timezone']
-
-    if event_num < 1 or event_num > len(events):
-        await callback.answer("Неверный номер события")
-        return
-
-    event = events[event_num - 1]
+def form_one_event_detailed(event: dict, user_timezone: str) -> str:
     event['start_dtm'] = (
         datetime.fromisoformat(event['task_start_dtm'])
         .astimezone(pytz.timezone(user_timezone)).strftime("%d.%m.%Y %H:%M")
@@ -218,6 +232,25 @@ async def show_event_details(callback: types.CallbackQuery, state: FSMContext):
         event['task_link'],
         event['task_description']
     )
+    return text
+
+
+@router.callback_query(F.data.startswith('event_'), StateFilter(ShowEvent.waiting_events_show_end))
+async def show_event_details(callback: types.CallbackQuery, state: FSMContext):
+    # Получаем номер события из callback_data
+    event_num = int(callback.data.split('_')[1])
+
+    data = await state.get_data()
+    events = data['events']
+    day_offset = data['day_offset']
+    user_timezone = data['user_timezone']
+
+    if event_num < 1 or event_num > len(events):
+        await callback.answer("Неверный номер события")
+        return
+
+    event = events[event_num - 1]
+    text = form_one_event_detailed(event, user_timezone)
 
     # Создаем клавиатуру с действиями
     delete_change_inline_kb = change_delete_task_inline_keyboard(day_offset, event_num)
@@ -239,11 +272,9 @@ async def edit_event_start(callback: types.CallbackQuery, state: FSMContext):
     await callback.answer()
 
 
+# NAME
 @router.callback_query(F.data.startswith('editing_task_name'), StateFilter(ShowEvent.waiting_events_show_end))
 async def editing_task_name_event_start(callback: types.CallbackQuery, state: FSMContext):
-    # data = await state.get_data()
-
-    # удалить сообщение с задачей изменяемой и дать ввод реактирования
     await callback.message.edit_text("Введите новое название", reply_markup=None)
     await callback.answer()
     await state.set_state(ChangeEvent.approving_new_event_name)
@@ -251,12 +282,18 @@ async def editing_task_name_event_start(callback: types.CallbackQuery, state: FS
 
 @router.message(StateFilter(ChangeEvent.approving_new_event_name))
 async def editing_task_name_event_start(message: types.Message, state: FSMContext):
-    data = await state.get_data()
     new_name = message.text
-    logger.info(data)
-    # await ...
-    await message.answer("OK", reply_markup=None)
+    data = await state.get_data()
+    user_timezone = data['user_timezone']
+    event = data['events'][data['editing_event_num'] - 1]
+    event['task_name'] = new_name
+    new_text = form_one_event_detailed(event, user_timezone)
+    await message.answer(new_text, reply_markup=editing_approve_task())
+    await state.update_data(one_event_text=new_text)
     await state.set_state(ShowEvent.waiting_events_show_end)
+
+
+# CATEGORY
 
 
 # cur_date
@@ -266,6 +303,33 @@ async def editing_task_name_event_start(message: types.Message, state: FSMContex
 # approving_new_event_link = State()
 # approving_new_event_start = State()
 # approving_new_event_end = State()
+
+
+# UNIVERSAL IN EDIT MODE
+@router.callback_query(F.data.startswith('approve_new_edit'), StateFilter(ShowEvent.waiting_events_show_end))
+async def approved_save_editing_task(callback: types.CallbackQuery, state: FSMContext):
+    await state.update_data(events_message_id=callback.message.message_id)
+    data = await state.get_data()
+    business_dt = convert_to_business_dt(data['task_start_dtm'], data['user_timezone'])
+    task_start_dtm = convert_date_string(data['task_start_dtm'], data['user_timezone'])
+    task_end_dtm = convert_date_string(data['task_end_dtm'], data['user_timezone'])
+    _, status = await db_api.update_task(
+        business_dt=business_dt, task_relative_id=data['editing_event_num'],
+        tg_user_id=data['tg_user_id'], task_name=data['task_name'],
+        task_status=2, task_category=map_task_category_from_str(data['task_category']),
+        task_description=data['task_description'], task_link=data['task_link'],
+        task_start_dtm=task_start_dtm, task_end_dtm=task_end_dtm
+    )
+    if status == 200:
+        await callback.message.answer("✅ Событие успешно обновлено!")
+    else:
+        await callback.message.answer(
+            f"INTERNAL SERVER ERROR.\n"
+            f"Please, contact support https://t.me/dm1trybu"
+        )
+    delete_change_inline_kb = change_delete_task_inline_keyboard(data['day_offset'], data['editing_event_num'])
+    await callback.message.edit_text(data['one_event_text'], reply_markup=delete_change_inline_kb)
+    await callback.answer()
 
 
 @router.callback_query(F.data.startswith('back_to_change_delete_task'), StateFilter(ShowEvent.waiting_events_show_end))

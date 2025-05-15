@@ -158,3 +158,14 @@ def only_back_to_manual_calendar_menu_keyboard() -> ReplyKeyboardMarkup:
     kb.row(KeyboardButton(text='Вернуться назад'))
     return kb.as_markup(resize_keyboard=True)
 # -----------------------------------------
+
+
+# ------ MANUAL TASK EDIT INTERACTION -----
+def editing_approve_task() -> InlineKeyboardMarkup:
+    buttons = [
+        [
+            InlineKeyboardButton(text="Изменить", callback_data="approve_new_edit")
+        ]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+# -----------------------------------------
