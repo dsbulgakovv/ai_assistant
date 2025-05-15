@@ -328,7 +328,7 @@ async def approved_save_editing_task(callback: types.CallbackQuery, state: FSMCo
     _, status = await db_api.update_task(
         business_dt=event['business_dt'], task_relative_id=data['editing_event_num'],
         tg_user_id=data['tg_user_id'], task_name=event['task_name'],
-        task_status=2, task_category=map_task_category_from_str(event['task_category']),
+        task_status=2, task_category=event['task_category'],
         task_description=event['task_description'], task_link=event['task_link'],
         task_start_dtm=task_start_dtm, task_end_dtm=task_end_dtm
     )
