@@ -245,11 +245,11 @@ async def editing_task_name_event_start(callback: types.CallbackQuery, state: FS
 
     # удалить сообщение с задачей изменяемой и дать ввод реактирования
     await callback.message.edit_text("Введите новое название", reply_markup=None)
-    await callback.answer()
     await state.set_state(ChangeEvent.approving_new_event_name)
+    await callback.answer()
 
 
-@router.callback_query(StateFilter(ShowEvent.waiting_events_show_end))
+@router.callback_query(StateFilter(ChangeEvent.approving_new_event_name))
 async def editing_task_name_event_start(message: types.Message, state: FSMContext):
     data = await state.get_data()
     new_name = message.text
