@@ -54,7 +54,7 @@ async def q_and_a_process_handler(message: types.Message, bot: Bot, state: FSMCo
                 "content": system_prompt_q_and_a.format(text['text'])
             }
         ]
-        answer = llm_api.prompt_answer(
+        answer = await llm_api.prompt_answer(
             messages, temperature=0.1, top_p=0.1, max_tokens=3_000
         )['choices'][0]['message']['content']
         if len(answer) > 4080:
@@ -73,7 +73,7 @@ async def q_and_a_process_handler(message: types.Message, bot: Bot, state: FSMCo
                 "content": system_prompt_q_and_a.format(message.text)
             }
         ]
-        answer = llm_api.prompt_answer(
+        answer = await llm_api.prompt_answer(
             messages, temperature=0.1, top_p=0.1, max_tokens=3_000
         )['choices'][0]['message']['content']
         if len(answer) > 4080:
