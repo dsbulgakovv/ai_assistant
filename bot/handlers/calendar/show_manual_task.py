@@ -78,6 +78,15 @@ def convert_date_string(input_date_str: str, timezone_str: str) -> str:
     return formatted_date
 
 
+def localize_db_date(input_date_str: str, timezone_str: str) -> str:
+    local_dtm = (
+        datetime.fromisoformat(input_date_str)
+        .astimezone(pytz.timezone(timezone_str))
+        .strftime("%Y-%m-%d %H:%M:%S.000 %z")
+    )
+    return local_dtm
+
+
 def convert_to_business_dt(input_date_str: str, timezone_str: str) -> str:
     dt_naive = datetime.strptime(input_date_str, "%d.%m.%Y %H:%M")
     tz = pytz.timezone(timezone_str)
@@ -314,8 +323,8 @@ async def approved_save_editing_task(callback: types.CallbackQuery, state: FSMCo
     logger.info(data)
     logger.info(event)
     # business_dt = convert_to_business_dt(event['task_start_dtm'], data['user_timezone'])
-    task_start_dtm = convert_date_string(event['task_start_dtm'], data['user_timezone'])
-    task_end_dtm = convert_date_string(event['task_end_dtm'], data['user_timezone'])
+    task_start_dtm = localize_db_date(event['task_start_dtm'], data['user_timezone'])
+    task_end_dtm = localize_db_date(event['task_end_dtm'], data['user_timezone'])
     _, status = await db_api.update_task(
         business_dt=event['business_dt'], task_relative_id=data['editing_event_num'],
         tg_user_id=data['tg_user_id'], task_name=event['task_name'],
