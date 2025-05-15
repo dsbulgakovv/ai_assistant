@@ -17,7 +17,7 @@ from texts.prompts import system_prompt_q_and_a
 logger = logging.getLogger('aiogram')
 logger.setLevel(logging.DEBUG)
 
-markup_text = "**Ответ:**\n{}"
+markup_text = "<b>Ответ:</b>\n{}"
 
 router = Router()
 llm_api = LLMapi()
