@@ -255,6 +255,7 @@ async def editing_task_name_event_start(message: types.Message, state: FSMContex
     new_name = message.text
     logger.info(data)
     # await ...
+    await message.answer("OK", reply_markup=None)
     await state.set_state(ShowEvent.waiting_events_show_end)
 
 
