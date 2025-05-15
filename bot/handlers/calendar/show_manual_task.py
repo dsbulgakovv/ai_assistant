@@ -250,7 +250,6 @@ async def show_event_details(callback: types.CallbackQuery, state: FSMContext):
         return
 
     event = events[event_num - 1]
-    logger.info(event)
     text = form_one_event_detailed(event, user_timezone)
 
     # Создаем клавиатуру с действиями
