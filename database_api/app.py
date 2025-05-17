@@ -155,19 +155,21 @@ async def get_filtered_tasks(
 ):
     tasks = await conn.fetch(
         """
-        SELECT
+        SELECT * FROM (
+          SELECT
             *,
-            (task_start_dtm::date) AS business_dt,
+            to_char(task_start_dtm, 'YYYY-MM-DD') AS business_dt,
             ROW_NUMBER() OVER (
-                PARTITION BY tg_user_id, (task_start_dtm::date)
-                ORDER BY task_start_dtm
+              PARTITION BY tg_user_id, (task_start_dtm::date)
+              ORDER BY task_start_dtm
             ) AS task_relative_id
-        FROM tasks
+          FROM tasks
+          WHERE
+            t.tg_user_id = $1
+        ) t
         WHERE
-            tg_user_id = $1
-            AND task_start_dtm::date >= $2
-            AND task_end_dtm::date <= $3
-        ORDER BY task_start_dtm
+          AND t.business_dt >= $2
+          AND t.business_dt <= $3
         """,
         tg_user_id, start_date, end_date
     )

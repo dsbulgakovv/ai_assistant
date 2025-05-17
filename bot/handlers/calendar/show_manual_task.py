@@ -152,7 +152,6 @@ async def show_events(message: types.Message, state: FSMContext):
 
     # Здесь получаем события из вашего API/Redis
     events, status = await db_api.get_tasks(data['tg_user_id'], target_date_str, target_date_str)
-    logger.info(events)
     await state.update_data(events=events)
 
     # Если событий нет
