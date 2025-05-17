@@ -168,8 +168,9 @@ async def get_filtered_tasks(
             t.tg_user_id = $1
         ) t
         WHERE
-          AND t.business_dt >= $2
-          AND t.business_dt <= $3
+            1 = 1
+            AND t.business_dt >= $2
+            AND t.business_dt <= $3
         """,
         tg_user_id, start_date, end_date
     )
