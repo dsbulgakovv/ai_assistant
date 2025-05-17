@@ -165,7 +165,7 @@ async def get_filtered_tasks(
             ) AS task_relative_id
           FROM tasks
           WHERE
-            t.tg_user_id = $1
+            tg_user_id = $1
         ) t
         WHERE
             1 = 1
