@@ -153,6 +153,8 @@ async def get_filtered_tasks(
         end_date: date = Query(..., description="End date in YYYY-MM-DD format (inclusively)"),
         conn=Depends(get_db)
 ):
+    start_date = start_date.isoformat()
+    end_date = end_date.isoformat()
     tasks = await conn.fetch(
         """
         SELECT * FROM (
