@@ -119,9 +119,9 @@ async def show_nearest_events_manual_calendar_handler(message: types.Message, st
 
 @router.message(
     or_f(
-        StateFilter(ShowEvent.waiting_events_show_end), StateFilter(ShowEvent.waiting_events_show_end),
-        StateFilter(ShowEvent.waiting_events_show_end), StateFilter(ShowEvent.waiting_events_show_end),
-        StateFilter(ShowEvent.waiting_events_show_end), StateFilter(ShowEvent.waiting_events_show_end),
+        StateFilter(ChangeEvent.approving_new_event_name), StateFilter(ChangeEvent.approving_new_event_category),
+        StateFilter(ChangeEvent.approving_new_event_description), StateFilter(ChangeEvent.approving_new_event_link),
+        StateFilter(ChangeEvent.approving_new_event_start), StateFilter(ChangeEvent.approving_new_event_end),
         StateFilter(ShowEvent.waiting_events_show_end)
     ),
     F.text.casefold() == 'вернуться назад'
@@ -152,6 +152,7 @@ async def show_events(message: types.Message, state: FSMContext):
 
     # Здесь получаем события из вашего API/Redis
     events, status = await db_api.get_tasks(data['tg_user_id'], target_date_str, target_date_str)
+    logger.info(events)
     await state.update_data(events=events)
 
     # Если событий нет
