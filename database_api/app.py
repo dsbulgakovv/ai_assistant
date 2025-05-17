@@ -161,10 +161,10 @@ async def get_filtered_tasks(
           SELECT
             *,
             to_char(
-                (task_start_dtm AT TIME ZONE 'UTC') AT TIME ZONE
-                (SELECT EXTRACT(TIMEZONE FROM task_start_dtm)::text || ' hours'),
+                (task_start_dtm AT TIME ZONE 'UTC') AT TIME ZONE 
+                (EXTRACT(TIMEZONE_HOUR FROM task_start_dtm) || ' hours'),
                 'YYYY-MM-DD'
-            ) AS business_dt,
+            ) AS business_dt
             ROW_NUMBER() OVER (
               PARTITION BY tg_user_id, (task_start_dtm::date)
               ORDER BY task_start_dtm
