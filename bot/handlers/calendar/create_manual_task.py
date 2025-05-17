@@ -348,20 +348,45 @@ async def create_event_task_success_manual_calendar_handler(
         await state.set_state(CreateEvent.waiting_task_end_dt)
     elif message.text.lower() == 'подтвердить':
         data = await state.get_data()
-        await db_api.create_task(
+        response, status = await db_api.create_task(
             message.from_user.id,
             data['task_name'], 1, map_task_category(data['task_category']),
             data['task_description'], data['task_link'],
             convert_date_string(data['start_dtm'], data['timezone']),
             convert_date_string(data['end_dtm'], data['timezone'])
         )
-        await state.clear()
-        await dialog_manager.done()
-        await message.answer(
-            "✅ Событие успешно создано!",
-            reply_markup=start_manual_calendar_keyboard()
-        )
-        await state.set_state(StartCalendar.start_manual_calendar)
+        if status == 201:
+            await state.clear()
+            await dialog_manager.done()
+            await message.answer(
+                "✅ Событие успешно создано!",
+                reply_markup=start_manual_calendar_keyboard()
+            )
+            await state.set_state(StartCalendar.start_manual_calendar)
+        elif status == 404:
+            await message.answer(
+                "Неверно выбрана дата завершения"
+            )
+            data = await state.get_data()
+            end_nearest_dtm = data.get('end_dtm')
+            await message.answer(
+                "Выбери дату и время заверешния события.\n"
+                f"Нажми <b>Дальше</b>, чтобы выбрать ближайшую: {end_nearest_dtm}",
+                reply_markup=task_duration_manual_calendar_keyboard()
+            )
+            await dialog_manager.start(
+                CalendarState.select_date,
+                mode=StartMode.RESET_STACK
+            )
+            await state.set_state(CreateEvent.waiting_task_end_dt)
+        else:
+            await message.answer(
+                f"INTERNAL SERVER ERROR.\n"
+                f"Please, contact support https://t.me/dm1trybu",
+                reply_markup=ReplyKeyboardRemove()
+            )
+            await state.clear()
+            await state.set_state(None)
     else:
         await message.answer("Не та команда")
 
