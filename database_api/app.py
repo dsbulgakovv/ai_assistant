@@ -152,14 +152,15 @@ async def get_filtered_tasks(
 ):
     start_date = start_date.isoformat()
     end_date = end_date.isoformat()
+    user_timezone = await conn.fetchrow("SELECT timezone FROM users WHERE tg_user_id = $1", tg_user_id)
+    logger.info(user_timezone)
     tasks = await conn.fetch(
         """
         SELECT * FROM (
           SELECT
             *,
             to_char(
-                (task_start_dtm AT TIME ZONE 'UTC') AT TIME ZONE 
-                (EXTRACT(TIMEZONE_HOUR FROM task_start_dtm) || ' hours'),
+                task_start_dtm AT TIME ZONE 'UTC' AT TIME ZONE $1,
                 'YYYY-MM-DD'
             ) AS business_dt,
             ROW_NUMBER() OVER (
@@ -168,14 +169,14 @@ async def get_filtered_tasks(
             ) AS task_relative_id
           FROM tasks
           WHERE
-            tg_user_id = $1
+            tg_user_id = $2
         ) t
         WHERE
             1 = 1
-            AND t.business_dt >= $2
-            AND t.business_dt <= $3
+            AND t.business_dt >= $3
+            AND t.business_dt <= $4
         """,
-        tg_user_id, start_date, end_date
+        user_timezone, tg_user_id, start_date, end_date
     )
 
     if not tasks:
