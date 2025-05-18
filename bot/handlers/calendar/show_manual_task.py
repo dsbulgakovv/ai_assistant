@@ -487,7 +487,10 @@ async def approved_save_editing_task(callback: types.CallbackQuery, state: FSMCo
     )
 
     if status == 200:
-        await callback.message.answer("✅ Событие успешно обновлено!")
+        await callback.message.answer(
+            "✅ Событие успешно обновлено!",
+            reply_markup=only_back_to_manual_calendar_menu_keyboard()
+        )
     elif status == 404:
         await callback.message.answer(
             "Неверно выбрана дата завершения"
