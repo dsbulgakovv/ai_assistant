@@ -409,7 +409,7 @@ async def editing_task_link_event_start(message: types.Message, state: FSMContex
 
 
 # START DTM
-@router.callback_query(F.data.startswith('editing_task_category'), StateFilter(ShowEvent.waiting_events_show_end))
+@router.callback_query(F.data.startswith('editing_start_dtm'), StateFilter(ShowEvent.waiting_events_show_end))
 async def editing_task_start_event_start(callback: types.CallbackQuery, state: FSMContext, dialog_manager: DialogManager):
     data = await state.get_data()
     await callback.message.edit_text(
@@ -424,7 +424,7 @@ async def editing_task_start_event_start(callback: types.CallbackQuery, state: F
     await state.set_state(ChangeEvent.approving_new_event_start)
 
 
-@router.callback_query(F.data.startswith('task_category_'), StateFilter(ChangeEvent.approving_new_event_start))
+@router.callback_query(StateFilter(ChangeEvent.approving_new_event_start))
 async def editing_task_start_event_start(callback: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     selected_datetime = data.get("event_datetime")
