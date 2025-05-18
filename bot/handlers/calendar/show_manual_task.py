@@ -1,6 +1,7 @@
 import pytz
 import logging
 from datetime import datetime, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 from aiogram import F, Router, types
 from aiogram.filters import StateFilter, or_f
@@ -82,7 +83,8 @@ def convert_date_string(input_date_str: str, timezone_str: str) -> str:
 
 def convert_date_string_to_iso_utc(input_date_str: str, timezone_str: str) -> str:
     dt_naive = datetime.strptime(input_date_str, "%d.%m.%Y %H:%M")
-    dt_local = dt_naive.replace(tzinfo=timezone_str)
+    local_tz = ZoneInfo(timezone_str)
+    dt_local = dt_naive.replace(tzinfo=local_tz)
     dt_utc = dt_local.astimezone(timezone.utc)
     return dt_utc.isoformat()
 
