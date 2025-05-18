@@ -80,6 +80,13 @@ def convert_date_string(input_date_str: str, timezone_str: str) -> str:
     return formatted_date
 
 
+def convert_date_string_to_iso_utc(input_date_str: str, timezone_str: str) -> str:
+    dt_naive = datetime.strptime(input_date_str, "%d.%m.%Y %H:%M")
+    dt_local = dt_naive.replace(tzinfo=timezone_str)
+    dt_utc = dt_local.astimezone(timezone.utc)
+    return dt_utc.isoformat()
+
+
 def localize_db_date(input_date_str: str, timezone_str: str) -> str:
     local_dtm = (
         datetime.fromisoformat(input_date_str)
@@ -442,8 +449,8 @@ async def editing_task_start_event_start(message: types.Message, state: FSMConte
         user_timezone = data['user_timezone']
         event = data['events'][data['editing_event_num'] - 1]
         new_event_info = event.copy()
-        new_event_info['task_start_dtm'] = convert_date_string(selected_datetime, user_timezone)
-        new_event_info['task_end_dtm'] = convert_date_string(after_selected_datetime, user_timezone)
+        new_event_info['task_start_dtm'] = convert_date_string_to_iso_utc(selected_datetime, user_timezone)
+        new_event_info['task_end_dtm'] = convert_date_string_to_iso_utc(after_selected_datetime, user_timezone)
         new_text = form_one_event_detailed(new_event_info, user_timezone)
         await state.update_data(new_event_info=new_event_info)
         msg = await message.answer(new_text, reply_markup=editing_approve_task())
