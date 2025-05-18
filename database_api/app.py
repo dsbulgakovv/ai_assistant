@@ -156,17 +156,21 @@ async def get_filtered_tasks(
     user_timezone = user_timezone['timezone']
     tasks = await conn.fetch(
         """
-        SELECT * FROM (
+        SELECT
+            *,
+            business_dt,
+            ROW_NUMBER() OVER (
+                  PARTITION BY tg_user_id, business_dt
+                  ORDER BY task_start_dtm_localized
+            ) AS task_relative_id
+        FROM (
           SELECT
             *,
             to_char(
-                task_start_dtm AT TIME ZONE 'UTC' AT TIME ZONE $1,
+                task_start_dtm AT TIME ZONE $1,
                 'YYYY-MM-DD'
             ) AS business_dt,
-            ROW_NUMBER() OVER (
-              PARTITION BY tg_user_id, (task_start_dtm::date)
-              ORDER BY task_start_dtm
-            ) AS task_relative_id
+            task_start_dtm AT TIME ZONE $1 as task_start_dtm_localized
           FROM tasks
           WHERE
             tg_user_id = $2
