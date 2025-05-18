@@ -186,7 +186,7 @@ async def get_filtered_tasks(
 
 
 @app.get("/tasks/test/{tg_user_id}")
-async def get_test(tg_user_id: str, conn=Depends(get_db)):
+async def get_test(tg_user_id: int, conn=Depends(get_db)):
     user_timezone = await conn.fetchrow("SELECT timezone FROM users WHERE tg_user_id = $1", tg_user_id)
     user_timezone = user_timezone['timezone']
     dates = await conn.fetch(
