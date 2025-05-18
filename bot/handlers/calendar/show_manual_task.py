@@ -334,19 +334,6 @@ async def approved_save_editing_task(callback: types.CallbackQuery, state: FSMCo
     task_start_dtm = localize_db_date(event['task_start_dtm'], data['user_timezone'])
     task_end_dtm = localize_db_date(event['task_end_dtm'], data['user_timezone'])
 
-    logger.info(
-        {
-            'task_global_id': task_global_id,
-            'task_name': event['task_name'],
-            'task_status': 2,
-            'task_category': map_task_category_from_str(event['task_category']),
-            'task_description': event['task_description'],
-            'task_link': event['task_link'],
-            'task_start_dtm': task_start_dtm,
-            'task_end_dtm': task_end_dtm
-        }
-    )
-
     _, status = await db_api.update_task(
         task_global_id=task_global_id, task_name=event['task_name'],
         task_status=2, task_category=map_task_category_from_str(event['task_category']),
@@ -356,6 +343,11 @@ async def approved_save_editing_task(callback: types.CallbackQuery, state: FSMCo
 
     if status == 200:
         await callback.message.answer("✅ Событие успешно обновлено!")
+    elif status == 404:
+        await callback.message.answer(
+            "Неверно выбрана дата завершения"
+        )
+        return
     else:
         await callback.message.answer(
             f"INTERNAL SERVER ERROR.\n"
@@ -374,7 +366,8 @@ async def approved_save_editing_task(callback: types.CallbackQuery, state: FSMCo
         events=events, editing_event_num=new_task_relative_id, day_offset=new_day_offset
     )
     await callback.message.delete()
-    await callback.message.answer(data['one_event_text'], reply_markup=delete_change_inline_kb)
+    msg = await callback.message.answer(data['one_event_text'], reply_markup=delete_change_inline_kb)
+    await state.update_data(events_message_id=msg.message_id)
     await callback.answer()
 
 
