@@ -483,13 +483,11 @@ async def editing_task_end_event_next(message: types.Message, state: FSMContext,
         data = await state.get_data()
         selected_datetime = data.get("event_datetime")
         await state.update_data(event_datetime=None)
-        logger.info(data['events'][data['editing_event_num'] - 1]['task_start_dtm'])
-        if (
-                datetime.strptime(selected_datetime, "%d.%m.%Y %H:%M") >
-                datetime.fromisoformat(
-                    data['events'][data['editing_event_num'] - 1]['task_start_dtm']
-                ).strftime("%d.%m.%Y %H:%M")
-        ):
+        user_timezone = data['user_timezone']
+        startd_dtm = datetime.fromisoformat(
+            data['events'][data['editing_event_num'] - 1]['task_start_dtm']
+        ).astimezone(pytz.timezone(user_timezone))
+        if datetime.strptime(selected_datetime, "%d.%m.%Y %H:%M") > startd_dtm:
             await message.answer(
                 f"Неверно выбрана дата завершения\n"
                 f"Выбери новую дату и время завершения события.",
@@ -502,7 +500,6 @@ async def editing_task_end_event_next(message: types.Message, state: FSMContext,
             await state.set_state(ChangeEvent.approving_new_event_end)
         await state.update_data(end_dtm=selected_datetime)
         # data = await state.get_data()
-        user_timezone = data['user_timezone']
         event = data['events'][data['editing_event_num'] - 1]
         new_event_info = event.copy()
         new_event_info['task_end_dtm'] = convert_date_string_to_iso_utc(selected_datetime, user_timezone)
@@ -525,8 +522,6 @@ async def approved_save_editing_task(callback: types.CallbackQuery, state: FSMCo
     business_dt = convert_to_business_dt(event['task_start_dtm'], data['user_timezone'])
     task_start_dtm = localize_db_date(event['task_start_dtm'], data['user_timezone'])
     task_end_dtm = localize_db_date(event['task_end_dtm'], data['user_timezone'])
-
-    logger.info({'init_task_start_dtm': event['task_start_dtm'], 'task_start_dtm': task_start_dtm})
 
     _, status = await db_api.update_task(
         task_global_id=task_global_id, task_name=event['task_name'],
