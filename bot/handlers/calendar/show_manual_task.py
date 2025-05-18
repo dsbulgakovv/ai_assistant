@@ -335,7 +335,7 @@ async def editing_task_name_event_start(callback: types.CallbackQuery, state: FS
 
 
 @router.message(StateFilter(ChangeEvent.approving_new_event_name))
-async def editing_task_name_event_start(message: types.Message, state: FSMContext):
+async def editing_task_name_event_next(message: types.Message, state: FSMContext):
     new_name = message.text
     data = await state.get_data()
     user_timezone = data['user_timezone']
@@ -358,7 +358,7 @@ async def editing_task_category_event_start(callback: types.CallbackQuery, state
 
 
 @router.callback_query(F.data.startswith('task_category_'), StateFilter(ChangeEvent.approving_new_event_category))
-async def editing_task_category_event_start(callback: types.CallbackQuery, state: FSMContext):
+async def editing_task_category_event_next(callback: types.CallbackQuery, state: FSMContext):
     new_category_int = int(callback.data.split('_')[-1])
     data = await state.get_data()
     user_timezone = data['user_timezone']
@@ -381,7 +381,7 @@ async def editing_task_description_event_start(callback: types.CallbackQuery, st
 
 
 @router.message(StateFilter(ChangeEvent.approving_new_event_description))
-async def editing_task_description_event_start(message: types.Message, state: FSMContext):
+async def editing_task_description_event_next(message: types.Message, state: FSMContext):
     new_description = message.text
     data = await state.get_data()
     user_timezone = data['user_timezone']
@@ -404,7 +404,7 @@ async def editing_task_link_event_start(callback: types.CallbackQuery, state: FS
 
 
 @router.message(StateFilter(ChangeEvent.approving_new_event_link))
-async def editing_task_link_event_start(message: types.Message, state: FSMContext):
+async def editing_task_link_event_next(message: types.Message, state: FSMContext):
     new_link = message.text
     data = await state.get_data()
     user_timezone = data['user_timezone']
@@ -421,7 +421,6 @@ async def editing_task_link_event_start(message: types.Message, state: FSMContex
 # START DTM
 @router.callback_query(F.data.startswith('editing_start_dtm'), StateFilter(ShowEvent.waiting_events_show_end))
 async def editing_task_start_event_start(callback: types.CallbackQuery, state: FSMContext, dialog_manager: DialogManager):
-    data = await state.get_data()
     await callback.message.delete()
     await callback.message.answer(
         f"Выбери новую дату и время начала события.\n",
@@ -436,7 +435,7 @@ async def editing_task_start_event_start(callback: types.CallbackQuery, state: F
 
 
 @router.message(StateFilter(ChangeEvent.approving_new_event_start))
-async def editing_task_start_event_start(message: types.Message, state: FSMContext):
+async def editing_task_start_event_next(message: types.Message, state: FSMContext):
     if message.text.lower() == 'дальше':
         data = await state.get_data()
         selected_datetime = data.get("event_datetime")
@@ -447,7 +446,7 @@ async def editing_task_start_event_start(message: types.Message, state: FSMConte
         ).strftime("%d.%m.%Y %H:%M")
         await state.update_data(end_dtm=after_selected_datetime)
 
-        data = await state.get_data()
+        # data = await state.get_data()
         user_timezone = data['user_timezone']
         event = data['events'][data['editing_event_num'] - 1]
         new_event_info = event.copy()
@@ -462,8 +461,55 @@ async def editing_task_start_event_start(message: types.Message, state: FSMConte
         await message.answer("Такой опции нет")
 
 
-# cur_date
-# approving_new_event_end = State()
+# END DTM
+@router.callback_query(F.data.startswith('editing_end_dtm'), StateFilter(ShowEvent.waiting_events_show_end))
+async def editing_task_end_event_start(callback: types.CallbackQuery, state: FSMContext, dialog_manager: DialogManager):
+    await callback.message.delete()
+    await callback.message.answer(
+        f"Выбери новую дату и время завершения события.\n",
+        reply_markup=task_dtm_change_calendar_keyboard()
+    )
+    await dialog_manager.start(
+        CalendarState.select_date,
+        mode=StartMode.RESET_STACK
+    )
+    await callback.answer()
+    await state.set_state(ChangeEvent.approving_new_event_end)
+
+
+@router.message(StateFilter(ChangeEvent.approving_new_event_end))
+async def editing_task_end_event_next(message: types.Message, state: FSMContext, dialog_manager: DialogManager):
+    if message.text.lower() == 'дальше':
+        data = await state.get_data()
+        selected_datetime = data.get("event_datetime")
+        await state.update_data(event_datetime=None)
+        if (
+                datetime.strptime(selected_datetime, "%d.%m.%Y %H:%M") >
+                datetime.strptime(data['start_dtm'], "%d.%m.%Y %H:%M")
+        ):
+            await message.answer(
+                f"Неверно выбрана дата завершения\n"
+                f"Выбери новую дату и время завершения события.",
+                reply_markup=task_dtm_change_calendar_keyboard()
+            )
+            await dialog_manager.start(
+                CalendarState.select_date,
+                mode=StartMode.RESET_STACK
+            )
+            await state.set_state(ChangeEvent.approving_new_event_end)
+        await state.update_data(end_dtm=selected_datetime)
+        # data = await state.get_data()
+        user_timezone = data['user_timezone']
+        event = data['events'][data['editing_event_num'] - 1]
+        new_event_info = event.copy()
+        new_event_info['task_end_dtm'] = convert_date_string_to_iso_utc(selected_datetime, user_timezone)
+        new_text = form_one_event_detailed(new_event_info, user_timezone)
+        await state.update_data(new_event_info=new_event_info)
+        msg = await message.answer(new_text, reply_markup=editing_approve_task())
+        await state.update_data(one_event_text=new_text, events_message_id=msg.message_id)
+        await state.set_state(ShowEvent.waiting_events_show_end)
+    else:
+        await message.answer("Такой опции нет")
 
 
 # UNIVERSAL IN EDIT MODE
