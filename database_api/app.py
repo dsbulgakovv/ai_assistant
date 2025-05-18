@@ -153,7 +153,7 @@ async def get_filtered_tasks(
     start_date = start_date.isoformat()
     end_date = end_date.isoformat()
     user_timezone = await conn.fetchrow("SELECT timezone FROM users WHERE tg_user_id = $1", tg_user_id)
-    logger.info(user_timezone)
+    user_timezone = user_timezone['timezone']
     tasks = await conn.fetch(
         """
         SELECT * FROM (
