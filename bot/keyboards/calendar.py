@@ -165,6 +165,14 @@ def task_category_change_calendar_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
+def task_dtm_change_calendar_keyboard() -> ReplyKeyboardMarkup:
+    kb = ReplyKeyboardBuilder()
+    kb.row(KeyboardButton(text='Дальше'))
+    kb.row(KeyboardButton(text='Вернуться назад'))
+
+    return kb.as_markup(resize_keyboard=True)
+
+
 def only_back_to_manual_calendar_menu_keyboard() -> ReplyKeyboardMarkup:
     kb = ReplyKeyboardBuilder()
     kb.row(KeyboardButton(text='Вернуться назад'))

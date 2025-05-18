@@ -23,7 +23,8 @@ from keyboards.calendar import (
     change_delete_task_inline_keyboard,
     choice_change_task_inline_keyboard,
     editing_approve_task,
-    task_category_change_calendar_keyboard
+    task_category_change_calendar_keyboard,
+    task_dtm_change_calendar_keyboard
 )
 from utils.database_api import DatabaseAPI
 
@@ -412,9 +413,10 @@ async def editing_task_link_event_start(message: types.Message, state: FSMContex
 @router.callback_query(F.data.startswith('editing_start_dtm'), StateFilter(ShowEvent.waiting_events_show_end))
 async def editing_task_start_event_start(callback: types.CallbackQuery, state: FSMContext, dialog_manager: DialogManager):
     data = await state.get_data()
-    await callback.message.edit_text(
+    await callback.message.delete()
+    await callback.message.answer(
         f"Выбери новую дату и время начала события.\n",
-        reply_markup=None
+        reply_markup=task_dtm_change_calendar_keyboard()
     )
     await dialog_manager.start(
         CalendarState.select_date,
@@ -424,28 +426,31 @@ async def editing_task_start_event_start(callback: types.CallbackQuery, state: F
     await state.set_state(ChangeEvent.approving_new_event_start)
 
 
-@router.callback_query(StateFilter(ChangeEvent.approving_new_event_start))
-async def editing_task_start_event_start(callback: types.CallbackQuery, state: FSMContext):
-    data = await state.get_data()
-    selected_datetime = data.get("event_datetime")
-    await state.update_data(event_datetime=None)
-    await state.update_data(start_dtm=selected_datetime)
-    after_selected_datetime = (
-            datetime.strptime(selected_datetime, "%d.%m.%Y %H:%M") + timedelta(minutes=30)
-    ).strftime("%d.%m.%Y %H:%M")
-    await state.update_data(end_dtm=after_selected_datetime)
+@router.message(StateFilter(ChangeEvent.approving_new_event_start))
+async def editing_task_start_event_start(message: types.Message, state: FSMContext):
+    if message.text.lower() == 'дальше':
+        data = await state.get_data()
+        selected_datetime = data.get("event_datetime")
+        await state.update_data(event_datetime=None)
+        await state.update_data(start_dtm=selected_datetime)
+        after_selected_datetime = (
+                datetime.strptime(selected_datetime, "%d.%m.%Y %H:%M") + timedelta(minutes=30)
+        ).strftime("%d.%m.%Y %H:%M")
+        await state.update_data(end_dtm=after_selected_datetime)
 
-    data = await state.get_data()
-    user_timezone = data['user_timezone']
-    event = data['events'][data['editing_event_num'] - 1]
-    new_event_info = event.copy()
-    new_event_info['start_dtm'] = selected_datetime
-    new_event_info['end_dtm'] = after_selected_datetime
-    new_text = form_one_event_detailed(new_event_info, user_timezone)
-    await state.update_data(new_event_info=new_event_info)
-    await callback.message.edit_text(new_text, reply_markup=editing_approve_task())
-    await state.update_data(one_event_text=new_text)
-    await state.set_state(ShowEvent.waiting_events_show_end)
+        data = await state.get_data()
+        user_timezone = data['user_timezone']
+        event = data['events'][data['editing_event_num'] - 1]
+        new_event_info = event.copy()
+        new_event_info['start_dtm'] = selected_datetime
+        new_event_info['end_dtm'] = after_selected_datetime
+        new_text = form_one_event_detailed(new_event_info, user_timezone)
+        await state.update_data(new_event_info=new_event_info)
+        await message.edit_text(new_text, reply_markup=editing_approve_task())
+        await state.update_data(one_event_text=new_text)
+        await state.set_state(ShowEvent.waiting_events_show_end)
+    else:
+        await message.answer("Такой опции нет")
 
 
 # cur_date
