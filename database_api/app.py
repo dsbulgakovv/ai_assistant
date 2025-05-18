@@ -223,53 +223,15 @@ async def create_task(task: Task, conn=Depends(get_db)):
 
 @app.put("/tasks/update")
 async def update_task(task: UpdateTask, conn=Depends(get_db)):
-    # # Получаем текущие данные задачи
-    # current_task = await conn.fetchrow(
-    #     """
-    #     SELECT * FROM (
-    #       SELECT
-    #         *,
-    #         (task_start_dtm::date) AS business_dt,
-    #         ROW_NUMBER() OVER (
-    #           PARTITION BY tg_user_id, (task_start_dtm::date)
-    #           ORDER BY task_start_dtm
-    #         ) AS task_relative_id
-    #       FROM tasks
-    #     ) t
-    #     WHERE
-    #       t.tg_user_id = $1
-    #       AND t.business_dt = $2::date
-    #       AND t.task_relative_id = $3;
-    #     """,
-    #     task.tg_user_id, task.business_dt, task.task_relative_id
-    # )
-    # if not current_task:
-    #     raise HTTPException(status_code=404, detail="Task not found")
-
-    # if task.task_start_dtm:
-    #     task.task_start_dtm = parse_datetime(task.task_start_dtm)
-    # if task.task_end_dtm:
-    #     task.task_end_dtm = parse_datetime(task.task_end_dtm)
-    #
-    # # Обновляем только переданные поля
-    # updated_task = {
-    #     "task_name": task.task_name or current_task["task_name"],
-    #     "task_status": task.task_status or current_task["task_status"],
-    #     "task_category": task.task_category or current_task["task_category"],
-    #     "task_description": task.task_description or current_task["task_description"],
-    #     "task_start_dtm": task.task_start_dtm or current_task["task_start_dtm"],
-    #     "task_end_dtm": task.task_end_dtm or current_task["task_end_dtm"],
-    # }
-
-    if task["task_start_dtm"] > task["task_end_dtm"]:
+    if parse_datetime(task.task_start_dtm) > parse_datetime(task.task_end_dtm):
         raise HTTPException(status_code=404, detail="Task start dtm cannot be after end dtm")
 
     await conn.execute(
         """
         UPDATE tasks
         SET 
-          task_name = $1, 
-          task_status = $2, 
+          task_name = $1,
+          task_status = $2,
           task_category = $3,
           task_description = $4,
           task_link = $5,
@@ -278,9 +240,9 @@ async def update_task(task: UpdateTask, conn=Depends(get_db)):
           updated_at=NOW()
         WHERE id = $8;
         """,
-        task["task_name"], task["task_status"], task["task_category"],
-        task["task_description"], task["task_link"],
-        task["task_start_dtm"], task["task_end_dtm"],
+        task.task_name, task.task_status, task.task_category,
+        task.task_description, task.task_link,
+        task.task_start_dtm, task.task_end_dtm,
         task.id
     )
     return {"status": "success", "message": "Task updated"}
