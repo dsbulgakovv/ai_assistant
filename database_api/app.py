@@ -189,31 +189,6 @@ async def get_filtered_tasks(
     return tasks
 
 
-@app.get("/tasks/test/{tg_user_id}")
-async def get_test(tg_user_id: int, conn=Depends(get_db)):
-    user_timezone = await conn.fetchrow("SELECT timezone FROM users WHERE tg_user_id = $1", tg_user_id)
-    user_timezone = user_timezone['timezone']
-    dates = await conn.fetch(
-        """
-        SELECT
-            task_start_dtm AT TIME ZONE $1,
-             to_char(
-                task_start_dtm AT TIME ZONE $1,
-                'YYYY-MM-DD'
-            ) AS business_dt
-        FROM tasks
-        WHERE
-            tg_user_id = $2
-        """,
-        user_timezone, tg_user_id
-    )
-
-    if not dates:
-        raise HTTPException(status_code=404, detail="No tasks found in this date range")
-
-    return dates
-
-
 @app.post("/users/add_new", status_code=201)
 async def create_user(user: UserCreate, conn=Depends(get_db)):
     await conn.execute(
