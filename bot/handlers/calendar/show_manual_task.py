@@ -617,6 +617,14 @@ async def editing_task_name_event(callback: types.CallbackQuery, state: FSMConte
     await state.set_state(ShowEvent.waiting_events_show_end)
     await show_events(callback.message, state)
     await callback.answer()
+
+
+@router.callback_query(F.data.startswith('back_to_delete_task_choice'), StateFilter(DeleteEvent.approving_event_delete))
+async def back_to_events_list(callback: types.CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    delete_change_inline_kb = change_delete_task_inline_keyboard(data['day_offset'], data['editing_event_num'])
+    await callback.message.edit_text(data['one_event_text'], reply_markup=delete_change_inline_kb)
+    await callback.answer()
 # ----------------------------------------------------------------
 
 
