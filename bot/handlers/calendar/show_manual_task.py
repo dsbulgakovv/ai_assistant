@@ -103,6 +103,32 @@ def days_diff(date1, date2):
     return abs((d2 - d1).days)
 
 
+def get_rounded_datetime(user_time_zone):
+    utc_time = datetime.now(timezone.utc)
+    local_time = utc_time.astimezone(pytz.timezone(user_time_zone))
+
+    # Округляем до ближайших 30 минут
+    minute = local_time.minute
+    if minute < 15:
+        # Округляем вниз до полного часа
+        rounded = local_time.replace(minute=0, second=0, microsecond=0)
+    elif 15 <= minute < 45:
+        # Округляем до 30 минут
+        rounded = local_time.replace(minute=30, second=0, microsecond=0)
+    else:
+        # Округляем вверх до следующего часа
+        rounded = (local_time.replace(minute=0, second=0, microsecond=0)
+                   + timedelta(hours=1))
+
+    next_rounded = rounded + timedelta(minutes=30)
+
+    # Форматируем в строку дд.мм.гггг чч:мм
+    formatted_cur = rounded.strftime("%d.%m.%Y %H:%M")
+    formatted_next = next_rounded.strftime("%d.%m.%Y %H:%M")
+
+    return formatted_cur, formatted_next
+
+
 # ------------------------ SHOWING EVENTS ------------------------
 @router.message(StateFilter(StartCalendar.start_manual_calendar), F.text.casefold() == 'посмотреть предстоящие события')
 async def show_nearest_events_manual_calendar_handler(message: types.Message, state: FSMContext) -> None:
@@ -382,8 +408,47 @@ async def editing_task_link_event_start(message: types.Message, state: FSMContex
     await state.set_state(ShowEvent.waiting_events_show_end)
 
 
+# START DTM
+@router.callback_query(F.data.startswith('editing_task_category'), StateFilter(ShowEvent.waiting_events_show_end))
+async def editing_task_start_event_start(callback: types.CallbackQuery, state: FSMContext, dialog_manager: DialogManager):
+    data = await state.get_data()
+    await callback.message.edit_text(
+        f"Выбери новую дату и время начала события.\n",
+        reply_markup=None
+    )
+    await dialog_manager.start(
+        CalendarState.select_date,
+        mode=StartMode.RESET_STACK
+    )
+    await callback.answer()
+    await state.set_state(ChangeEvent.approving_new_event_start)
+
+
+@router.callback_query(F.data.startswith('task_category_'), StateFilter(ChangeEvent.approving_new_event_start))
+async def editing_task_start_event_start(callback: types.CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    selected_datetime = data.get("event_datetime")
+    await state.update_data(event_datetime=None)
+    await state.update_data(start_dtm=selected_datetime)
+    after_selected_datetime = (
+            datetime.strptime(selected_datetime, "%d.%m.%Y %H:%M") + timedelta(minutes=30)
+    ).strftime("%d.%m.%Y %H:%M")
+    await state.update_data(end_dtm=after_selected_datetime)
+
+    data = await state.get_data()
+    user_timezone = data['user_timezone']
+    event = data['events'][data['editing_event_num'] - 1]
+    new_event_info = event.copy()
+    new_event_info['start_dtm'] = selected_datetime
+    new_event_info['end_dtm'] = after_selected_datetime
+    new_text = form_one_event_detailed(new_event_info, user_timezone)
+    await state.update_data(new_event_info=new_event_info)
+    await callback.message.edit_text(new_text, reply_markup=editing_approve_task())
+    await state.update_data(one_event_text=new_text)
+    await state.set_state(ShowEvent.waiting_events_show_end)
+
+
 # cur_date
-# approving_new_event_start = State()
 # approving_new_event_end = State()
 
 
