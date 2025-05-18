@@ -22,7 +22,8 @@ from keyboards.calendar import (
     swiping_tasks_no_nums_inline_keyboard,
     change_delete_task_inline_keyboard,
     choice_change_task_inline_keyboard,
-    editing_approve_task
+    editing_approve_task,
+    task_category_manual_calendar_keyboard
 )
 from utils.database_api import DatabaseAPI
 
@@ -312,10 +313,29 @@ async def editing_task_name_event_start(message: types.Message, state: FSMContex
 
 
 # CATEGORY
+@router.callback_query(F.data.startswith('editing_task_category'), StateFilter(ShowEvent.waiting_events_show_end))
+async def editing_task_category_event_start(callback: types.CallbackQuery, state: FSMContext):
+    await callback.message.edit_text("Выберите новую категорию", reply_markup=task_category_manual_calendar_keyboard())
+    await callback.answer()
+    await state.set_state(ChangeEvent.approving_new_event_category)
+
+
+@router.message(StateFilter(ChangeEvent.approving_new_event_category))
+async def editing_task_category_event_start(message: types.Message, state: FSMContext):
+    new_category = message.text
+    data = await state.get_data()
+    user_timezone = data['user_timezone']
+    event = data['events'][data['editing_event_num'] - 1]
+    new_event_info = event.copy()
+    new_event_info['task_category'] = new_category
+    new_text = form_one_event_detailed(new_event_info, user_timezone)
+    await state.update_data(new_event_info=new_event_info)
+    await message.answer(new_text, reply_markup=editing_approve_task())
+    await state.update_data(one_event_text=new_text)
+    await state.set_state(ShowEvent.waiting_events_show_end)
 
 
 # cur_date
-# approving_new_event_name = State()
 # approving_new_event_category = State()
 # approving_new_event_description = State()
 # approving_new_event_link = State()
@@ -388,24 +408,7 @@ async def back_to_events_list(callback: types.CallbackQuery, state: FSMContext):
     # Возвращаемся к списку событий
     await show_events(callback.message, state)
     await callback.answer()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+# ----------------------------------------------------------------
 
 
 def setup_calendar_show_tasks_handlers(dp):
