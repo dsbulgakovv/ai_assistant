@@ -149,10 +149,11 @@ async def show_events(message: types.Message, state: FSMContext):
         day_offset = 0
         await state.update_data(day_offset=day_offset, cur_date=cur_date.strftime("%Y-%m-%d"))
 
-    target_date_str = (cur_date + timedelta(days=day_offset)).strftime("%Y-%m-%d")
+    target_date_str = (cur_date + timedelta(days=day_offset)).strftime("%d.%m.%Y")
+    target_date_query = (cur_date + timedelta(days=day_offset)).strftime("%Y-%m-%d")
 
     # Здесь получаем события из вашего API/Redis
-    events, status = await db_api.get_tasks(data['tg_user_id'], target_date_str, target_date_str)
+    events, status = await db_api.get_tasks(data['tg_user_id'], target_date_query, target_date_query)
     await state.update_data(events=events)
 
     # Если событий нет
