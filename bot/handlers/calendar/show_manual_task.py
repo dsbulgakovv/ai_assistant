@@ -584,8 +584,9 @@ async def delete_event_start(callback: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     event_num = int(callback.data.split('_')[-1])
     day_offset = data['day_offset']
+    delete_inline_kb = deleting_task_inline_keyboard(day_offset)
     await state.update_data(editing_event_num=event_num)
-    await callback.message.edit_text(data['one_event_text'], reply_markup=deleting_task_inline_keyboard(day_offset))
+    await callback.message.edit_text(data['one_event_text'], reply_markup=delete_inline_kb)
     await state.set_state(DeleteEvent.approving_event_delete)
     await callback.answer()
 
