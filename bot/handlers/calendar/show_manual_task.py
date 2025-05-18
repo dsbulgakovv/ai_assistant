@@ -446,8 +446,8 @@ async def editing_task_start_event_start(message: types.Message, state: FSMConte
         new_event_info['end_dtm'] = after_selected_datetime
         new_text = form_one_event_detailed(new_event_info, user_timezone)
         await state.update_data(new_event_info=new_event_info)
-        await message.edit_text(new_text, reply_markup=editing_approve_task())
-        await state.update_data(one_event_text=new_text)
+        msg = await message.answer(new_text, reply_markup=editing_approve_task())
+        await state.update_data(one_event_text=new_text, events_message_id=msg.message_id)
         await state.set_state(ShowEvent.waiting_events_show_end)
     else:
         await message.answer("Такой опции нет")
