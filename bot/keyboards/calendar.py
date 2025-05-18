@@ -153,6 +153,18 @@ def choice_change_task_inline_keyboard() -> InlineKeyboardMarkup:
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
+def task_category_change_calendar_keyboard() -> InlineKeyboardMarkup:
+    buttons = [
+        [InlineKeyboardButton(text="Работа", callback_data="task_category_1")],
+        [InlineKeyboardButton(text="Учеба", callback_data="task_category_2")],
+        [InlineKeyboardButton(text="Личное", callback_data="task_category_3")],
+        [InlineKeyboardButton(text="Здоровье", callback_data="task_category_3")],
+        [InlineKeyboardButton(text="Финансы", callback_data="task_category_4")],
+        [InlineKeyboardButton(text="Семья", callback_data="task_category_5")]
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=buttons)
+
+
 def only_back_to_manual_calendar_menu_keyboard() -> ReplyKeyboardMarkup:
     kb = ReplyKeyboardBuilder()
     kb.row(KeyboardButton(text='Вернуться назад'))
