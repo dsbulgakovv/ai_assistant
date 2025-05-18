@@ -25,7 +25,8 @@ from keyboards.calendar import (
     choice_change_task_inline_keyboard,
     editing_approve_task,
     task_category_change_calendar_keyboard,
-    task_dtm_change_calendar_keyboard
+    task_dtm_change_calendar_keyboard,
+    deleting_task_inline_keyboard
 )
 from utils.database_api import DatabaseAPI
 
@@ -47,6 +48,10 @@ class ChangeEvent(StatesGroup):
     approving_new_event_link = State()
     approving_new_event_start = State()
     approving_new_event_end = State()
+
+
+class DeleteEvent(StatesGroup):
+    approving_event_delete = State()
 
 
 def map_task_category(idx_category):
@@ -570,6 +575,45 @@ async def back_to_events_list(callback: types.CallbackQuery, state: FSMContext):
     delete_change_inline_kb = change_delete_task_inline_keyboard(data['day_offset'], data['editing_event_num'])
     await callback.message.edit_text(data['one_event_text'], reply_markup=delete_change_inline_kb)
     await callback.answer()
+# ----------------------------------------------------------------
+
+
+# -------------------------- DELETE TASK -------------------------
+@router.callback_query(F.data.startswith('delete_'), StateFilter(ShowEvent.waiting_events_show_end))
+async def delete_event_start(callback: types.CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    event_num = int(callback.data.split('_')[-1])
+    await state.update_data(editing_event_num=event_num)
+    await callback.message.edit_text(data['one_event_text'], reply_markup=deleting_task_inline_keyboard())
+    await state.set_state(DeleteEvent.approving_event_delete)
+    await callback.answer()
+
+
+@router.callback_query(F.data.startswith('deleting_task'), StateFilter(DeleteEvent.approving_event_delete))
+async def editing_task_name_event(callback: types.CallbackQuery, state: FSMContext):
+    response, status = await db_api.delete_task()
+    if status == 200:
+        await callback.message.delete()
+        await callback.message.answer(
+            "✅ Событие успешно удалено!",
+            reply_markup=only_back_to_manual_calendar_menu_keyboard()
+        )
+    elif status == 404:
+        await callback.message.answer(
+            "Событие не найдено",
+            reply_markup=only_back_to_manual_calendar_menu_keyboard()
+        )
+    else:
+        await callback.message.answer(
+            f"INTERNAL SERVER ERROR.\n"
+            f"Please, contact support https://t.me/dm1trybu"
+        )
+        return
+    # Возвращаемся к списку событий
+    await state.set_state(ShowEvent.waiting_events_show_end)
+    await show_events(callback.message, state)
+    await callback.answer()
+# ----------------------------------------------------------------
 
 
 # ---------------------------- GO BACK ---------------------------

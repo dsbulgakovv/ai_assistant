@@ -78,12 +78,12 @@ class DatabaseAPI:
         return response, status
 
     async def delete_task(
-            self, business_dt, task_relative_id, tg_user_id
+            self, task_global_id
     ):
         async with ClientSession() as session:
             async with session.delete(
                 f"{self.base_url}/tasks/delete",
-                json={"business_dt": business_dt, "task_relative_id": task_relative_id, "tg_user_id": tg_user_id}
+                json={"id": task_global_id}
             ) as resp:
                 response, status = await resp.json(), resp.status
         return response, status
