@@ -136,10 +136,10 @@ def change_delete_task_inline_keyboard(day_offset: int, event_num: int) -> Inlin
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 
 
-def deleting_task_inline_keyboard(day_offset: int, event_num: int) -> InlineKeyboardMarkup:
+def deleting_task_inline_keyboard(day_offset: int) -> InlineKeyboardMarkup:
     buttons = [
         [
-            InlineKeyboardButton(text="Подтвердить удаление", callback_data=f"delete_{event_num}")
+            InlineKeyboardButton(text="Подтвердить удаление")
         ],
         [
             InlineKeyboardButton(text="Назад", callback_data=f"back_to_list_{day_offset}")
