@@ -483,9 +483,12 @@ async def editing_task_end_event_next(message: types.Message, state: FSMContext,
         data = await state.get_data()
         selected_datetime = data.get("event_datetime")
         await state.update_data(event_datetime=None)
+        logger.info(data['events'][data['editing_event_num'] - 1]['task_start_dtm'])
         if (
                 datetime.strptime(selected_datetime, "%d.%m.%Y %H:%M") >
-                datetime.strptime(data['start_dtm'], "%d.%m.%Y %H:%M")
+                datetime.fromisoformat(
+                    data['events'][data['editing_event_num'] - 1]['task_start_dtm']
+                ).strftime("%d.%m.%Y %H:%M")
         ):
             await message.answer(
                 f"Неверно выбрана дата завершения\n"
