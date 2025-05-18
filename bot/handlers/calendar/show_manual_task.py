@@ -526,6 +526,7 @@ async def approved_save_editing_task(callback: types.CallbackQuery, state: FSMCo
     event = data['new_event_info']
     task_global_id = event['id']
     business_dt = convert_to_business_dt(event['task_start_dtm'], data['user_timezone'])
+    logger.info({'task_start_dtm': event['task_start_dtm'], 'business_dt': business_dt})
     task_start_dtm = localize_db_date(event['task_start_dtm'], data['user_timezone'])
     task_end_dtm = localize_db_date(event['task_end_dtm'], data['user_timezone'])
 
