@@ -223,7 +223,9 @@ async def create_task(task: Task, conn=Depends(get_db)):
 
 @app.put("/tasks/update")
 async def update_task(task: UpdateTask, conn=Depends(get_db)):
-    if parse_datetime(task.task_start_dtm) > parse_datetime(task.task_end_dtm):
+    task_start_dtm = parse_datetime(task.task_start_dtm)
+    task_end_dtm = parse_datetime(task.task_end_dtm)
+    if task_start_dtm > task_end_dtm:
         raise HTTPException(status_code=404, detail="Task start dtm cannot be after end dtm")
 
     await conn.execute(
@@ -242,7 +244,7 @@ async def update_task(task: UpdateTask, conn=Depends(get_db)):
         """,
         task.task_name, task.task_status, task.task_category,
         task.task_description, task.task_link,
-        task.task_start_dtm, task.task_end_dtm,
+        task_start_dtm, task_end_dtm,
         task.id
     )
     return {"status": "success", "message": "Task updated"}
