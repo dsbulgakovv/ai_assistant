@@ -68,7 +68,6 @@ class Task(BaseModel):
 
 class UpdateTask(BaseModel):
     id: int
-    tg_user_id: int
     task_name: Optional[str] = None
     task_status: Optional[int] = None
     task_category: Optional[int] = None
@@ -79,9 +78,7 @@ class UpdateTask(BaseModel):
 
 
 class TasksDelete(BaseModel):
-    business_dt: date
-    task_relative_id: Optional[int] = None
-    tg_user_id: int
+    id: int
 
 
 class TaskResponse(BaseModel):
@@ -274,63 +271,30 @@ async def update_task(task: UpdateTask, conn=Depends(get_db)):
           task_name = $1, 
           task_status = $2, 
           task_category = $3,
-          task_description = $4, 
-          task_start_dtm = $5, 
-          task_end_dtm = $6,
+          task_description = $4,
+          task_link = $5,
+          task_start_dtm = $6, 
+          task_end_dtm = $7,
           updated_at=NOW()
-        WHERE id = $7;
+        WHERE id = $8;
         """,
         task["task_name"], task["task_status"], task["task_category"],
-        task["task_description"], task["task_start_dtm"], task["task_end_dtm"],
+        task["task_description"], task["task_link"],
+        task["task_start_dtm"], task["task_end_dtm"],
         task.id
     )
     return {"status": "success", "message": "Task updated"}
 
 
 @app.delete("/tasks/delete")
-async def delete_task(tasks: TasksDelete, conn=Depends(get_db)):
-    if tasks.task_relative_id:
-        result = await conn.execute(
-            """
-            DELETE FROM tasks
-            WHERE id = (
-              SELECT id FROM (
-                SELECT 
-                  id,
-                  (task_start_dtm::date) AS business_dt,
-                  ROW_NUMBER() OVER (
-                    PARTITION BY tg_user_id, (task_start_dtm::date)
-                    ORDER BY task_start_dtm
-                  ) AS task_relative_id
-                FROM tasks
-                WHERE tg_user_id = $1
-              ) t
-              WHERE t.business_dt = $2::date AND t.task_relative_id = $3
-            );
-            """,
-            tasks.tg_user_id, tasks.business_dt, tasks.task_relative_id
-        )
-    else:
-        result = await conn.execute(
-            """
-            DELETE FROM tasks
-            WHERE id IN (
-              SELECT id FROM (
-                SELECT 
-                  id,
-                  (task_start_dtm::date) AS business_dt,
-                  ROW_NUMBER() OVER (
-                    PARTITION BY tg_user_id, (task_start_dtm::date)
-                    ORDER BY task_start_dtm
-                  ) AS task_relative_id
-                FROM tasks
-                WHERE tg_user_id = $1
-              ) t
-              WHERE t.business_dt = $2::date
-            );
-            """,
-            tasks.tg_user_id, tasks.business_dt
-        )
+async def delete_task(task: TasksDelete, conn=Depends(get_db)):
+    result = await conn.execute(
+        """
+        DELETE FROM tasks
+        WHERE id = $1;
+        """,
+        task.id
+    )
     if result == "DELETE 0":
         raise HTTPException(status_code=404, detail="Task not found")
     return {"status": "success", "message": "Task deleted"}

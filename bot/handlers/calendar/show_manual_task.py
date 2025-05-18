@@ -353,6 +353,10 @@ async def approved_save_editing_task(callback: types.CallbackQuery, state: FSMCo
         task_description=event['task_description'], task_link=event['task_link'],
         task_start_dtm=task_start_dtm, task_end_dtm=task_end_dtm
     )
+
+    task_global_id, tg_user_id, task_name, task_status, task_category,
+    task_description, task_link, task_start_dtm, task_end_dtm
+
     if status == 200:
         await callback.message.answer("✅ Событие успешно обновлено!")
     else:
