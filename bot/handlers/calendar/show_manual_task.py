@@ -323,6 +323,7 @@ async def editing_task_category_event_start(callback: types.CallbackQuery, state
 @router.callback_query(F.data.startswith('task_category_'), StateFilter(ChangeEvent.approving_new_event_category))
 async def editing_task_category_event_start(callback: types.CallbackQuery, state: FSMContext):
     new_category_int = int(callback.data.split('_')[-1])
+    logger.info(new_category_int)
     new_category_str = map_task_category(new_category_int)
     data = await state.get_data()
     user_timezone = data['user_timezone']
