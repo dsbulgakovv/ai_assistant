@@ -336,8 +336,30 @@ async def editing_task_category_event_start(callback: types.CallbackQuery, state
     await state.set_state(ShowEvent.waiting_events_show_end)
 
 
+# DESCRIPTION
+@router.callback_query(F.data.startswith('editing_task_description'), StateFilter(ShowEvent.waiting_events_show_end))
+async def editing_task_description_event_start(callback: types.CallbackQuery, state: FSMContext):
+    await callback.message.edit_text("Введите новое описание", reply_markup=None)
+    await callback.answer()
+    await state.set_state(ChangeEvent.approving_new_event_description)
+
+
+@router.message(StateFilter(ChangeEvent.approving_new_event_description))
+async def editing_task_description_event_start(message: types.Message, state: FSMContext):
+    new_description = message.text
+    data = await state.get_data()
+    user_timezone = data['user_timezone']
+    event = data['events'][data['editing_event_num'] - 1]
+    new_event_info = event.copy()
+    new_event_info['task_description'] = new_description
+    new_text = form_one_event_detailed(new_event_info, user_timezone)
+    await state.update_data(new_event_info=new_event_info)
+    await message.answer(new_text, reply_markup=editing_approve_task())
+    await state.update_data(one_event_text=new_text)
+    await state.set_state(ShowEvent.waiting_events_show_end)
+
+
 # cur_date
-# approving_new_event_category = State()
 # approving_new_event_description = State()
 # approving_new_event_link = State()
 # approving_new_event_start = State()
