@@ -556,9 +556,6 @@ async def approved_save_editing_task(callback: types.CallbackQuery, state: FSMCo
     delete_change_inline_kb = change_delete_task_inline_keyboard(data['day_offset'], data['editing_event_num'])
     events, _ = await db_api.get_tasks(data['tg_user_id'], business_dt, business_dt)
 
-    logger.info(task_global_id)
-    logger.info(events)
-
     result = next(filter(lambda x: x["id"] == task_global_id, events), None)
     new_task_relative_id = result['task_relative_id']
 
