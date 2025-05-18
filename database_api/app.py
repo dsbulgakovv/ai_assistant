@@ -192,16 +192,16 @@ async def get_test(tg_user_id: int, conn=Depends(get_db)):
     dates = await conn.fetch(
         """
         SELECT
-            task_start_dtm AT TIME ZONE 'Europe/Moscow',
+            task_start_dtm AT TIME ZONE $1,
              to_char(
-                task_start_dtm AT TIME ZONE 'Europe/Moscow',
+                task_start_dtm AT TIME ZONE $1,
                 'YYYY-MM-DD'
             ) AS business_dt
         FROM tasks
         WHERE
-            tg_user_id = $1
+            tg_user_id = $2
         """,
-        tg_user_id
+        user_timezone, tg_user_id
     )
 
     if not dates:
