@@ -192,9 +192,9 @@ async def get_test(tg_user_id: int, conn=Depends(get_db)):
     dates = await conn.fetch(
         """
         SELECT
-            task_start_dtm,
-            to_char(
-                task_start_dtm AT TIME ZONE 'UTC' AT TIME ZONE $1,
+            task_start_dtm AT TIME ZONE 'Europe/Moscow',
+             to_char(
+                task_start_dtm AT TIME ZONE 'Europe/Moscow',
                 'YYYY-MM-DD'
             ) AS business_dt
         FROM tasks
