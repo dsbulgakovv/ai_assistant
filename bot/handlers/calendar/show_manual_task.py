@@ -487,7 +487,8 @@ async def editing_task_end_event_next(message: types.Message, state: FSMContext,
         startd_dtm = datetime.fromisoformat(
             data['events'][data['editing_event_num'] - 1]['task_start_dtm']
         ).astimezone(pytz.timezone(user_timezone))
-        if datetime.strptime(selected_datetime, "%d.%m.%Y %H:%M") > startd_dtm:
+        end_dtm = datetime.strptime(selected_datetime, "%d.%m.%Y %H:%M").replace(tzinfo=ZoneInfo(user_timezone))
+        if end_dtm > startd_dtm:
             await message.answer(
                 f"Неверно выбрана дата завершения\n"
                 f"Выбери новую дату и время завершения события.",
