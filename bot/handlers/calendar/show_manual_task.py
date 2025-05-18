@@ -592,7 +592,10 @@ async def delete_event_start(callback: types.CallbackQuery, state: FSMContext):
 
 @router.callback_query(F.data.startswith('deleting_task'), StateFilter(DeleteEvent.approving_event_delete))
 async def editing_task_name_event(callback: types.CallbackQuery, state: FSMContext):
-    response, status = await db_api.delete_task()
+    data = await state.get_data()
+    event = data['new_event_info']
+    task_global_id = event['id']
+    response, status = await db_api.delete_task(task_global_id)
     if status == 200:
         await callback.message.delete()
         await callback.message.answer(
