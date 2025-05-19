@@ -70,7 +70,6 @@ def get_rounded_datetime(user_time_zone):
 
     return formatted_cur, formatted_next
 
-
 def convert_date_string(input_date_str: str, timezone_str: str) -> str:
     dt_naive = datetime.strptime(input_date_str, "%d.%m.%Y %H:%M")
     tz = pytz.timezone(timezone_str)
@@ -368,7 +367,10 @@ async def create_event_task_success_manual_calendar_handler(
                 "Неверно выбрана дата завершения"
             )
             data = await state.get_data()
-            end_nearest_dtm = data.get('end_dtm')
+            end_nearest_dtm = (
+                    datetime.strptime(data.get('start_dtm'), "%d.%m.%Y %H:%M") + timedelta(minutes=30)
+            ).strftime("%d.%m.%Y %H:%M")
+            await state.update_data(end_dtm=end_nearest_dtm)
             await message.answer(
                 "Выбери дату и время заверешния события.\n"
                 f"Нажми <b>Дальше</b>, чтобы выбрать ближайшую: {end_nearest_dtm}",
