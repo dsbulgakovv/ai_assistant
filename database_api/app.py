@@ -49,8 +49,8 @@ app = FastAPI(lifespan=lifespan)
 
 class UserCreate(BaseModel):
     tg_user_id: int
-    username: str
-    full_name: str
+    username: Optional[str] = None
+    full_name: Optional[str] = None
     timezone: str
     lang: str
 
