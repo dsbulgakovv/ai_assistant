@@ -27,18 +27,17 @@ class InitStates(StatesGroup):
 async def command_start_handler(message: types.Message, state: FSMContext) -> None:
     resp, status = await db_api.get_user(message.from_user.id)
     if status == 404:
-        user_info = {
-            'tg_user_id': message.from_user.id, 'username': message.from_user.username,
-            'full_name': message.from_user.full_name, 'timezone': 'Europe/Moscow', 'lang': 'rus'
-        }
-        logger.info(user_info)
+        # user_info = {
+        #     'tg_user_id': message.from_user.id, 'username': message.from_user.username,
+        #     'full_name': message.from_user.full_name, 'timezone': 'Europe/Moscow', 'lang': 'rus'
+        # }
+        # logger.info(user_info)
         post_resp, post_status = await db_api.create_user(
-            **user_info
-            # message.from_user.id,
-            # message.from_user.username,
-            # message.from_user.full_name,
-            # 'Europe/Moscow',
-            # 'rus'
+            message.from_user.id,
+            message.from_user.username,
+            message.from_user.full_name,
+            'Europe/Moscow',
+            'rus'
         )
         if post_status == 201:
             await message.answer(
