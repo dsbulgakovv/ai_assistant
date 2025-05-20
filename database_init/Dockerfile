@@ -16,11 +16,11 @@ RUN poetry config virtualenvs.create false && \
 
 WORKDIR /app
 
+COPY ./database_init /app/
 COPY pyproject.toml poetry.lock /app/
-RUN mkdir service_files
-RUN poetry install --no-interaction --no-ansi --without voice_to_text,large_lang_model,db
 
+RUN poetry install --no-interaction --no-ansi --no-root --without bot,large_lang_model,voice_to_text
 
-COPY ./bot /app/
+ENV PYTHONUNBUFFERED 1
 
-CMD ["python", "app.py"]
+CMD ["poetry", "run", "python", "init_db.py"]

@@ -1,9 +1,14 @@
-FROM python:3.12-slim
+FROM python:3.12
 
-# Установка системных зависимостей
+# Установка последней версии FFmpeg
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl \
+    ffmpeg \
+    flac  \
+    libavcodec-dev \
+    libavformat-dev \
+    libswscale-dev \
     && rm -rf /var/lib/apt/lists/*
+
 
 # Установка Poetry (фиксированная версия для стабильности)
 ENV POETRY_VERSION=1.8.2
@@ -16,11 +21,13 @@ RUN poetry config virtualenvs.create false && \
 
 WORKDIR /app
 
+COPY ./voice_to_text_api /app/
 COPY pyproject.toml poetry.lock /app/
+
 RUN mkdir service_files
-RUN poetry install --no-interaction --no-ansi --without voice_to_text,large_lang_model,db
+RUN poetry install --no-interaction --no-ansi --without bot,large_lang_model,db
 
+ENV PYTHONUNBUFFERED 1
 
-COPY ./bot /app/
-
-CMD ["python", "app.py"]
+CMD ["poetry", "run", "python", "load_models_at_start.py"]
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8000"]

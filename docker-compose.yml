@@ -1,78 +1,94 @@
 version: '1'
 
 services:
-#  postgres:
-#    image: postgres:16
-#    env_file:
-#      - .env
-#    environment:
-#      POSTGRES_DB: $DB_NAME
-#      POSTGRES_USER: $DB_USER
-#      POSTGRES_PASSWORD: $DB_PASS
-#      PGUSER: $DB_USER
-#    ports:
-#      - "5432:5432"
-#    volumes:
-#      - ./database/create_db.sql:/docker-entrypoint-initdb.d/init.sql
-#      - ./pgdata:/var/lib/postgresql/data
-#    networks:
-#      - pg-network
-#    healthcheck:
-#      test: [ "CMD-SHELL", "pg_isready -d $$DB_NAME -U $$DB_USER"]
-#      interval: 5s
-#      timeout: 5s
-#      retries: 5
+  postgres:
+    image: postgres:16
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: ${DB_NAME:-ai_assistant}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASS}
+      DB_HOST: ${DB_HOST}
+      DB_PORT: ${DB_PORT}
+      DB_TYPE: ${DB_TYPE}
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    networks:
+      - pg-network
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -d ${DB_NAME} -U ${DB_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
-#  redis:
-#    image: redis:latest
-#    container_name: redis_app
-#    command: --port 5370
-#    expose:
-#      - 5370
+  redis:
+    image: redis:latest
+    command: redis-server --port 5370 --save 60 1 --appendonly yes  # автосохранение + AOF
+    ports:
+      - "5370:5370"
+    expose:
+      - "5370"
+    networks:
+      - pg-network
+    volumes:
+      - ./redis_data:/data
+    restart: unless-stopped
 
-#  init_db:
-#    build:
-#      context: .
-#      dockerfile: db/Dockerfile
-#    depends_on:
-#      postgres:
-#        condition: service_healthy
-#    links:
-#      - postgres
-#    networks:
-#      - pg-network
-
-
-  bot:
+  database_init:
     build:
       context: .
-      dockerfile: bot/Dockerfile
+      dockerfile: database_init/Dockerfile
     depends_on:
-      voice_to_text:
-        condition: service_started
+      postgres:
+        condition: service_healthy
     links:
-#      - postgres
-      - voice_to_text
-    ports:
-      - "3000:3000"
+      - postgres
     networks:
       - pg-network
     env_file:
       - .env
-    volumes:
-      - ./service_files:/app/service_files
+    environment:
+      POSTGRES_DB: $DB_NAME
+      POSTGRES_USER: $DB_USER
+      POSTGRES_PASSWORD: $DB_PASS
+      DB_HOST: $DB_HOST
+      DB_PORT: $DB_PORT
+      DB_TYPE: $DB_TYPE
 
-
-  voice_to_text:
+  database_api:
     build:
       context: .
-      dockerfile: voice_to_text/Dockerfile
-#    depends_on:
-#      init_db:
-#        condition: service_completed_successfully
-#    links:
-#      - postgres
-#      - redis
+      dockerfile: database_api/Dockerfile
+    depends_on:
+      database_init:
+        condition: service_completed_successfully
+    links:
+      - postgres
+    ports:
+      - "8002:8002"
+    networks:
+      - pg-network
+    env_file:
+      - .env
+    environment:
+      POSTGRES_DB: $DB_NAME
+      POSTGRES_USER: $DB_USER
+      POSTGRES_PASSWORD: $DB_PASS
+      DB_HOST: $DB_HOST
+      DB_PORT: $DB_PORT
+      DB_TYPE: $DB_TYPE
+
+
+  voice_to_text_api:
+    build:
+      context: .
+      dockerfile: voice_to_text_api/Dockerfile
+    depends_on:
+      database_api:
+        condition: service_started
     ports:
       - "8000:8000"
     networks:
@@ -80,29 +96,39 @@ services:
     env_file:
       - .env
     volumes:
-      - ./service_files:/voice_to_text/service_files
+      - ./service_files:/app/service_files
+      - ./models:/app/models
 
 
-#  large_lang_model:
-#    build:
-#      context: .
-#      dockerfile: large_lang_model/Dockerfile
-##    depends_on:
-##      init_db:
-##        condition: service_completed_successfully
-##    links:
-##      - postgres
-##      - redis
-#    ports:
-#      - "8001:8001"
-#    networks:
-#      - pg-network
-#    env_file:
-#      - .env
-#    volumes:
-#      - ./artifacts:/large_lang_model/artifacts
+  bot:
+    build:
+      context: .
+      dockerfile: bot/Dockerfile
+    depends_on:
+      voice_to_text_api:
+        condition: service_started
+      redis:
+        condition: service_started
+    links:
+      - voice_to_text_api
+    ports:
+      - "3000:3000"
+    networks:
+      - pg-network
+    env_file:
+      - .env
+    environment:
+      BOT_TOKEN: $BOT_TOKEN
+      SERVERSPACE_API_KEY: $SERVERSPACE_API_KEY
+      SERVERSPACE_MODEL: $SERVERSPACE_MODEL
+    volumes:
+      - ./service_files:/app/service_files
 
 
 networks:
   pg-network:
     driver: bridge
+
+
+volumes:
+  redis_data:

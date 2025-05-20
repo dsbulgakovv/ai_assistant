@@ -14,7 +14,7 @@ from utils.voice_to_text_api import VoiceToTextAPI
 logger = logging.getLogger('aiogram')
 logger.setLevel(logging.DEBUG)
 
-markup_text = "**Текст:**\n{}"
+markup_text = "<b>Текст:</b>\n{}"
 
 router = Router()
 api = VoiceToTextAPI()
@@ -42,17 +42,15 @@ async def voice_to_text_process_handler(message: types.Message, bot: Bot, state:
         file_name = f"service_files/audio_{file_id}.mp3"
         await bot.download_file(file_path, file_name)
         await message.answer('Голосовое сообщение обработано!', reply_markup=end_keyboard())
-        logger.info(os.listdir('./service_files'))
         text = await api.transcript(file_name)
         await message.answer(markup_text.format(text['text']), reply_markup=end_keyboard())
     else:
-        if message.text == 'Хватит':
+        if message.text == 'Вернуться в меню':
             await message.answer('Закончили', reply_markup=ReplyKeyboardRemove())
             await state.clear()
         else:
             await message.answer('Пришли голсоовое сообщение', reply_markup=end_keyboard())
 
 
-@router.message(StateFilter(None))
-async def uncertainty_handler(message: types.Message) -> None:
-    await message.answer(f"Выбери нужную функцию!")
+def setup_voice_to_text_handler(dp):
+    dp.include_router(router)
