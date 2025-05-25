@@ -52,7 +52,7 @@ logger = logging.getLogger("voice_to_text")
 #         os.remove(path_to_file)
 
 
-async def convert_voice_to_text(deepgram: DeepgramClient, options: PrerecordedOptions, path_to_file: str) -> str:
+def convert_voice_to_text(deepgram: DeepgramClient, options: PrerecordedOptions, path_to_file: str) -> str:
     logger.info('Converting voice to text ...')
     try:
         # path_to_wav_file = path_to_file[:-3] + 'wav'
@@ -65,7 +65,7 @@ async def convert_voice_to_text(deepgram: DeepgramClient, options: PrerecordedOp
         payload: FileSource = {
             "buffer": buffer_data,
         }
-        response = await deepgram.listen.prerecorded.v("1").transcribe_file(payload, options)
+        response = deepgram.listen.prerecorded.v("1").transcribe_file(payload, options)
         text = response.to_json()['results']['channels'][0]['alternatives'][0]['transcript']
         return text if text else '...'
     except Exception as e:
