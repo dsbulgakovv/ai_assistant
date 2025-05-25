@@ -25,12 +25,7 @@ os.makedirs(MODEL_CACHE_DIR, exist_ok=True)
 os.environ["XDG_CACHE_HOME"] = MODEL_CACHE_DIR
 deepgram_api_token = os.getenv('DEEPGRAM_ASR_API_KEY')
 
-deepgram = DeepgramClient("", ClientOptionsFromEnv(api_key=deepgram_api_token))
-options = PrerecordedOptions(
-    model="nova-2",
-    language="ru",
-    smart_format=True,
-)
+deepgram = DeepgramClient(deepgram_api_token)
 
 
 # @lru_cache(maxsize=None)

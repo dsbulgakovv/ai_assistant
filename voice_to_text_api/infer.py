@@ -13,6 +13,12 @@ from log_config import LogConfig
 dictConfig(LogConfig().dict())
 logger = logging.getLogger("voice_to_text")
 
+options = PrerecordedOptions(
+    model="nova-2",
+    language="ru",
+    smart_format=True,
+)
+
 
 # def convert_voice_to_text(path_to_file: str) -> str:
 #     path_to_wav_file = path_to_file[:-3] + 'wav'
@@ -52,7 +58,7 @@ logger = logging.getLogger("voice_to_text")
 #         os.remove(path_to_file)
 
 
-def convert_voice_to_text(deepgram: DeepgramClient, options: PrerecordedOptions, path_to_file: str) -> str:
+def convert_voice_to_text(deepgram: DeepgramClient, path_to_file: str) -> str:
     logger.info('Converting voice to text ...')
     try:
         # path_to_wav_file = path_to_file[:-3] + 'wav'
