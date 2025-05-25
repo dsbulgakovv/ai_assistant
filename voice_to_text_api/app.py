@@ -47,5 +47,5 @@ async def root():
 
 @app.get("/voice_to_text")
 async def voice_to_text(path_to_file: str):
-    resp = convert_voice_to_text(deepgram, options, path_to_file)
+    resp = convert_voice_to_text(deepgram, path_to_file)
     return JSONResponse(content={"text": resp})
