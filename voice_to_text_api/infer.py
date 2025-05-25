@@ -66,12 +66,12 @@ def convert_voice_to_text(deepgram: DeepgramClient, path_to_file: str) -> str:
         # logger.info(os.listdir('.'))
         # logger.info(os.listdir('./service_files'))
         # subprocess.call(['ffmpeg', '-i', path_to_file, path_to_wav_file])
-        with open(path_to_file, "rb") as file:
-            buffer_data = file.read()
-        payload: FileSource = {
-            "buffer": buffer_data,
-        }
-        response = deepgram.listen.prerecorded.v("1").transcribe_file(payload, options)
+        with open(path_to_file, "rb") as audio:
+            payload: FileSource = {
+                "buffer": audio,
+                "mimetype": "audio/mpeg"
+            }
+            response = deepgram.listen.rest.v("1").transcribe_file(payload, options)
         text = response.to_json()['results']['channels'][0]['alternatives'][0]['transcript']
         return text if text else '...'
     except Exception as e:
