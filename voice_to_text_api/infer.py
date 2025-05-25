@@ -61,8 +61,8 @@ def convert_voice_to_text(deepgram: DeepgramClient, options: PrerecordedOptions,
             "buffer": buffer_data,
         }
         response = deepgram.listen.rest.v("1").transcribe_file(payload, options)
-        logger.info(f'voice_to_text response: {response}')
-        return response if response else '...'
+        text = response.to_json()['results']['channels'][0]['alternatives'][0]['transcript']
+        return text if text else '...'
     except Exception as e:
         logger.info(f'Error: {e}')
     finally:
