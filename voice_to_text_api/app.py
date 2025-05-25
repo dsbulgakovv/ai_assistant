@@ -5,7 +5,7 @@ from fastapi.responses import JSONResponse
 import os
 
 # import whisper
-from deepgram import DeepgramClient, ClientOptionsFromEnv, PrerecordedOptions
+from deepgram import DeepgramClient
 
 import logging
 from logging.config import dictConfig

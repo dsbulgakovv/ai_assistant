@@ -3,7 +3,7 @@ import logging
 from logging.config import dictConfig
 
 # import speech_recognition as sr
-import subprocess
+# import subprocess
 
 from deepgram import DeepgramClient, PrerecordedOptions, FileSource
 
@@ -61,18 +61,13 @@ options = PrerecordedOptions(
 def convert_voice_to_text(deepgram: DeepgramClient, path_to_file: str) -> str:
     logger.info('Converting voice to text ...')
     try:
-        # path_to_wav_file = path_to_file[:-3] + 'wav'
-        # logger.info('Changing file format')
-        # logger.info(os.listdir('.'))
-        # logger.info(os.listdir('./service_files'))
-        # subprocess.call(['ffmpeg', '-i', path_to_file, path_to_wav_file])
         with open(path_to_file, "rb") as audio:
             payload: FileSource = {
                 "buffer": audio,
                 "mimetype": "audio/mpeg"
             }
             response = deepgram.listen.rest.v("1").transcribe_file(payload, options)
-        text = response.to_json()['results']['channels'][0]['alternatives'][0]['transcript']
+        text = response.to_dict()['results']['channels'][0]['alternatives'][0]['transcript']
         return text if text else '...'
     except Exception as e:
         logger.info(f'Error: {e}')
