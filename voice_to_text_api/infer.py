@@ -5,6 +5,8 @@ from logging.config import dictConfig
 # import speech_recognition as sr
 # import subprocess
 
+from deepgram import DeepgramClient, PrerecordedOptions, FileSource
+
 from log_config import LogConfig
 
 
@@ -39,11 +41,28 @@ logger = logging.getLogger("voice_to_text")
 #     return text
 
 
-def convert_voice_to_text(path_to_file: str, model) -> str:
+# def convert_voice_to_text(path_to_file: str, model) -> str:
+#     logger.info('Converting voice to text ...')
+#     try:
+#         result = model.transcribe(path_to_file, language="ru")
+#         return result["text"] if result["text"] else '...'
+#     except Exception as e:
+#         logger.info(f'Error: {e}')
+#     finally:
+#         os.remove(path_to_file)
+
+
+def convert_voice_to_text(deepgram: DeepgramClient, options: PrerecordedOptions, path_to_file: str) -> str:
     logger.info('Converting voice to text ...')
     try:
-        result = model.transcribe(path_to_file, language="ru")
-        return result["text"] if result["text"] else '...'
+        with open(path_to_file, "rb") as file:
+            buffer_data = file.read()
+        payload: FileSource = {
+            "buffer": buffer_data,
+        }
+        response = deepgram.listen.rest.v("1").transcribe_file(payload, options)
+        logger.info(f'voice_to_text response: {response}')
+        return response if response else '...'
     except Exception as e:
         logger.info(f'Error: {e}')
     finally:

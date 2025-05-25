@@ -23,6 +23,7 @@ pytz = "^2025.2"
 fastapi = "^0.111.0"
 asyncio = "^3.4.3"
 openai-whisper = "^20240930"
+deepgram-sdk = "^4.1.0"
 
 
 [tool.poetry.group.large_lang_model.dependencies]
