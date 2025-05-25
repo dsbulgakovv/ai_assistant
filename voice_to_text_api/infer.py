@@ -55,12 +55,12 @@ logger = logging.getLogger("voice_to_text")
 def convert_voice_to_text(deepgram: DeepgramClient, options: PrerecordedOptions, path_to_file: str) -> str:
     logger.info('Converting voice to text ...')
     try:
-        path_to_wav_file = path_to_file[:-3] + 'wav'
-        logger.info('Changing file format')
-        logger.info(os.listdir('.'))
-        logger.info(os.listdir('./service_files'))
-        subprocess.call(['ffmpeg', '-i', path_to_file, path_to_wav_file])
-        with open(path_to_wav_file, "rb") as file:
+        # path_to_wav_file = path_to_file[:-3] + 'wav'
+        # logger.info('Changing file format')
+        # logger.info(os.listdir('.'))
+        # logger.info(os.listdir('./service_files'))
+        # subprocess.call(['ffmpeg', '-i', path_to_file, path_to_wav_file])
+        with open(path_to_file, "rb") as file:
             buffer_data = file.read()
         payload: FileSource = {
             "buffer": buffer_data,

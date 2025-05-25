@@ -27,7 +27,8 @@ deepgram_api_token = os.getenv('DEEPGRAM_ASR_API_KEY')
 
 deepgram = DeepgramClient("", ClientOptionsFromEnv(api_key=deepgram_api_token))
 options = PrerecordedOptions(
-    model="nova-3",
+    model="nova-2",
+    language="ru",
     smart_format=True,
 )
 
