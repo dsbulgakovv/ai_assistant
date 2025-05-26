@@ -153,6 +153,7 @@ async def voice_operations_main_calendar_handler(message: types.Message, bot: Bo
         }
     ]
     llm_json = await llm_api.prompt_answer(messages=messages, temperature=0.05, top_p=0.1, max_tokens=3_000)
+    logger.info(llm_json)
     intent = llm_json['intent']
     if intent == 'create_task':
         llm_data = llm_json['data']
