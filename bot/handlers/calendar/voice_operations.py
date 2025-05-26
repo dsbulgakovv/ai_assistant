@@ -181,30 +181,31 @@ async def voice_operations_create_task_calendar_handler(message: types.Message, 
         await state.clear()
         await state.set_state(StartCalendar.start_calendar)
         return
-    elif message.text.lower() == 'без ссылки':
-        task_link = 'Нет ссылки на событие'
     else:
-        task_link = message.text
-    data = await state.get_data()
-    task_data = data['llm_data']
-    task_data['task_link'] = task_link
-    await state.update_data(llm_data=task_data)
-    await message.answer(
-        build_event_full_info(
-            task_data.get('task_name'),
-            task_data.get('start_dtm'),
-            task_data.get('end_dtm'),
-            task_data.get('task_category'),
-            task_data.get('task_link'),
-            task_data.get('task_description')
-        ),
-        reply_markup=ReplyKeyboardRemove()
-    )
-    await message.answer(
-        "Все верно?",
-        reply_markup=task_approval_manual_calendar_keyboard()
-    )
-    await state.set_state(CreateVoiceEvent.waiting_approval)
+        if message.text.lower() == 'без ссылки':
+            task_link = 'Нет ссылки на событие'
+        else:
+            task_link = message.text
+        data = await state.get_data()
+        task_data = data['llm_data']
+        task_data['task_link'] = task_link
+        await state.update_data(llm_data=task_data)
+        await message.answer(
+            build_event_full_info(
+                task_data.get('task_name'),
+                task_data.get('start_dtm'),
+                task_data.get('end_dtm'),
+                task_data.get('task_category'),
+                task_data.get('task_link'),
+                task_data.get('task_description')
+            ),
+            reply_markup=ReplyKeyboardRemove()
+        )
+        await message.answer(
+            "Все верно?",
+            reply_markup=task_approval_manual_calendar_keyboard()
+        )
+        await state.set_state(CreateVoiceEvent.waiting_approval)
 
 
 @router.message(StateFilter(CreateVoiceEvent.waiting_approval))
