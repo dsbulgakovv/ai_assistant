@@ -154,9 +154,9 @@ async def voice_operations_main_calendar_handler(message: types.Message, bot: Bo
     ]
     llm_json = await llm_api.prompt_answer(messages=messages, temperature=0.05, top_p=0.1, max_tokens=3_000)
     logger.info(llm_json)
-    intent = llm_json['intent']
+    intent = llm_json['choices'][0]['message']['content']['intent']
     if intent == 'create_task':
-        llm_data = llm_json['data']
+        llm_data = llm_json['choices'][0]['message']['content']['data']
         await message.answer(
             "Добавим ссылку на встречу?",
             reply_markup=task_link_manual_calendar_keyboard()
@@ -164,6 +164,7 @@ async def voice_operations_main_calendar_handler(message: types.Message, bot: Bo
         await state.update_data(llm_data=llm_data)
         await state.set_state(CreateEvent.waiting_task_link)
     elif intent == 'show_tasks':
+        llm_data = llm_json['choices'][0]['message']['content']['data']
         ...
     elif intent == 'unrecognized':
         await message.answer("Не получается распознать желаемое действие")
