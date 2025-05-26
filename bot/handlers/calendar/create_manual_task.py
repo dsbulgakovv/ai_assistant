@@ -347,12 +347,6 @@ async def create_event_task_success_manual_calendar_handler(
         await state.set_state(CreateEvent.waiting_task_end_dt)
     elif message.text.lower() == 'подтвердить':
         data = await state.get_data()
-        logger.info([
-            message.from_user.id, data['task_name'], 1, map_task_category(data['task_category']),
-            data['task_description'], data['task_link'],
-            convert_date_string(data['start_dtm'], data['timezone']),
-            convert_date_string(data['end_dtm'], data['timezone'])
-        ])
         _, status = await db_api.create_task(
             message.from_user.id,
             data['task_name'], 1, map_task_category(data['task_category']),
