@@ -14,14 +14,14 @@ class LLMapi:
         self.model = model
 
     async def prompt_answer(
-        self, message: list, temperature: float, top_p: float, max_tokens: int
+        self, messages: list, temperature: float, top_p: float, max_tokens: int
     ):
         payload = {
           "model": self.model,
           "max_tokens": max_tokens,
           "top_p": top_p,
           "temperature": temperature,
-          "messages": [{"role": "user", "content": message}]
+          "messages": messages
         }
         headers = {
             "Authorization": f"Bearer {self.api_token}",

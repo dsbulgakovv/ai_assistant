@@ -142,12 +142,17 @@ async def voice_operations_main_calendar_handler(message: types.Message, bot: Bo
     tz = pytz.timezone(user_time_zone)
     current_dtm = datetime.now(tz)
     current_dtm_str = current_dtm.strftime("%Y-%m-%d %H:%M:%S.000 %z")
-    full_prompt = system_prompt_calendar.format(
-        current_dtm_str,
-        map_weekday(current_dtm.weekday()),
-        user_text
-    )
-    llm_json_txt = await llm_api.prompt_answer(message=full_prompt, temperature=0.05, top_p=0.1, max_tokens=3_000)
+    messages = [
+        {
+            "role": "user",
+            "content": system_prompt_calendar.format(
+                current_dtm_str,
+                map_weekday(current_dtm.weekday()),
+                user_text
+            )
+        }
+    ]
+    llm_json_txt = await llm_api.prompt_answer(messages=messages, temperature=0.05, top_p=0.1, max_tokens=3_000)
     llm_json = json.loads(llm_json_txt)
     intent = llm_json['intent']
     if intent == 'create_task':
