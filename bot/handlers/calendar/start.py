@@ -37,6 +37,7 @@ async def start_calendar_handler(message: types.Message, state: FSMContext) -> N
         "или перейди в мануальный режим",
         reply_markup=start_calendar_keyboard()
     )
+    await state.clear()
     await state.set_state(StartCalendar.start_calendar)
 
 
