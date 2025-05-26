@@ -9,7 +9,7 @@ system_prompt_calendar = """
         intent: "create_task",
         data: {{
             task_name: "Название события",
-            task_category: Номер категории события как цеолое число,
+            task_category: "Категория события",
             task_description: "Описание события",
             start_dtm: Дата и время начала события в формате "YYYY-MM-DD hh:mm",
             end_dtm: Дата и время начала события в формате "YYYY-MM-DD hh:mm"
