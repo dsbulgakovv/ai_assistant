@@ -42,7 +42,7 @@ llm_api = LLMapi()
 MAX_FILE_SIZE = 1 * 1024 * 1024  # = 1MB
 
 
-class CreateEvent(StatesGroup):
+class CreateVoiceEvent(StatesGroup):
     waiting_task_link = State()
     waiting_approval = State()
 
@@ -163,7 +163,7 @@ async def voice_operations_main_calendar_handler(message: types.Message, bot: Bo
             reply_markup=task_link_manual_calendar_keyboard()
         )
         await state.update_data(llm_data=llm_data)
-        await state.set_state(CreateEvent.waiting_task_link)
+        await state.set_state(CreateVoiceEvent.waiting_task_link)
     elif intent == 'show_tasks':
         llm_data = llm_json['data']
         ...
@@ -171,16 +171,16 @@ async def voice_operations_main_calendar_handler(message: types.Message, bot: Bo
         await message.answer("Не получается распознать желаемое действие")
 
 
-@router.message(StateFilter(StartCalendar.start_calendar))
+@router.message(StateFilter(CreateVoiceEvent.waiting_task_link))
 async def voice_operations_create_task_calendar_handler(message: types.Message, state: FSMContext) -> None:
     if message.text.lower() == 'без ссылки':
         await state.update_data(task_link='Нет ссылки на событие')
     else:
         await state.update_data(task_link=message.text)
-    await state.set_state(CreateEvent.waiting_approval)
+    await state.set_state(CreateVoiceEvent.waiting_approval)
 
 
-@router.message(StateFilter(StartCalendar.start_calendar))
+@router.message(StateFilter(CreateVoiceEvent.waiting_approval))
 async def voice_operations_create_approval_calendar_handler(message: types.Message, state: FSMContext) -> None:
     if message.text.lower() == 'без ссылки':
         task_link = 'Нет ссылки на событие'
@@ -205,10 +205,10 @@ async def voice_operations_create_approval_calendar_handler(message: types.Messa
         "Все верно?",
         reply_markup=task_approval_manual_calendar_keyboard()
     )
-    await state.set_state(CreateEvent.waiting_approval)
+    await state.set_state(CreateVoiceEvent.waiting_approval)
 
 
-@router.message(StateFilter(StartCalendar.start_calendar))
+@router.message(StateFilter(CreateVoiceEvent.waiting_approval))
 async def voice_operations_create_success_calendar_handler(
         message: types.Message, state: FSMContext, dialog_manager: DialogManager) -> None:
     if message.text.lower() == 'отмена':
