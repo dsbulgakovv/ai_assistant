@@ -173,16 +173,15 @@ async def voice_operations_main_calendar_handler(message: types.Message, bot: Bo
 
 @router.message(StateFilter(CreateVoiceEvent.waiting_task_link))
 async def voice_operations_create_task_calendar_handler(message: types.Message, state: FSMContext) -> None:
-    if message.text.lower() == 'без ссылки':
-        await state.update_data(task_link='Нет ссылки на событие')
-    else:
-        await state.update_data(task_link=message.text)
-    await state.set_state(CreateVoiceEvent.waiting_approval)
-
-
-@router.message(StateFilter(CreateVoiceEvent.waiting_approval))
-async def voice_operations_create_approval_calendar_handler(message: types.Message, state: FSMContext) -> None:
-    if message.text.lower() == 'без ссылки':
+    if message.text.lower() == 'отмена':
+        await message.answer(
+            "Создание события отменено",
+            reply_markup=start_calendar_keyboard()
+        )
+        await state.clear()
+        await state.set_state(StartCalendar.start_calendar)
+        return
+    elif message.text.lower() == 'без ссылки':
         task_link = 'Нет ссылки на событие'
     else:
         task_link = message.text
@@ -218,6 +217,7 @@ async def voice_operations_create_success_calendar_handler(
         )
         await state.clear()
         await state.set_state(StartCalendar.start_calendar)
+        return
     elif message.text.lower() == 'подтвердить':
         data = await state.get_data()
         task_data = data['llm_data']
