@@ -208,8 +208,7 @@ async def voice_operations_create_task_calendar_handler(message: types.Message, 
 
 
 @router.message(StateFilter(CreateVoiceEvent.waiting_approval))
-async def voice_operations_create_success_calendar_handler(
-        message: types.Message, state: FSMContext) -> None:
+async def voice_operations_create_success_calendar_handler(message: types.Message, state: FSMContext) -> None:
     if message.text.lower() == 'отмена':
         await message.answer(
             "Создание события отменено",
