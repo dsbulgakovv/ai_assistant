@@ -30,7 +30,7 @@ class StartCalendar(StatesGroup):
 @router.message(F.text.casefold() == 'мой календарь')
 async def start_calendar_handler(message: types.Message, state: FSMContext) -> None:
     await message.answer(
-        "Запиши голосовое сообщение 🎙️ или напиши текст, чтобы:\n"
+        "Запиши голосовое сообщение 🎙️, чтобы:\n"
         "➕ Добавить новое событие\n"
         "👀 Просмотреть предстоящие встречи\n"
         "✏️ Изменить или удалить существующие события\n"
