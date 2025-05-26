@@ -147,7 +147,7 @@ async def voice_operations_main_calendar_handler(message: types.Message, bot: Bo
         map_weekday(current_dtm.weekday()),
         user_text
     )
-    llm_json_txt = llm_api.prompt_answer(full_prompt, temperature=0.05, top_p=0.1, max_tokens=3_000)
+    llm_json_txt = await llm_api.prompt_answer(full_prompt, temperature=0.05, top_p=0.1, max_tokens=3_000)
     llm_json = json.loads(llm_json_txt)
     intent = llm_json['intent']
     if intent == 'create_task':
