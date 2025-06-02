@@ -19,11 +19,13 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
-      - name: Build and Push Docker Image
+      - name: Build Docker Image
         run: |
-          IMAGE_NAME=${{ secrets.DOCKER_USERNAME }}/${{ secrets.SERVICE_NAME }}
-          docker build --network=host -t $IMAGE_NAME:latest .
-          docker push $IMAGE_NAME:latest
+          docker compose build
+
+      - name: Push Docker Image
+        run: |
+          docker compose push
 
   deploy:
     name: Deploy to Remote Server
@@ -38,8 +40,63 @@ jobs:
         username: ${{ secrets.SSH_USER }}
         key: ${{ secrets.SSH_KEY }}
         script: |
-          docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.SERVICE_NAME }}:latest
-          docker stop ${{ secrets.SERVICE_NAME }} || true
-          docker rm ${{ secrets.SERVICE_NAME }} || true
-          docker image prune -f
-          docker run --network=host --restart=always -d --name ${{ secrets.SERVICE_NAME }} ${{ secrets.DOCKER_USERNAME }}/${{ secrets.SERVICE_NAME }}:latest
+          # cd ~/app-directory || true
+
+          #############################
+          # 1) Скачиваем свежие образы
+          #############################
+          docker pull ${{ secrets.DOCKER_USERNAME }}/ai_assistant_database_init:latest
+          docker pull ${{ secrets.DOCKER_USERNAME }}/ai_assistant_database_api:latest
+          docker pull ${{ secrets.DOCKER_USERNAME }}/ai_assistant_voice_to_text_api:latest
+          docker pull ${{ secrets.DOCKER_USERNAME }}/ai_assistant_bot:latest
+
+          ########################################
+          # 2) Запускаем (или пересобираем) сервис database_init
+          #    (этот контейнер, как правило, делает инициализацию БД и завершает работу)
+          ########################################
+          docker stop database_init || true
+          docker rm database_init  || true
+          docker run \
+            --network host \
+            --env-file .env \
+            --name database_init \
+            ${{ secrets.DOCKER_USERNAME }}/ai_assistant_database_init:latest
+
+          ########################################
+          # 3) Запускаем (или пересобираем) сервис database_api
+          ########################################
+          docker stop database_api || true
+          docker rm database_api  || true
+          docker run \
+            --network host \
+            --restart always \
+            --env-file .env \
+            --name database_api \
+            -d \
+            ${{ secrets.DOCKER_USERNAME }}/ai_assistant_database_api:latest
+
+          ########################################
+          # 4) Запускаем (или пересобираем) сервис voice_to_text_api
+          ########################################
+          docker stop voice_to_text_api || true
+          docker rm voice_to_text_api  || true
+          docker run \
+            --network host \
+            --restart always \
+            --env-file .env \
+            --name voice_to_text_api \
+            -d \
+            ${{ secrets.DOCKER_USERNAME }}/ai_assistant_voice_to_text_api:latest
+
+          ########################################
+          # 5) Запускаем (или пересобираем) сервис bot
+          ########################################
+          docker stop bot || true
+          docker rm bot  || true
+          docker run \
+            --network host \
+            --restart always \
+            --env-file .env \
+            --name bot \
+            -d \
+            ${{ secrets.DOCKER_USERNAME }}/ai_assistant_bot:latest
