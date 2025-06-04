@@ -13,6 +13,27 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Create .env file
+        run: |
+          cat <<EOF > .env
+          DB_NAME=${{ secrets.DB_NAME }}
+          DB_USER=${{ secrets.DB_USER }}
+          DB_PASS=${{ secrets.DB_PASS }}
+          DB_HOST=${{ secrets.DB_HOST }}
+          DB_PORT=${{ secrets.DB_PORT }}
+          DB_TYPE=${{ secrets.DB_TYPE }}
+          BOT_TOKEN=${{ secrets.BOT_TOKEN }}
+          CLOUD_PROJECT_ID=${{ secrets.CLOUD_PROJECT_ID }}
+          SERVERSPACE_API_KEY=${{ secrets.SERVERSPACE_API_KEY }}
+          SERVERSPACE_MODEL=${{ secrets.SERVERSPACE_MODEL }}
+          DEEPGRAM_ASR_API_KEY=${{ secrets.DEEPGRAM_ASR_API_KEY }}
+          EOF
+
+      - name: Verify .env contents
+        run: |
+          echo "Содержимое .env:"
+          cat .env
+
       - name: Login to DockerHub
         uses: docker/login-action@v2
         with:
