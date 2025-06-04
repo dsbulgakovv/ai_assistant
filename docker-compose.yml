@@ -41,7 +41,7 @@ services:
     build:
       context: .
       dockerfile: database_init/Dockerfile
-    image: "dsbulfakovv/ai_assistant_database_init:latest"
+    image: "dsbulgakovv/ai_assistant_database_init:latest"
     depends_on:
       postgres:
         condition: service_healthy
@@ -63,7 +63,7 @@ services:
     build:
       context: .
       dockerfile: database_api/Dockerfile
-    image: "dsbulfakovv/ai_assistant_database_api:latest"
+    image: "dsbulgakovv/ai_assistant_database_api:latest"
     depends_on:
       database_init:
         condition: service_completed_successfully
@@ -89,7 +89,7 @@ services:
     build:
       context: .
       dockerfile: voice_to_text_api/Dockerfile
-    image: "dsbulfakovv/ai_assistant_voice_to_text_api:latest"
+    image: "dsbulgakovv/ai_assistant_voice_to_text_api:latest"
     depends_on:
       database_api:
         condition: service_started
@@ -111,7 +111,7 @@ services:
     build:
       context: .
       dockerfile: bot/Dockerfile
-    image: "dsbulfakovv/ai_assistant_bot:latest"
+    image: "dsbulgakovv/ai_assistant_bot:latest"
     depends_on:
       voice_to_text_api:
         condition: service_started
