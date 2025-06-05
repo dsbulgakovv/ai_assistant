@@ -54,6 +54,17 @@ jobs:
     needs: build
 
     steps:
+    - name: Copy project to server
+      uses: appleboy/scp-action@v0.1.3
+      with:
+        host: ${{ secrets.SSH_HOST }}
+        username: ${{ secrets.SSH_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        port: 22
+        source: |
+          docker-compose.yml
+        target: /home/${{ secrets.SSH_USER }}/project
+
     - name: Deploy on Remote Server
       uses: appleboy/ssh-action@v1.2.0
       with:
@@ -61,63 +72,26 @@ jobs:
         username: ${{ secrets.SSH_USER }}
         key: ${{ secrets.SSH_KEY }}
         script: |
-          # cd ~/app-directory || true
+          PROJECT_DIR=/home/${{ secrets.SSH_USER }}/project
+          
+          # 1) Создаём (или перезаписываем) файл .env прямо на сервере:
+          cat <<EOF > $PROJECT_DIR/.env
+          DB_NAME=${{ secrets.DB_NAME }}
+          DB_USER=${{ secrets.DB_USER }}
+          DB_PASS=${{ secrets.DB_PASS }}
+          DB_HOST=${{ secrets.DB_HOST }}
+          DB_PORT=${{ secrets.DB_PORT }}
+          DB_TYPE=${{ secrets.DB_TYPE }}
+          BOT_TOKEN=${{ secrets.BOT_TOKEN }}
+          CLOUD_PROJECT_ID=${{ secrets.CLOUD_PROJECT_ID }}
+          SERVERSPACE_API_KEY=${{ secrets.SERVERSPACE_API_KEY }}
+          SERVERSPACE_MODEL=${{ secrets.SERVERSPACE_MODEL }}
+          DEEPGRAM_ASR_API_KEY=${{ secrets.DEEPGRAM_ASR_API_KEY }}
+          EOF
+          
+          # 2) Заходим в директорию с docker-compose.yml
+          cd $PROJECT_DIR
 
-          #############################
-          # 1) Скачиваем свежие образы
-          #############################
-          docker pull ${{ secrets.DOCKER_USERNAME }}/ai_assistant_database_init:latest
-          docker pull ${{ secrets.DOCKER_USERNAME }}/ai_assistant_database_api:latest
-          docker pull ${{ secrets.DOCKER_USERNAME }}/ai_assistant_voice_to_text_api:latest
-          docker pull ${{ secrets.DOCKER_USERNAME }}/ai_assistant_bot:latest
-
-          ########################################
-          # 2) Запускаем (или пересобираем) сервис database_init
-          #    (этот контейнер, как правило, делает инициализацию БД и завершает работу)
-          ########################################
-          docker stop database_init || true
-          docker rm database_init  || true
-          docker run \
-            --network host \
-            --env-file .env \
-            --name database_init \
-            ${{ secrets.DOCKER_USERNAME }}/ai_assistant_database_init:latest
-
-          ########################################
-          # 3) Запускаем (или пересобираем) сервис database_api
-          ########################################
-          docker stop database_api || true
-          docker rm database_api  || true
-          docker run \
-            --network host \
-            --restart always \
-            --env-file .env \
-            --name database_api \
-            -d \
-            ${{ secrets.DOCKER_USERNAME }}/ai_assistant_database_api:latest
-
-          ########################################
-          # 4) Запускаем (или пересобираем) сервис voice_to_text_api
-          ########################################
-          docker stop voice_to_text_api || true
-          docker rm voice_to_text_api  || true
-          docker run \
-            --network host \
-            --restart always \
-            --env-file .env \
-            --name voice_to_text_api \
-            -d \
-            ${{ secrets.DOCKER_USERNAME }}/ai_assistant_voice_to_text_api:latest
-
-          ########################################
-          # 5) Запускаем (или пересобираем) сервис bot
-          ########################################
-          docker stop bot || true
-          docker rm bot  || true
-          docker run \
-            --network host \
-            --restart always \
-            --env-file .env \
-            --name bot \
-            -d \
-            ${{ secrets.DOCKER_USERNAME }}/ai_assistant_bot:latest
+          # 2) Скачиваем свежие образы
+          docker compose pull
+          docker compose up -d --remove-orphans
