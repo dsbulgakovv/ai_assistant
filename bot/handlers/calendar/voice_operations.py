@@ -167,6 +167,7 @@ async def voice_operations_main_calendar_handler(message: types.Message, bot: Bo
     elif intent == 'show_tasks':
         llm_data = llm_json['data']
         await state.update_data(show_dt=llm_data['show_dt'])
+        await show_events(message, state)
         # await state.set_state(CreateVoiceEvent.waiting_task_show)
     elif intent == 'unrecognized':
         await message.answer("Не получается распознать желаемое действие")
