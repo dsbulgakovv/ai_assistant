@@ -29,7 +29,7 @@ from keyboards.calendar import (
 from utils.database_api import DatabaseAPI
 
 from utils.scheduler import schedule_event, remove_event
-from app import bot, scheduler
+
 
 logger = logging.getLogger('aiogram')
 logger.setLevel(logging.DEBUG)
@@ -358,6 +358,7 @@ async def create_event_task_success_manual_calendar_handler(
             convert_date_string(data['end_dtm'], data['timezone'])
         )
         # ---------- scheduler create ----------
+        from app import bot, scheduler
         run_datetime_30 = (
                 datetime.fromisoformat(convert_date_string(data['start_dtm'], data['timezone'])) - timedelta(minutes=30)
         )

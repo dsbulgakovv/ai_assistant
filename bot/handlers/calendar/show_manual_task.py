@@ -31,7 +31,7 @@ from keyboards.calendar import (
 from utils.database_api import DatabaseAPI
 
 from utils.scheduler import schedule_event, remove_event
-from app import bot, scheduler
+
 
 logger = logging.getLogger('aiogram')
 logger.setLevel(logging.DEBUG)
@@ -540,6 +540,7 @@ async def approved_save_editing_task(callback: types.CallbackQuery, state: FSMCo
         task_start_dtm=task_start_dtm, task_end_dtm=task_end_dtm
     )
     # ---------- scheduler edit ----------
+    from app import bot, scheduler
     remove_event(scheduler=scheduler, event_id=task_global_id + 30)
     remove_event(scheduler=scheduler, event_id=task_global_id + 5)
     run_datetime_30 = datetime.fromisoformat(task_start_dtm) - timedelta(minutes=30)
@@ -622,6 +623,7 @@ async def delete_event_approved(callback: types.CallbackQuery, state: FSMContext
     task_global_id = event['id']
     response, status = await db_api.delete_task(task_global_id)
     # ---------- scheduler delete ----------
+    from app import scheduler
     remove_event(scheduler=scheduler, event_id=task_global_id + 30)
     remove_event(scheduler=scheduler, event_id=task_global_id + 5)
     # --------------------------------------

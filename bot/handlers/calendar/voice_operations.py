@@ -27,7 +27,7 @@ from utils.voice_to_text_api import VoiceToTextAPI
 from utils.large_lang_model_api import LLMapi
 
 from utils.scheduler import schedule_event, remove_event
-from app import bot, scheduler
+
 
 logger = logging.getLogger('aiogram')
 logger.setLevel(logging.DEBUG)
@@ -220,6 +220,7 @@ async def voice_operations_create_success_calendar_handler(message: types.Messag
             convert_date_string(task_data['end_dtm'], data['user_timezone'])
         )
         # ---------- scheduler create ----------
+        from app import bot, scheduler
         run_datetime_30 = datetime.fromisoformat(task_data['start_dtm']) - timedelta(minutes=30)
         text_30 = build_event_reminder_info(
             title=task_data['task_name'], min_left=30,
