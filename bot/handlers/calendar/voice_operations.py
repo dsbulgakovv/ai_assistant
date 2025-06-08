@@ -20,7 +20,9 @@ from texts.prompts import system_prompt_calendar
 from keyboards.calendar import (
     start_calendar_keyboard,
     task_link_voice_calendar_keyboard,
-    task_approval_voice_calendar_keyboard
+    task_approval_voice_calendar_keyboard,
+    swiping_tasks_no_nums_inline_keyboard,
+    swiping_tasks_with_nums_inline_keyboard
 )
 from utils.database_api import DatabaseAPI
 from utils.voice_to_text_api import VoiceToTextAPI
@@ -49,6 +51,10 @@ class ChangeEvent(StatesGroup):
     approving_new_event_link = State()
     approving_new_event_start = State()
     approving_new_event_end = State()
+
+
+class ShowEvent(StatesGroup):
+    waiting_events_show_end = State()
 
 
 def get_rounded_datetime(user_time_zone):
@@ -133,7 +139,7 @@ async def voice_operations_main_calendar_handler(message: types.Message, bot: Bo
         await message.answer("Не получается распознать объект")
         return
     user_time_zone = await db_api.get_user_timezone(message.from_user.id)
-    await state.update_data(timezone=user_time_zone)
+    await state.update_data(timezone=user_time_zone, tg_user_id=message.from_user.id)
     tz = pytz.timezone(user_time_zone)
     current_dtm = datetime.now(tz)
     current_dtm_str = current_dtm.strftime("%Y-%m-%d %H:%M:%S.000 %z")
@@ -149,7 +155,6 @@ async def voice_operations_main_calendar_handler(message: types.Message, bot: Bo
     ]
     llm_json_txt = await llm_api.prompt_answer(messages=messages, temperature=0.05, top_p=0.1, max_tokens=3_000)
     llm_json = json.loads(llm_json_txt['choices'][0]['message']['content'])
-    logger.info(llm_json)
     intent = llm_json['intent']
     if intent == 'create_task':
         llm_data = llm_json['data']
@@ -161,9 +166,8 @@ async def voice_operations_main_calendar_handler(message: types.Message, bot: Bo
         await state.set_state(CreateVoiceEvent.waiting_task_link)
     elif intent == 'show_tasks':
         llm_data = llm_json['data']
-        logger.info(llm_data)
-        await state.update_data(llm_data=llm_data)
-        await state.set_state(CreateVoiceEvent.waiting_task_show)
+        await state.update_data(show_dt=llm_data['show_dt'])
+        # await state.set_state(CreateVoiceEvent.waiting_task_show)
     elif intent == 'unrecognized':
         await message.answer("Не получается распознать желаемое действие")
 
@@ -241,6 +245,84 @@ async def voice_operations_create_success_calendar_handler(message: types.Messag
             )
             await state.clear()
             await state.set_state(None)
+
+
+async def show_events(message: types.Message, state: FSMContext):
+    data = await state.get_data()
+    user_timezone = data['timezone']
+    show_dt = data['show_dt']
+    cur_date = datetime.strptime(show_dt, "%Y-%m-%d")
+
+    if 'day_offset' in data:
+        day_offset = data['day_offset']
+    else:
+        day_offset = 0
+        await state.update_data(day_offset=day_offset, cur_date=cur_date.strftime("%Y-%m-%d"))
+
+    target_date_str = (cur_date + timedelta(days=day_offset)).strftime("%d.%m.%Y")
+    target_date_query = (cur_date + timedelta(days=day_offset)).strftime("%Y-%m-%d")
+
+    # Здесь получаем события из вашего API/Redis
+    events, status = await db_api.get_tasks(data['tg_user_id'], target_date_query, target_date_query)
+    await state.update_data(events=events)
+
+    # Если событий нет
+    if status == 404:
+        left_right_inline_no_nums_kb = swiping_tasks_no_nums_inline_keyboard(day_offset)
+        text = f"На <b>{target_date_str}</b> событий нет"
+        if 'events_message_id' in data:
+            try:
+                await message.bot.edit_message_text(
+                    chat_id=message.chat.id,
+                    message_id=data['events_message_id'],
+                    text=text,
+                    reply_markup=left_right_inline_no_nums_kb
+                )
+            except Exception as e:
+                logger.debug(e)
+                pass
+        else:
+            msg = await message.answer(text, reply_markup=left_right_inline_no_nums_kb)
+            await state.update_data(events_message_id=msg.message_id)
+            await state.set_state(ShowEvent.waiting_events_show_end)
+
+        await state.set_state(ShowEvent.waiting_events_show_end)
+        return
+
+    # Формируем текст сообщения
+    text = f"События на <b>{target_date_str}</b>\n\n"
+    for cur_event in events:
+        start_time = (
+            datetime
+            .fromisoformat(cur_event['task_start_dtm'])
+            .astimezone(pytz.timezone(user_timezone))
+            .time().strftime("%H:%M")
+        )
+        text += f"<b>{cur_event['task_relative_id']}.</b> <code>{start_time}</code> - {cur_event['task_name']}\n"
+
+    left_right_inline_with_nums_kb = swiping_tasks_with_nums_inline_keyboard(events, day_offset)
+
+    # Если у нас уже есть message_id в состоянии, редактируем сообщение
+    if 'events_message_id' in data:
+        try:
+            await message.bot.edit_message_text(
+                chat_id=message.chat.id,
+                message_id=data['events_message_id'],
+                text=text,
+                reply_markup=left_right_inline_with_nums_kb
+            )
+            await state.set_state(ShowEvent.waiting_events_show_end)
+            return
+        except Exception as e:
+            logger.debug(e)
+            pass
+
+    # # Иначе отправляем новое сообщение
+    msg = await message.answer(text, reply_markup=left_right_inline_with_nums_kb)
+
+    # # Сохраняем ID сообщения в состоянии
+    await state.update_data(events_message_id=msg.message_id)
+    await state.set_state(ShowEvent.waiting_events_show_end)
 
 
 def setup_calendar_voice_operations_handlers(dp):
