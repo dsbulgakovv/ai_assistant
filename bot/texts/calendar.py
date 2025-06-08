@@ -16,7 +16,7 @@ def build_event_full_info(title, start_date, end_date, category, link, descripti
 
 def build_event_reminder_info(title, min_left, link, description):
     return (
-        f"🔔 <b>Напоминание</b> — через <code>{min_left} мин</code> '\n"
+        f"🔔 <b>Напоминание</b> — <code>через {min_left} мин</code>\n\n"
         f"<b>{h(title)}</b>\n"
         "━━━━━━━━━━━━━━\n"
         f"<i>{h(link)}</i>\n"
