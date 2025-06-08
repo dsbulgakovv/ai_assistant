@@ -34,11 +34,13 @@ DATABASE_URL = f"postgresql://{db_user}:{db_pass}@{db_host}:{db_port}/{db_name}"
 
 redis_connection = Redis(host='redis', port=5370, db=0)
 storage = RedisStorage(redis=redis_connection, key_builder=DefaultKeyBuilder(with_destiny=True))
-job_store = {'default': SQLAlchemyJobStore(url=DATABASE_URL)}
 
 bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-scheduler = AsyncIOScheduler(jobstores=job_store, timezone='Europe/Moscow')
 dp = Dispatcher(storage=storage)
+
+job_store = {'default': SQLAlchemyJobStore(url=DATABASE_URL)}
+scheduler = AsyncIOScheduler(jobstores=job_store, timezone='Europe/Moscow')
+scheduler.start()
 
 
 async def set_commands(bot: Bot):
@@ -48,7 +50,6 @@ async def set_commands(bot: Bot):
 
 
 async def main() -> None:
-    scheduler.start()
     setup_handlers(dp)
     await bot.delete_webhook(drop_pending_updates=True)
     await set_commands(bot)
