@@ -221,7 +221,7 @@ async def voice_operations_create_success_calendar_handler(message: types.Messag
         )
         # ---------- scheduler create ----------
         from app import bot, scheduler
-        run_datetime_30 = datetime.strptime(task_data['start_dtm'], '%Y-%m-%d %H:%M:%S.%f %z') - timedelta(minutes=30)
+        run_datetime_30 = datetime.strptime(task_data['start_dtm'], '%Y-%m-%d %H:%M') - timedelta(minutes=30)
         text_30 = build_event_reminder_info(
             title=task_data['task_name'], min_left=30,
             link=task_data['task_link'], description=task_data['task_description']
@@ -230,7 +230,7 @@ async def voice_operations_create_success_calendar_handler(message: types.Messag
             scheduler=scheduler, event_id=response['task_id'] + 30,
             run_datetime=run_datetime_30, bot=bot, chat_id=message.chat.id, text=text_30
         )
-        run_datetime_5 = datetime.strptime(task_data['start_dtm'], '%Y-%m-%d %H:%M:%S.%f %z') - timedelta(minutes=5)
+        run_datetime_5 = datetime.strptime(task_data['start_dtm'], '%Y-%m-%d %H:%M') - timedelta(minutes=5)
         text_5 = build_event_reminder_info(
             title=task_data['task_name'], min_left=5,
             link=task_data['task_link'], description=task_data['task_description']
