@@ -106,7 +106,7 @@ def map_weekday(num_day):
     return week_days[num_day]
 
 
-def map_task_category(str_category):
+def map_task_category_from_name(str_category):
     categories_mapping = {
         'Работа': 1,
         'Учеба': 2,
@@ -117,6 +117,18 @@ def map_task_category(str_category):
     }
 
     return categories_mapping[str_category]
+
+
+def map_task_category_from_key(idx_category):
+    categories_mapping = {
+        1: 'Работа',
+        2: 'Учеба',
+        3: 'Личное',
+        4: 'Здоровье',
+        5: 'Финансы',
+        6: 'Семья'
+    }
+    return categories_mapping[idx_category]
 
 
 @router.message(StateFilter(StartCalendar.start_calendar))
@@ -225,7 +237,7 @@ async def voice_operations_create_success_calendar_handler(message: types.Messag
         task_data = data['llm_data']
         _, status = await db_api.create_task(
             message.from_user.id,
-            task_data['task_name'], 1, map_task_category(task_data['task_category']),
+            task_data['task_name'], 1, map_task_category_from_name(task_data['task_category']),
             task_data['task_description'], task_data['task_link'],
             convert_date_string(task_data['start_dtm'], data['timezone']),
             convert_date_string(task_data['end_dtm'], data['timezone'])
@@ -353,7 +365,7 @@ def form_one_event_detailed(event: dict, user_timezone: str) -> str:
         datetime.fromisoformat(event['task_end_dtm'])
         .astimezone(pytz.timezone(user_timezone)).strftime("%d.%m.%Y %H:%M")
     )
-    event['task_category'] = map_task_category(event['task_category'])
+    event['task_category'] = map_task_category_from_key(event['task_category'])
     # Формируем текст с полным описанием
     text = build_event_full_info(
         event['task_name'],
