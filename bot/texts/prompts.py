@@ -19,7 +19,7 @@ system_prompt_calendar = """
     {{
         intent: "show_tasks",
         data: {{
-            show_dt: Дата и время начала события в формате "YYYY-MM-DD",
+            show_dt: Дата начала события в формате "YYYY-MM-DD",
         }}
     }}
 иначе, когда намерение непонятное:

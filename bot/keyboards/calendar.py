@@ -201,3 +201,19 @@ def editing_approve_task() -> InlineKeyboardMarkup:
     ]
     return InlineKeyboardMarkup(inline_keyboard=buttons)
 # -----------------------------------------
+
+
+# -------- VOICE TASK INTERACTION ---------
+def task_link_voice_calendar_keyboard() -> ReplyKeyboardMarkup:
+    kb = ReplyKeyboardBuilder()
+    kb.row(KeyboardButton(text='Без ссылки'))
+    kb.row(KeyboardButton(text='Отмена'))
+    return kb.as_markup(resize_keyboard=True)
+
+
+def task_approval_voice_calendar_keyboard() -> ReplyKeyboardMarkup:
+    kb = ReplyKeyboardBuilder()
+    kb.row(KeyboardButton(text='Подтвердить'))
+    kb.row(KeyboardButton(text='Отмена'))
+    return kb.as_markup(resize_keyboard=True)
+# -----------------------------------------

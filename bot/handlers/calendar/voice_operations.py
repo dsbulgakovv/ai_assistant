@@ -19,14 +19,8 @@ from texts.calendar import build_event_full_info
 from texts.prompts import system_prompt_calendar
 from keyboards.calendar import (
     start_calendar_keyboard,
-    start_manual_calendar_keyboard,
-    task_name_manual_calendar_keyboard,
-    task_category_manual_calendar_keyboard,
-    task_description_manual_calendar_keyboard,
-    task_link_manual_calendar_keyboard,
-    task_start_dt_manual_calendar_keyboard,
-    task_duration_manual_calendar_keyboard,
-    task_approval_manual_calendar_keyboard
+    task_link_voice_calendar_keyboard,
+    task_approval_voice_calendar_keyboard
 )
 from utils.database_api import DatabaseAPI
 from utils.voice_to_text_api import VoiceToTextAPI
@@ -45,6 +39,7 @@ MAX_FILE_SIZE = 1 * 1024 * 1024  # = 1MB
 class CreateVoiceEvent(StatesGroup):
     waiting_task_link = State()
     waiting_approval = State()
+    waiting_task_show = State()
 
 
 class ChangeEvent(StatesGroup):
@@ -160,13 +155,15 @@ async def voice_operations_main_calendar_handler(message: types.Message, bot: Bo
         llm_data = llm_json['data']
         await message.answer(
             "Добавим ссылку на встречу?",
-            reply_markup=task_link_manual_calendar_keyboard()
+            reply_markup=task_link_voice_calendar_keyboard()
         )
         await state.update_data(llm_data=llm_data)
         await state.set_state(CreateVoiceEvent.waiting_task_link)
     elif intent == 'show_tasks':
         llm_data = llm_json['data']
-        ...
+        logger.info(llm_data)
+        await state.update_data(llm_data=llm_data)
+        await state.set_state(CreateVoiceEvent.waiting_task_show)
     elif intent == 'unrecognized':
         await message.answer("Не получается распознать желаемое действие")
 
@@ -203,7 +200,7 @@ async def voice_operations_create_task_calendar_handler(message: types.Message, 
         )
         await message.answer(
             "Все верно?",
-            reply_markup=task_approval_manual_calendar_keyboard()
+            reply_markup=task_approval_voice_calendar_keyboard()
         )
         await state.set_state(CreateVoiceEvent.waiting_approval)
 
