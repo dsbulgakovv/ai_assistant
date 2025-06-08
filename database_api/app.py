@@ -212,18 +212,19 @@ async def create_task(task: Task, conn=Depends(get_db)):
     if task_start_dtm > task_end_dtm:
         raise HTTPException(status_code=404, detail="Task start dtm cannot be after end dtm")
 
-    await conn.execute(
+    task_id: int = await conn.fetchval(
         """
         INSERT INTO tasks (
             tg_user_id, task_name, task_status, task_category, task_description, task_link,
             task_start_dtm, task_end_dtm, created_at, updated_at
         )
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW(), NOW())
+        RETURNING id;
         """,
         task.tg_user_id, task.task_name, task.task_status, task.task_category, task.task_description,
         task.task_link, task_start_dtm, task_end_dtm
     )
-    return {"status": "success", "message": "Task created"}
+    return {"status": "success", "message": "Task created", "task_id": task_id}
 
 
 @app.put("/tasks/update")
