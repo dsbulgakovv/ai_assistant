@@ -374,7 +374,7 @@ async def show_event_details(callback: types.CallbackQuery, state: FSMContext):
     data = await state.get_data()
     events = data['events']
     day_offset = data['day_offset']
-    user_timezone = data['user_timezone']
+    user_timezone = data['timezone']
 
     if event_num < 1 or event_num > len(events):
         await callback.answer("Неверный номер события")
