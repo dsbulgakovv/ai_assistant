@@ -1,26 +1,26 @@
 import pytz
 import logging
 import json
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 
-from aiogram import Bot, F, Router, types
+from aiogram import Bot, Router, types
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import ReplyKeyboardRemove
 
-from aiogram_dialog import DialogManager
-from aiogram_dialog.api.entities import StartMode
-
 from .start import StartCalendar
+from .show_manual_task import show_events
 
-from .calendar_util import CalendarState
 from texts.calendar import build_event_full_info
 from texts.prompts import system_prompt_calendar
 from keyboards.calendar import (
     start_calendar_keyboard,
     task_link_voice_calendar_keyboard,
-    task_approval_voice_calendar_keyboard
+    task_approval_voice_calendar_keyboard,
+    swiping_tasks_no_nums_inline_keyboard,
+    swiping_tasks_with_nums_inline_keyboard,
+    change_delete_task_inline_keyboard
 )
 from utils.database_api import DatabaseAPI
 from utils.voice_to_text_api import VoiceToTextAPI
@@ -39,7 +39,6 @@ MAX_FILE_SIZE = 1 * 1024 * 1024  # = 1MB
 class CreateVoiceEvent(StatesGroup):
     waiting_task_link = State()
     waiting_approval = State()
-    waiting_task_show = State()
 
 
 class ChangeEvent(StatesGroup):
@@ -51,30 +50,11 @@ class ChangeEvent(StatesGroup):
     approving_new_event_end = State()
 
 
-def get_rounded_datetime(user_time_zone):
-    utc_time = datetime.now(timezone.utc)
-    local_time = utc_time.astimezone(pytz.timezone(user_time_zone))
+# class ShowVoiceEvents(StatesGroup):
+#     waiting_events_show_end = State()
 
-    # Округляем до ближайших 30 минут
-    minute = local_time.minute
-    if minute < 15:
-        # Округляем вниз до полного часа
-        rounded = local_time.replace(minute=0, second=0, microsecond=0)
-    elif 15 <= minute < 45:
-        # Округляем до 30 минут
-        rounded = local_time.replace(minute=30, second=0, microsecond=0)
-    else:
-        # Округляем вверх до следующего часа
-        rounded = (local_time.replace(minute=0, second=0, microsecond=0)
-                   + timedelta(hours=1))
-
-    next_rounded = rounded + timedelta(minutes=30)
-
-    # Форматируем в строку дд.мм.гггг чч:мм
-    formatted_cur = rounded.strftime("%d.%m.%Y %H:%M")
-    formatted_next = next_rounded.strftime("%d.%m.%Y %H:%M")
-
-    return formatted_cur, formatted_next
+class ShowEvent(StatesGroup):
+    waiting_events_show_end = State()
 
 
 def convert_date_string(input_date_str: str, timezone_str: str) -> str:
@@ -100,7 +80,7 @@ def map_weekday(num_day):
     return week_days[num_day]
 
 
-def map_task_category(str_category):
+def map_task_category_from_name(str_category):
     categories_mapping = {
         'Работа': 1,
         'Учеба': 2,
@@ -111,6 +91,18 @@ def map_task_category(str_category):
     }
 
     return categories_mapping[str_category]
+
+
+def map_task_category_from_key(idx_category):
+    categories_mapping = {
+        1: 'Работа',
+        2: 'Учеба',
+        3: 'Личное',
+        4: 'Здоровье',
+        5: 'Финансы',
+        6: 'Семья'
+    }
+    return categories_mapping[idx_category]
 
 
 @router.message(StateFilter(StartCalendar.start_calendar))
@@ -133,7 +125,7 @@ async def voice_operations_main_calendar_handler(message: types.Message, bot: Bo
         await message.answer("Не получается распознать объект")
         return
     user_time_zone = await db_api.get_user_timezone(message.from_user.id)
-    await state.update_data(timezone=user_time_zone)
+    await state.update_data(user_timezone=user_time_zone, tg_user_id=message.from_user.id)
     tz = pytz.timezone(user_time_zone)
     current_dtm = datetime.now(tz)
     current_dtm_str = current_dtm.strftime("%Y-%m-%d %H:%M:%S.000 %z")
@@ -149,7 +141,6 @@ async def voice_operations_main_calendar_handler(message: types.Message, bot: Bo
     ]
     llm_json_txt = await llm_api.prompt_answer(messages=messages, temperature=0.05, top_p=0.1, max_tokens=3_000)
     llm_json = json.loads(llm_json_txt['choices'][0]['message']['content'])
-    logger.info(llm_json)
     intent = llm_json['intent']
     if intent == 'create_task':
         llm_data = llm_json['data']
@@ -161,9 +152,9 @@ async def voice_operations_main_calendar_handler(message: types.Message, bot: Bo
         await state.set_state(CreateVoiceEvent.waiting_task_link)
     elif intent == 'show_tasks':
         llm_data = llm_json['data']
-        logger.info(llm_data)
-        await state.update_data(llm_data=llm_data)
-        await state.set_state(CreateVoiceEvent.waiting_task_show)
+        await state.update_data(show_dt=llm_data['show_dt'])
+        await show_events(message, state)
+        await state.set_state(ShowEvent.waiting_events_show_end)
     elif intent == 'unrecognized':
         await message.answer("Не получается распознать желаемое действие")
 
@@ -220,10 +211,10 @@ async def voice_operations_create_success_calendar_handler(message: types.Messag
         task_data = data['llm_data']
         _, status = await db_api.create_task(
             message.from_user.id,
-            task_data['task_name'], 1, map_task_category(task_data['task_category']),
+            task_data['task_name'], 1, map_task_category_from_name(task_data['task_category']),
             task_data['task_description'], task_data['task_link'],
-            convert_date_string(task_data['start_dtm'], data['timezone']),
-            convert_date_string(task_data['end_dtm'], data['timezone'])
+            convert_date_string(task_data['start_dtm'], data['user_timezone']),
+            convert_date_string(task_data['end_dtm'], data['user_timezone'])
         )
         if status == 201:
             await state.clear()
