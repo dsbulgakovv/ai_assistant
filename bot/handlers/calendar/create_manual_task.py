@@ -358,7 +358,8 @@ async def create_event_task_success_manual_calendar_handler(
             convert_date_string(data['end_dtm'], data['timezone'])
         )
         # ---------- scheduler create ----------
-        from app import bot, scheduler
+        from core import bot, scheduler
+
         run_datetime_30 = (
             datetime.strptime(convert_date_string(data['start_dtm'], data['timezone']), '%Y-%m-%d %H:%M:%S.%f %z') - timedelta(minutes=30)
         )

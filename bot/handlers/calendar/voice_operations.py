@@ -220,7 +220,7 @@ async def voice_operations_create_success_calendar_handler(message: types.Messag
             convert_date_string(task_data['end_dtm'], data['user_timezone'])
         )
         # ---------- scheduler create ----------
-        from app import bot, scheduler
+        from core import bot, scheduler
         run_datetime_30 = datetime.strptime(task_data['start_dtm'], '%d.%m.%Y %H:%M') - timedelta(minutes=30)
         text_30 = build_event_reminder_info(
             title=task_data['task_name'], min_left=30,
