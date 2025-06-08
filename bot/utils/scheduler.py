@@ -10,7 +10,7 @@ logger = logging.getLogger('aiogram')
 logger.setLevel(logging.DEBUG)
 
 
-def schedule_event(
+async def schedule_event(
         scheduler: AsyncIOScheduler, event_id: int,
         run_datetime: datetime, bot: Bot, chat_id: int, text: str
 ):

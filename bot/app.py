@@ -49,10 +49,10 @@ async def set_commands(bot: Bot):
 
 async def main() -> None:
     setup_handlers(dp)
+    scheduler.start()
     await bot.delete_webhook(drop_pending_updates=True)
     await set_commands(bot)
     await dp.start_polling(bot)
-    await scheduler.start()
 
 
 if __name__ == "__main__":
