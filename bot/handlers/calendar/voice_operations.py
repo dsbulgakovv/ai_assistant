@@ -22,7 +22,8 @@ from keyboards.calendar import (
     task_link_voice_calendar_keyboard,
     task_approval_voice_calendar_keyboard,
     swiping_tasks_no_nums_inline_keyboard,
-    swiping_tasks_with_nums_inline_keyboard
+    swiping_tasks_with_nums_inline_keyboard,
+    change_delete_task_inline_keyboard
 )
 from utils.database_api import DatabaseAPI
 from utils.voice_to_text_api import VoiceToTextAPI
@@ -324,6 +325,72 @@ async def show_events(message: types.Message, state: FSMContext):
     # # Сохраняем ID сообщения в состоянии
     await state.update_data(events_message_id=msg.message_id)
     await state.set_state(ShowVoiceEvents.waiting_events_show_end)
+
+
+@router.callback_query(
+    F.data.startswith(('prev_day_', 'next_day_')), StateFilter(ShowVoiceEvents.waiting_events_show_end)
+)
+async def handle_day_navigation(callback: types.CallbackQuery, state: FSMContext):
+    # Получаем направление и текущее смещение
+    direction = callback.data.split('_')[0]
+    data = await state.get_data()
+    current_offset = data['day_offset']
+
+    # Вычисляем новое смещение
+    new_offset = current_offset - 1 if direction == "prev" else current_offset + 1
+    await state.update_data(day_offset=new_offset)
+
+    # "Переотправляем" сообщение с новым смещением
+    await show_events(callback.message, state)
+    await callback.answer()
+
+
+def form_one_event_detailed(event: dict, user_timezone: str) -> str:
+    event['start_dtm'] = (
+        datetime.fromisoformat(event['task_start_dtm'])
+        .astimezone(pytz.timezone(user_timezone)).strftime("%d.%m.%Y %H:%M")
+    )
+    event['end_dtm'] = (
+        datetime.fromisoformat(event['task_end_dtm'])
+        .astimezone(pytz.timezone(user_timezone)).strftime("%d.%m.%Y %H:%M")
+    )
+    event['task_category'] = map_task_category(event['task_category'])
+    # Формируем текст с полным описанием
+    text = build_event_full_info(
+        event['task_name'],
+        event['start_dtm'],
+        event['end_dtm'],
+        event['task_category'],
+        event['task_link'],
+        event['task_description']
+    )
+    return text
+
+
+@router.callback_query(F.data.startswith('event_'), StateFilter(ShowVoiceEvents.waiting_events_show_end))
+async def show_event_details(callback: types.CallbackQuery, state: FSMContext):
+    # Получаем номер события из callback_data
+    event_num = int(callback.data.split('_')[1])
+
+    data = await state.get_data()
+    events = data['events']
+    day_offset = data['day_offset']
+    user_timezone = data['user_timezone']
+
+    if event_num < 1 or event_num > len(events):
+        await callback.answer("Неверный номер события")
+        return
+
+    event = events[event_num - 1]
+    text = form_one_event_detailed(event, user_timezone)
+
+    # Создаем клавиатуру с действиями
+    delete_change_inline_kb = change_delete_task_inline_keyboard(day_offset, event_num)
+
+    # Редактируем сообщение
+    await callback.message.edit_text(text, reply_markup=delete_change_inline_kb)
+    await state.update_data(one_event_text=text)
+    await callback.answer()
 
 
 def setup_calendar_voice_operations_handlers(dp):
