@@ -8,7 +8,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import ReplyKeyboardRemove, CallbackQuery
 
-from .voice_operations import ShowVoiceEvents
+from handlers.voice_operations import ShowVoiceEvents
 
 from keyboards.calendar import (
     start_calendar_keyboard,
