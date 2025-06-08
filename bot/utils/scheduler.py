@@ -10,7 +10,7 @@ logger = logging.getLogger('aiogram')
 logger.setLevel(logging.DEBUG)
 
 
-async def schedule_event(
+def schedule_event(
         scheduler: AsyncIOScheduler, event_id: int,
         run_datetime: datetime, bot: Bot, chat_id: int, text: str
 ):
@@ -25,10 +25,10 @@ async def schedule_event(
     )
 
 
-async def remove_event(scheduler: AsyncIOScheduler, event_id: int):
+def remove_event(scheduler: AsyncIOScheduler, event_id: int):
     """Отключить напоминание, если событие удалили или изменили"""
     try:
-        await scheduler.remove_job(str(event_id))
+        scheduler.remove_job(str(event_id))
     except Exception as e:
         logger.debug(e)
 
