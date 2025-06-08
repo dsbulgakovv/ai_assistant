@@ -155,7 +155,7 @@ async def voice_operations_main_calendar_handler(message: types.Message, bot: Bo
         await message.answer("Не получается распознать объект")
         return
     user_time_zone = await db_api.get_user_timezone(message.from_user.id)
-    await state.update_data(timezone=user_time_zone, tg_user_id=message.from_user.id)
+    await state.update_data(user_timezone=user_time_zone, tg_user_id=message.from_user.id)
     tz = pytz.timezone(user_time_zone)
     current_dtm = datetime.now(tz)
     current_dtm_str = current_dtm.strftime("%Y-%m-%d %H:%M:%S.000 %z")
@@ -243,8 +243,8 @@ async def voice_operations_create_success_calendar_handler(message: types.Messag
             message.from_user.id,
             task_data['task_name'], 1, map_task_category_from_name(task_data['task_category']),
             task_data['task_description'], task_data['task_link'],
-            convert_date_string(task_data['start_dtm'], data['timezone']),
-            convert_date_string(task_data['end_dtm'], data['timezone'])
+            convert_date_string(task_data['start_dtm'], data['user_timezone']),
+            convert_date_string(task_data['end_dtm'], data['user_timezone'])
         )
         if status == 201:
             await state.clear()
@@ -266,7 +266,7 @@ async def voice_operations_create_success_calendar_handler(message: types.Messag
 
 # async def show_events(message: types.Message, state: FSMContext):
 #     data = await state.get_data()
-#     user_timezone = data['timezone']
+#     user_timezone = data['user_timezone']
 #     show_dt = data['show_dt']
 #     cur_date = datetime.strptime(show_dt, "%Y-%m-%d")
 #
@@ -390,7 +390,7 @@ async def voice_operations_create_success_calendar_handler(message: types.Messag
 #     data = await state.get_data()
 #     events = data['events']
 #     day_offset = data['day_offset']
-#     user_timezone = data['timezone']
+#     user_timezone = data['user_timezone']
 #
 #     if event_num < 1 or event_num > len(events):
 #         await callback.answer("Неверный номер события")
