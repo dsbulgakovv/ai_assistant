@@ -13,6 +13,7 @@ from aiogram_dialog import DialogManager
 from aiogram_dialog.api.entities import StartMode
 
 from .start import StartCalendar
+from .show_manual_task import show_events
 
 from .calendar_util import CalendarState
 from texts.calendar import build_event_full_info
@@ -53,7 +54,10 @@ class ChangeEvent(StatesGroup):
     approving_new_event_end = State()
 
 
-class ShowVoiceEvents(StatesGroup):
+# class ShowVoiceEvents(StatesGroup):
+#     waiting_events_show_end = State()
+
+class ShowEvent(StatesGroup):
     waiting_events_show_end = State()
 
 
@@ -180,7 +184,7 @@ async def voice_operations_main_calendar_handler(message: types.Message, bot: Bo
         llm_data = llm_json['data']
         await state.update_data(show_dt=llm_data['show_dt'])
         await show_events(message, state)
-        # await state.set_state(CreateVoiceEvent.waiting_task_show)
+        await state.set_state(ShowEvent.waiting_events_show_end)
     elif intent == 'unrecognized':
         await message.answer("Не получается распознать желаемое действие")
 
@@ -260,148 +264,148 @@ async def voice_operations_create_success_calendar_handler(message: types.Messag
             await state.set_state(None)
 
 
-async def show_events(message: types.Message, state: FSMContext):
-    data = await state.get_data()
-    user_timezone = data['timezone']
-    show_dt = data['show_dt']
-    cur_date = datetime.strptime(show_dt, "%Y-%m-%d")
-
-    if 'day_offset' in data:
-        day_offset = data['day_offset']
-    else:
-        day_offset = 0
-        await state.update_data(day_offset=day_offset, cur_date=cur_date.strftime("%Y-%m-%d"))
-
-    target_date_str = (cur_date + timedelta(days=day_offset)).strftime("%d.%m.%Y")
-    target_date_query = (cur_date + timedelta(days=day_offset)).strftime("%Y-%m-%d")
-
-    # Здесь получаем события из вашего API/Redis
-    events, status = await db_api.get_tasks(data['tg_user_id'], target_date_query, target_date_query)
-    await state.update_data(events=events)
-
-    # Если событий нет
-    if status == 404:
-        left_right_inline_no_nums_kb = swiping_tasks_no_nums_inline_keyboard(day_offset)
-        text = f"На <b>{target_date_str}</b> событий нет"
-        if 'events_message_id' in data:
-            try:
-                await message.bot.edit_message_text(
-                    chat_id=message.chat.id,
-                    message_id=data['events_message_id'],
-                    text=text,
-                    reply_markup=left_right_inline_no_nums_kb
-                )
-            except Exception as e:
-                logger.debug(e)
-                pass
-        else:
-            msg = await message.answer(text, reply_markup=left_right_inline_no_nums_kb)
-            await state.update_data(events_message_id=msg.message_id)
-            await state.set_state(ShowVoiceEvents.waiting_events_show_end)
-
-        await state.set_state(ShowVoiceEvents.waiting_events_show_end)
-        return
-
-    # Формируем текст сообщения
-    text = f"События на <b>{target_date_str}</b>\n\n"
-    for cur_event in events:
-        start_time = (
-            datetime
-            .fromisoformat(cur_event['task_start_dtm'])
-            .astimezone(pytz.timezone(user_timezone))
-            .time().strftime("%H:%M")
-        )
-        text += f"<b>{cur_event['task_relative_id']}.</b> <code>{start_time}</code> - {cur_event['task_name']}\n"
-
-    left_right_inline_with_nums_kb = swiping_tasks_with_nums_inline_keyboard(events, day_offset)
-
-    # Если у нас уже есть message_id в состоянии, редактируем сообщение
-    if 'events_message_id' in data:
-        try:
-            await message.bot.edit_message_text(
-                chat_id=message.chat.id,
-                message_id=data['events_message_id'],
-                text=text,
-                reply_markup=left_right_inline_with_nums_kb
-            )
-            await state.set_state(ShowVoiceEvents.waiting_events_show_end)
-            return
-        except Exception as e:
-            logger.debug(e)
-            pass
-
-    # # Иначе отправляем новое сообщение
-    msg = await message.answer(text, reply_markup=left_right_inline_with_nums_kb)
-
-    # # Сохраняем ID сообщения в состоянии
-    await state.update_data(events_message_id=msg.message_id)
-    await state.set_state(ShowVoiceEvents.waiting_events_show_end)
-
-
-@router.callback_query(
-    F.data.startswith(('prev_day_', 'next_day_')), StateFilter(ShowVoiceEvents.waiting_events_show_end)
-)
-async def handle_day_navigation(callback: types.CallbackQuery, state: FSMContext):
-    # Получаем направление и текущее смещение
-    direction = callback.data.split('_')[0]
-    data = await state.get_data()
-    current_offset = data['day_offset']
-
-    # Вычисляем новое смещение
-    new_offset = current_offset - 1 if direction == "prev" else current_offset + 1
-    await state.update_data(day_offset=new_offset)
-
-    # "Переотправляем" сообщение с новым смещением
-    await show_events(callback.message, state)
-    await callback.answer()
-
-
-def form_one_event_detailed(event: dict, user_timezone: str) -> str:
-    event['start_dtm'] = (
-        datetime.fromisoformat(event['task_start_dtm'])
-        .astimezone(pytz.timezone(user_timezone)).strftime("%d.%m.%Y %H:%M")
-    )
-    event['end_dtm'] = (
-        datetime.fromisoformat(event['task_end_dtm'])
-        .astimezone(pytz.timezone(user_timezone)).strftime("%d.%m.%Y %H:%M")
-    )
-    event['task_category'] = map_task_category_from_key(event['task_category'])
-    # Формируем текст с полным описанием
-    text = build_event_full_info(
-        event['task_name'],
-        event['start_dtm'],
-        event['end_dtm'],
-        event['task_category'],
-        event['task_link'],
-        event['task_description']
-    )
-    return text
-
-
-@router.callback_query(F.data.startswith('event_'), StateFilter(ShowVoiceEvents.waiting_events_show_end))
-async def show_event_details(callback: types.CallbackQuery, state: FSMContext):
-    # Получаем номер события из callback_data
-    event_num = int(callback.data.split('_')[1])
-
-    data = await state.get_data()
-    events = data['events']
-    day_offset = data['day_offset']
-    user_timezone = data['timezone']
-
-    if event_num < 1 or event_num > len(events):
-        await callback.answer("Неверный номер события")
-        return
-
-    event = events[event_num - 1]
-    text = form_one_event_detailed(event, user_timezone)
-
-    # Создаем клавиатуру с действиями
-    delete_change_inline_kb = change_delete_task_inline_keyboard(day_offset, event_num)
-
-    # Редактируем сообщение
-    await callback.message.edit_text(text, reply_markup=delete_change_inline_kb)
-    await state.update_data(one_event_text=text)
-    await callback.answer()
+# async def show_events(message: types.Message, state: FSMContext):
+#     data = await state.get_data()
+#     user_timezone = data['timezone']
+#     show_dt = data['show_dt']
+#     cur_date = datetime.strptime(show_dt, "%Y-%m-%d")
+#
+#     if 'day_offset' in data:
+#         day_offset = data['day_offset']
+#     else:
+#         day_offset = 0
+#         await state.update_data(day_offset=day_offset, cur_date=cur_date.strftime("%Y-%m-%d"))
+#
+#     target_date_str = (cur_date + timedelta(days=day_offset)).strftime("%d.%m.%Y")
+#     target_date_query = (cur_date + timedelta(days=day_offset)).strftime("%Y-%m-%d")
+#
+#     # Здесь получаем события из вашего API/Redis
+#     events, status = await db_api.get_tasks(data['tg_user_id'], target_date_query, target_date_query)
+#     await state.update_data(events=events)
+#
+#     # Если событий нет
+#     if status == 404:
+#         left_right_inline_no_nums_kb = swiping_tasks_no_nums_inline_keyboard(day_offset)
+#         text = f"На <b>{target_date_str}</b> событий нет"
+#         if 'events_message_id' in data:
+#             try:
+#                 await message.bot.edit_message_text(
+#                     chat_id=message.chat.id,
+#                     message_id=data['events_message_id'],
+#                     text=text,
+#                     reply_markup=left_right_inline_no_nums_kb
+#                 )
+#             except Exception as e:
+#                 logger.debug(e)
+#                 pass
+#         else:
+#             msg = await message.answer(text, reply_markup=left_right_inline_no_nums_kb)
+#             await state.update_data(events_message_id=msg.message_id)
+#             await state.set_state(ShowVoiceEvents.waiting_events_show_end)
+#
+#         await state.set_state(ShowVoiceEvents.waiting_events_show_end)
+#         return
+#
+#     # Формируем текст сообщения
+#     text = f"События на <b>{target_date_str}</b>\n\n"
+#     for cur_event in events:
+#         start_time = (
+#             datetime
+#             .fromisoformat(cur_event['task_start_dtm'])
+#             .astimezone(pytz.timezone(user_timezone))
+#             .time().strftime("%H:%M")
+#         )
+#         text += f"<b>{cur_event['task_relative_id']}.</b> <code>{start_time}</code> - {cur_event['task_name']}\n"
+#
+#     left_right_inline_with_nums_kb = swiping_tasks_with_nums_inline_keyboard(events, day_offset)
+#
+#     # Если у нас уже есть message_id в состоянии, редактируем сообщение
+#     if 'events_message_id' in data:
+#         try:
+#             await message.bot.edit_message_text(
+#                 chat_id=message.chat.id,
+#                 message_id=data['events_message_id'],
+#                 text=text,
+#                 reply_markup=left_right_inline_with_nums_kb
+#             )
+#             await state.set_state(ShowVoiceEvents.waiting_events_show_end)
+#             return
+#         except Exception as e:
+#             logger.debug(e)
+#             pass
+#
+#     # # Иначе отправляем новое сообщение
+#     msg = await message.answer(text, reply_markup=left_right_inline_with_nums_kb)
+#
+#     # # Сохраняем ID сообщения в состоянии
+#     await state.update_data(events_message_id=msg.message_id)
+#     await state.set_state(ShowVoiceEvents.waiting_events_show_end)
+#
+#
+# @router.callback_query(
+#     F.data.startswith(('prev_day_', 'next_day_')), StateFilter(ShowVoiceEvents.waiting_events_show_end)
+# )
+# async def handle_day_navigation(callback: types.CallbackQuery, state: FSMContext):
+#     # Получаем направление и текущее смещение
+#     direction = callback.data.split('_')[0]
+#     data = await state.get_data()
+#     current_offset = data['day_offset']
+#
+#     # Вычисляем новое смещение
+#     new_offset = current_offset - 1 if direction == "prev" else current_offset + 1
+#     await state.update_data(day_offset=new_offset)
+#
+#     # "Переотправляем" сообщение с новым смещением
+#     await show_events(callback.message, state)
+#     await callback.answer()
+#
+#
+# def form_one_event_detailed(event: dict, user_timezone: str) -> str:
+#     event['start_dtm'] = (
+#         datetime.fromisoformat(event['task_start_dtm'])
+#         .astimezone(pytz.timezone(user_timezone)).strftime("%d.%m.%Y %H:%M")
+#     )
+#     event['end_dtm'] = (
+#         datetime.fromisoformat(event['task_end_dtm'])
+#         .astimezone(pytz.timezone(user_timezone)).strftime("%d.%m.%Y %H:%M")
+#     )
+#     event['task_category'] = map_task_category_from_key(event['task_category'])
+#     # Формируем текст с полным описанием
+#     text = build_event_full_info(
+#         event['task_name'],
+#         event['start_dtm'],
+#         event['end_dtm'],
+#         event['task_category'],
+#         event['task_link'],
+#         event['task_description']
+#     )
+#     return text
+#
+#
+# @router.callback_query(F.data.startswith('event_'), StateFilter(ShowVoiceEvents.waiting_events_show_end))
+# async def show_event_details(callback: types.CallbackQuery, state: FSMContext):
+#     # Получаем номер события из callback_data
+#     event_num = int(callback.data.split('_')[1])
+#
+#     data = await state.get_data()
+#     events = data['events']
+#     day_offset = data['day_offset']
+#     user_timezone = data['timezone']
+#
+#     if event_num < 1 or event_num > len(events):
+#         await callback.answer("Неверный номер события")
+#         return
+#
+#     event = events[event_num - 1]
+#     text = form_one_event_detailed(event, user_timezone)
+#
+#     # Создаем клавиатуру с действиями
+#     delete_change_inline_kb = change_delete_task_inline_keyboard(day_offset, event_num)
+#
+#     # Редактируем сообщение
+#     await callback.message.edit_text(text, reply_markup=delete_change_inline_kb)
+#     await state.update_data(one_event_text=text)
+#     await callback.answer()
 
 
 def setup_calendar_voice_operations_handlers(dp):
