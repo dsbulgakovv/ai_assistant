@@ -8,8 +8,6 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import ReplyKeyboardRemove, CallbackQuery
 
-from .voice_operations import ShowVoiceEvents
-
 from keyboards.calendar import (
     start_calendar_keyboard,
     start_manual_calendar_keyboard,
@@ -27,6 +25,10 @@ api = DatabaseAPI()
 class StartCalendar(StatesGroup):
     start_calendar = State()
     start_manual_calendar = State()
+
+
+class ShowVoiceEvents(StatesGroup):
+    waiting_events_show_end = State()
 
 
 @router.message(F.text.casefold() == 'мой календарь')
