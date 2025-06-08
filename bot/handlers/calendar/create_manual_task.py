@@ -360,7 +360,7 @@ async def create_event_task_success_manual_calendar_handler(
         # ---------- scheduler create ----------
         from app import bot, scheduler
         run_datetime_30 = (
-                datetime.fromisoformat(convert_date_string(data['start_dtm'], data['timezone'])) - timedelta(minutes=30)
+            datetime.strptime(convert_date_string(data['start_dtm'], data['timezone']), '%Y-%m-%d %H:%M:%S.%f %z') - timedelta(minutes=30)
         )
         text_30 = build_event_reminder_info(
             title=data['task_name'], min_left=30,
@@ -371,7 +371,7 @@ async def create_event_task_success_manual_calendar_handler(
             run_datetime=run_datetime_30, bot=bot, chat_id=message.chat.id, text=text_30
         )
         run_datetime_5 = (
-                datetime.fromisoformat(convert_date_string(data['start_dtm'], data['timezone'])) - timedelta(minutes=5)
+                datetime.strptime(convert_date_string(data['start_dtm'], data['timezone']), '%Y-%m-%d %H:%M:%S.%f %z') - timedelta(minutes=5)
         )
         text_5 = build_event_reminder_info(
             title=data['task_name'], min_left=5,
