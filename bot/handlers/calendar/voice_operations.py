@@ -42,7 +42,6 @@ MAX_FILE_SIZE = 1 * 1024 * 1024  # = 1MB
 class CreateVoiceEvent(StatesGroup):
     waiting_task_link = State()
     waiting_approval = State()
-    waiting_task_show = State()
 
 
 class ChangeEvent(StatesGroup):

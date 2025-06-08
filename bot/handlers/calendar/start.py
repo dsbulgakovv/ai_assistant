@@ -3,10 +3,12 @@ import logging
 import os
 
 from aiogram import F, Router, types
-from aiogram.filters import StateFilter
+from aiogram.filters import StateFilter, or_f
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram.types import ReplyKeyboardRemove, CallbackQuery
+
+from .voice_operations import ShowVoiceEvents
 
 from keyboards.calendar import (
     start_calendar_keyboard,
@@ -41,7 +43,13 @@ async def start_calendar_handler(message: types.Message, state: FSMContext) -> N
     await state.set_state(StartCalendar.start_calendar)
 
 
-@router.message(StateFilter(StartCalendar.start_calendar), F.text.casefold() == 'мануальный режим')
+@router.message(
+    or_f(
+        StateFilter(StartCalendar.start_calendar),
+        StateFilter(ShowVoiceEvents.waiting_events_show_end)
+    ),
+    F.text.casefold() == 'мануальный режим'
+)
 async def start_manual_calendar_handler(message: types.Message, state: FSMContext) -> None:
     await message.answer(
         "Теперь ты в мануальном режиме.\n"
