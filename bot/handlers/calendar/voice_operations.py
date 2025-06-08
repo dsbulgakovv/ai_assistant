@@ -220,7 +220,7 @@ async def voice_operations_create_success_calendar_handler(message: types.Messag
             convert_date_string(task_data['end_dtm'], data['user_timezone'])
         )
         # ---------- scheduler create ----------
-        from core import bot, scheduler
+        from core import scheduler
         run_datetime_30 = datetime.strptime(task_data['start_dtm'], '%d.%m.%Y %H:%M') - timedelta(minutes=30)
         text_30 = build_event_reminder_info(
             title=task_data['task_name'], min_left=30,
@@ -228,7 +228,7 @@ async def voice_operations_create_success_calendar_handler(message: types.Messag
         )
         schedule_event(
             scheduler=scheduler, event_id=response['task_id'] + 30,
-            run_datetime=run_datetime_30, bot=bot, chat_id=message.chat.id, text=text_30
+            run_datetime=run_datetime_30, chat_id=message.chat.id, text=text_30
         )
         run_datetime_5 = datetime.strptime(task_data['start_dtm'], '%d.%m.%Y %H:%M') - timedelta(minutes=5)
         text_5 = build_event_reminder_info(
@@ -237,7 +237,7 @@ async def voice_operations_create_success_calendar_handler(message: types.Messag
         )
         schedule_event(
             scheduler=scheduler, event_id=response['task_id'] + 5,
-            run_datetime=run_datetime_5, bot=bot, chat_id=message.chat.id, text=text_5
+            run_datetime=run_datetime_5, chat_id=message.chat.id, text=text_5
         )
         # ---------------------------------------
         if status == 201:

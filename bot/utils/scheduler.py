@@ -1,6 +1,6 @@
 import sys
 import logging
-from aiogram import Bot
+from core import bot
 from datetime import datetime
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
@@ -12,14 +12,14 @@ logger.setLevel(logging.DEBUG)
 
 def schedule_event(
         scheduler: AsyncIOScheduler, event_id: int,
-        run_datetime: datetime, bot: Bot, chat_id: int, text: str
+        run_datetime: datetime, chat_id: int, text: str
 ):
     """Добавляем задачу с уникальным ID = str(event_id)"""
     scheduler.add_job(
         send_reminder,
         'date',
         run_date=run_datetime,
-        args=[bot, chat_id, text],
+        args=[chat_id, text],
         id=str(event_id),
         replace_existing=True
     )
@@ -33,5 +33,5 @@ def remove_event(scheduler: AsyncIOScheduler, event_id: int):
         logger.debug(e)
 
 
-async def send_reminder(bot: Bot, chat_id: int, text: str):
+async def send_reminder(chat_id: int, text: str):
     await bot.send_message(chat_id, text)

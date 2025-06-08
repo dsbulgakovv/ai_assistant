@@ -358,7 +358,7 @@ async def create_event_task_success_manual_calendar_handler(
             convert_date_string(data['end_dtm'], data['timezone'])
         )
         # ---------- scheduler create ----------
-        from core import bot, scheduler
+        from core import scheduler
 
         run_datetime_30 = (
             datetime.strptime(convert_date_string(data['start_dtm'], data['timezone']), '%Y-%m-%d %H:%M:%S.%f %z') - timedelta(minutes=30)
@@ -369,7 +369,7 @@ async def create_event_task_success_manual_calendar_handler(
         )
         schedule_event(
             scheduler=scheduler, event_id=response['task_id']  + 30,
-            run_datetime=run_datetime_30, bot=bot, chat_id=message.chat.id, text=text_30
+            run_datetime=run_datetime_30, chat_id=message.chat.id, text=text_30
         )
         run_datetime_5 = (
                 datetime.strptime(convert_date_string(data['start_dtm'], data['timezone']), '%Y-%m-%d %H:%M:%S.%f %z') - timedelta(minutes=5)
@@ -380,7 +380,7 @@ async def create_event_task_success_manual_calendar_handler(
         )
         schedule_event(
             scheduler=scheduler, event_id=response['task_id'] + 5,
-            run_datetime=run_datetime_5, bot=bot, chat_id=message.chat.id, text=text_5
+            run_datetime=run_datetime_5, chat_id=message.chat.id, text=text_5
         )
         # ---------------------------------------
         if status == 201:

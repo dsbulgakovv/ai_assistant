@@ -540,7 +540,7 @@ async def approved_save_editing_task(callback: types.CallbackQuery, state: FSMCo
         task_start_dtm=task_start_dtm, task_end_dtm=task_end_dtm
     )
     # ---------- scheduler edit ----------
-    from core import bot, scheduler
+    from core import scheduler
 
     remove_event(scheduler=scheduler, event_id=task_global_id + 30)
     remove_event(scheduler=scheduler, event_id=task_global_id + 5)
@@ -551,7 +551,7 @@ async def approved_save_editing_task(callback: types.CallbackQuery, state: FSMCo
     )
     schedule_event(
         scheduler=scheduler, event_id=task_global_id + 30,
-        run_datetime=run_datetime_30, bot=bot, chat_id=callback.message.chat.id, text=text_30
+        run_datetime=run_datetime_30, chat_id=callback.message.chat.id, text=text_30
     )
     run_datetime_5 = datetime.strptime(task_start_dtm, '%Y-%m-%d %H:%M:%S.%f %z') - timedelta(minutes=5)
     text_5 = build_event_reminder_info(
@@ -560,7 +560,7 @@ async def approved_save_editing_task(callback: types.CallbackQuery, state: FSMCo
     )
     schedule_event(
         scheduler=scheduler, event_id=task_global_id + 5,
-        run_datetime=run_datetime_5, bot=bot, chat_id=callback.message.chat.id, text=text_5
+        run_datetime=run_datetime_5, chat_id=callback.message.chat.id, text=text_5
     )
     # ---------------------------------------
 
