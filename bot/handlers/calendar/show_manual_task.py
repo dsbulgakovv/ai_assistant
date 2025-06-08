@@ -15,7 +15,7 @@ from aiogram_dialog.api.entities import StartMode
 from .start import StartCalendar
 
 from .calendar_util import CalendarState
-from texts.calendar import build_event_full_info
+from texts.calendar import build_event_full_info, build_event_reminder_info
 from keyboards.calendar import (
     start_manual_calendar_keyboard,
     only_back_to_manual_calendar_menu_keyboard,
@@ -29,6 +29,9 @@ from keyboards.calendar import (
     deleting_task_inline_keyboard
 )
 from utils.database_api import DatabaseAPI
+
+from utils.scheduler import schedule_event, remove_event
+from app import bot, scheduler
 
 logger = logging.getLogger('aiogram')
 logger.setLevel(logging.DEBUG)
@@ -530,12 +533,34 @@ async def approved_save_editing_task(callback: types.CallbackQuery, state: FSMCo
     task_start_dtm = localize_db_date(event['task_start_dtm'], data['user_timezone'])
     task_end_dtm = localize_db_date(event['task_end_dtm'], data['user_timezone'])
 
-    _, status = await db_api.update_task(
+    response, status = await db_api.update_task(
         task_global_id=task_global_id, task_name=event['task_name'],
         task_status=2, task_category=map_task_category_from_str(event['task_category']),
         task_description=event['task_description'], task_link=event['task_link'],
         task_start_dtm=task_start_dtm, task_end_dtm=task_end_dtm
     )
+    # ---------- scheduler edit ----------
+    remove_event(scheduler=scheduler, event_id=task_global_id + 30)
+    remove_event(scheduler=scheduler, event_id=task_global_id + 5)
+    run_datetime_30 = datetime.fromisoformat(task_start_dtm) - timedelta(minutes=30)
+    text_30 = build_event_reminder_info(
+        title=event['task_name'], min_left=30,
+        link=event['task_link'], description=event['task_description']
+    )
+    schedule_event(
+        scheduler=scheduler, event_id=task_global_id + 30,
+        run_datetime=run_datetime_30, bot=bot, chat_id=callback.message.chat.id, text=text_30
+    )
+    run_datetime_5 = datetime.fromisoformat(task_start_dtm) - timedelta(minutes=5)
+    text_5 = build_event_reminder_info(
+        title=event['task_name'], min_left=5,
+        link=event['task_link'], description=event['task_description']
+    )
+    schedule_event(
+        scheduler=scheduler, event_id=task_global_id + 5,
+        run_datetime=run_datetime_5, bot=bot, chat_id=callback.message.chat.id, text=text_5
+    )
+    # ---------------------------------------
 
     if status == 200:
         await callback.message.answer(
@@ -596,6 +621,10 @@ async def delete_event_approved(callback: types.CallbackQuery, state: FSMContext
     event = data['events'][data['editing_event_num'] - 1]
     task_global_id = event['id']
     response, status = await db_api.delete_task(task_global_id)
+    # ---------- scheduler delete ----------
+    remove_event(scheduler=scheduler, event_id=task_global_id + 30)
+    remove_event(scheduler=scheduler, event_id=task_global_id + 5)
+    # --------------------------------------
     if status == 200:
         await callback.message.delete()
         await callback.message.answer(

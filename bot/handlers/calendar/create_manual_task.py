@@ -14,7 +14,7 @@ from aiogram_dialog.api.entities import StartMode
 from .start import StartCalendar
 
 from .calendar_util import CalendarState
-from texts.calendar import build_event_full_info
+from texts.calendar import build_event_full_info, build_event_reminder_info
 from keyboards.calendar import (
     start_calendar_keyboard,
     start_manual_calendar_keyboard,
@@ -27,6 +27,9 @@ from keyboards.calendar import (
     task_approval_manual_calendar_keyboard
 )
 from utils.database_api import DatabaseAPI
+
+from utils.scheduler import schedule_event, remove_event
+from app import bot, scheduler
 
 logger = logging.getLogger('aiogram')
 logger.setLevel(logging.DEBUG)
@@ -347,13 +350,37 @@ async def create_event_task_success_manual_calendar_handler(
         await state.set_state(CreateEvent.waiting_task_end_dt)
     elif message.text.lower() == 'подтвердить':
         data = await state.get_data()
-        _, status = await db_api.create_task(
+        response, status = await db_api.create_task(
             message.from_user.id,
             data['task_name'], 1, map_task_category(data['task_category']),
             data['task_description'], data['task_link'],
             convert_date_string(data['start_dtm'], data['timezone']),
             convert_date_string(data['end_dtm'], data['timezone'])
         )
+        # ---------- scheduler create ----------
+        run_datetime_30 = (
+                datetime.fromisoformat(convert_date_string(data['start_dtm'], data['timezone'])) - timedelta(minutes=30)
+        )
+        text_30 = build_event_reminder_info(
+            title=data['task_name'], min_left=30,
+            link=data['task_link'], description=data['task_description']
+        )
+        schedule_event(
+            scheduler=scheduler, event_id=response['task_id']  + 30,
+            run_datetime=run_datetime_30, bot=bot, chat_id=message.chat.id, text=text_30
+        )
+        run_datetime_5 = (
+                datetime.fromisoformat(convert_date_string(data['start_dtm'], data['timezone'])) - timedelta(minutes=5)
+        )
+        text_5 = build_event_reminder_info(
+            title=data['task_name'], min_left=5,
+            link=data['task_link'], description=data['task_description']
+        )
+        schedule_event(
+            scheduler=scheduler, event_id=response['task_id'] + 5,
+            run_datetime=run_datetime_5, bot=bot, chat_id=message.chat.id, text=text_5
+        )
+        # ---------------------------------------
         if status == 201:
             await state.clear()
             await dialog_manager.done()

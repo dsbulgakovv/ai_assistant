@@ -1,7 +1,7 @@
 import pytz
 import logging
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from aiogram import Bot, Router, types
 from aiogram.filters import StateFilter
@@ -12,7 +12,7 @@ from aiogram.types import ReplyKeyboardRemove
 from .start import StartCalendar
 from .show_manual_task import show_events
 
-from texts.calendar import build_event_full_info
+from texts.calendar import build_event_full_info, build_event_reminder_info
 from texts.prompts import system_prompt_calendar
 from keyboards.calendar import (
     start_calendar_keyboard,
@@ -25,6 +25,9 @@ from keyboards.calendar import (
 from utils.database_api import DatabaseAPI
 from utils.voice_to_text_api import VoiceToTextAPI
 from utils.large_lang_model_api import LLMapi
+
+from utils.scheduler import schedule_event, remove_event
+from app import bot, scheduler
 
 logger = logging.getLogger('aiogram')
 logger.setLevel(logging.DEBUG)
@@ -209,13 +212,33 @@ async def voice_operations_create_success_calendar_handler(message: types.Messag
     elif message.text.lower() == 'подтвердить':
         data = await state.get_data()
         task_data = data['llm_data']
-        _, status = await db_api.create_task(
+        response, status = await db_api.create_task(
             message.from_user.id,
             task_data['task_name'], 1, map_task_category_from_name(task_data['task_category']),
             task_data['task_description'], task_data['task_link'],
             convert_date_string(task_data['start_dtm'], data['user_timezone']),
             convert_date_string(task_data['end_dtm'], data['user_timezone'])
         )
+        # ---------- scheduler create ----------
+        run_datetime_30 = datetime.fromisoformat(task_data['start_dtm']) - timedelta(minutes=30)
+        text_30 = build_event_reminder_info(
+            title=task_data['task_name'], min_left=30,
+            link=task_data['task_link'], description=task_data['task_description']
+        )
+        schedule_event(
+            scheduler=scheduler, event_id=response['task_id'] + 30,
+            run_datetime=run_datetime_30, bot=bot, chat_id=message.chat.id, text=text_30
+        )
+        run_datetime_5 = datetime.fromisoformat(task_data['start_dtm']) - timedelta(minutes=5)
+        text_5 = build_event_reminder_info(
+            title=task_data['task_name'], min_left=5,
+            link=task_data['task_link'], description=task_data['task_description']
+        )
+        schedule_event(
+            scheduler=scheduler, event_id=response['task_id'] + 5,
+            run_datetime=run_datetime_5, bot=bot, chat_id=message.chat.id, text=text_5
+        )
+        # ---------------------------------------
         if status == 201:
             await state.clear()
             await message.answer(
