@@ -53,7 +53,7 @@ class ChangeEvent(StatesGroup):
     approving_new_event_end = State()
 
 
-class ShowEvent(StatesGroup):
+class ShowVoiceEvents(StatesGroup):
     waiting_events_show_end = State()
 
 
@@ -285,9 +285,9 @@ async def show_events(message: types.Message, state: FSMContext):
         else:
             msg = await message.answer(text, reply_markup=left_right_inline_no_nums_kb)
             await state.update_data(events_message_id=msg.message_id)
-            await state.set_state(ShowEvent.waiting_events_show_end)
+            await state.set_state(ShowVoiceEvents.waiting_events_show_end)
 
-        await state.set_state(ShowEvent.waiting_events_show_end)
+        await state.set_state(ShowVoiceEvents.waiting_events_show_end)
         return
 
     # Формируем текст сообщения
@@ -312,7 +312,7 @@ async def show_events(message: types.Message, state: FSMContext):
                 text=text,
                 reply_markup=left_right_inline_with_nums_kb
             )
-            await state.set_state(ShowEvent.waiting_events_show_end)
+            await state.set_state(ShowVoiceEvents.waiting_events_show_end)
             return
         except Exception as e:
             logger.debug(e)
@@ -323,7 +323,7 @@ async def show_events(message: types.Message, state: FSMContext):
 
     # # Сохраняем ID сообщения в состоянии
     await state.update_data(events_message_id=msg.message_id)
-    await state.set_state(ShowEvent.waiting_events_show_end)
+    await state.set_state(ShowVoiceEvents.waiting_events_show_end)
 
 
 def setup_calendar_voice_operations_handlers(dp):
